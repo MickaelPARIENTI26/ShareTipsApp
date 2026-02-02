@@ -1,0 +1,38 @@
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Test projects (not needed in production image)
+**/*.Tests/
+**/*.Tests.csproj
+
+# Git
+.git/
+.gitignore
+
+# Docker
+**/Dockerfile*
+**/.dockerignore
+docker-compose*.yml
+
+# Environment files (secrets should be injected at runtime)
+**/.env
+**/.env.*
+**/appsettings.Development.json
+
+# Logs
+**/logs/
+**/*.log
+
+# Misc
+**/*.md
+**/README*
+**/.DS_Store
+**/Thumbs.db

@@ -1,0 +1,6 @@
+@ShareBetBackend_HostAddress = http://localhost:5250
+
+GET {{ShareBetBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

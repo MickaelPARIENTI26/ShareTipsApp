@@ -1,6 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/auth.store';
-import { parseError, ErrorType } from '../utils/errors';
 
 // API URL from environment variable (set in .env file)
 // Fallback to localhost for development if not set

@@ -63,7 +63,7 @@ export function SubscriptionGate({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Vérification de l'abonnement...</Text>
+        <Text style={styles.loadingText}>{"Vérification de l'abonnement..."}</Text>
       </View>
     );
   }
@@ -109,7 +109,7 @@ export function SubscriptionGate({
         <Text style={styles.subscribeButtonText}>{buttonText}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.benefitsTitle}>Avantages de l'abonnement :</Text>
+      <Text style={styles.benefitsTitle}>{"Avantages de l'abonnement :"}</Text>
       <View style={styles.benefitsList}>
         <BenefitItem
           icon="ticket-outline"

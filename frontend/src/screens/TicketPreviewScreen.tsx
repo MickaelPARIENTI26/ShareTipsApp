@@ -256,7 +256,7 @@ const TicketPreviewScreen: React.FC = () => {
               • Il ne pourra plus être modifié
             </Text>
             <Text style={styles.warningText}>
-              • Il ne pourra plus être supprimé s'il est public
+              {"• Il ne pourra plus être supprimé s'il est public"}
             </Text>
             <Text style={styles.warningText}>• Les cotes sont figées</Text>
           </View>

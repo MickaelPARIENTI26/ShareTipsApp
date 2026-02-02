@@ -73,13 +73,13 @@ interface NotificationItemProps {
 }
 
 // Memoized for FlatList performance
-const NotificationItem = React.memo<NotificationItemProps>(({
+const NotificationItem = React.memo<NotificationItemProps>(function NotificationItem({
   item,
   onPress,
   onDelete,
   colors,
   styles,
-}) => {
+}) {
   const iconName = NOTIFICATION_ICONS[item.type] ?? 'notifications-outline';
   const iconColor = NOTIFICATION_COLORS[item.type]?.(colors) ?? colors.primary;
 

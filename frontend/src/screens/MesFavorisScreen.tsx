@@ -108,7 +108,6 @@ const MesFavorisScreen: React.FC = () => {
   const [favorites, setFavorites] = useState<FavoriteTicketDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -125,7 +124,6 @@ const MesFavorisScreen: React.FC = () => {
       }
 
       setHasMore(data.hasNextPage);
-      setPage(pageNum);
       pageRef.current = pageNum;
     } catch {
       // silent
@@ -142,7 +140,6 @@ const MesFavorisScreen: React.FC = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setPage(1);
     pageRef.current = 1;
     setHasMore(true);
     fetchFavorites(1, true);

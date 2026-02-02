@@ -13,7 +13,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { matchApi } from '../../api/match.api';
-import type { HomeStackParamList, MatchListItem } from '../../types';
+import type { HomeStackParamList } from '../../types';
 import { useTheme, type ThemeColors } from '../../theme';
 
 type Nav = NativeStackNavigationProp<HomeStackParamList>;

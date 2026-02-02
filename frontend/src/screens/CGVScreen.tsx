@@ -17,9 +17,7 @@ const CGVScreen: React.FC = () => {
 
       <Section title="1. Objet" styles={styles}>
         <Text style={styles.paragraph}>
-          Les présentes Conditions Générales de Vente régissent l'achat de contenus numériques
-          sur la plateforme ShareTips, notamment l'achat de pronostics individuels et les
-          abonnements aux pronostiqueurs.
+          {"Les présentes Conditions Générales de Vente régissent l'achat de contenus numériques sur la plateforme ShareTips, notamment l'achat de pronostics individuels et les abonnements aux pronostiqueurs."}
         </Text>
       </Section>
 
@@ -28,25 +26,21 @@ const CGVScreen: React.FC = () => {
           Les produits vendus sur ShareTips sont exclusivement des contenus numériques :
         </Text>
         <Text style={styles.bullet}>• Pronostics sportifs (analyses et sélections)</Text>
-        <Text style={styles.bullet}>• Abonnements donnant accès aux pronostics d'un créateur</Text>
+        <Text style={styles.bullet}>{"• Abonnements donnant accès aux pronostics d'un créateur"}</Text>
         <Text style={styles.paragraph}>
-          Ces contenus sont fournis par des utilisateurs tiers (pronostiqueurs) et non par ShareTips.
-          ShareTips agit uniquement en tant qu'intermédiaire technique.
+          {"Ces contenus sont fournis par des utilisateurs tiers (pronostiqueurs) et non par ShareTips. ShareTips agit uniquement en tant qu'intermédiaire technique."}
         </Text>
       </Section>
 
       <Section title="3. Prix et monnaie" styles={styles}>
         <Text style={styles.paragraph}>
-          Tous les prix sur ShareTips sont exprimés en crédits, une monnaie virtuelle interne
-          à la plateforme.
+          Tous les prix sur ShareTips sont exprimés en crédits, une monnaie virtuelle interne à la plateforme.
         </Text>
         <Text style={styles.paragraph}>
-          Les crédits peuvent être acquis via les moyens de paiement proposés sur la plateforme.
-          Le taux de conversion euros/crédits est indiqué lors de l'achat de crédits.
+          {"Les crédits peuvent être acquis via les moyens de paiement proposés sur la plateforme. Le taux de conversion euros/crédits est indiqué lors de l'achat de crédits."}
         </Text>
         <Text style={styles.paragraph}>
-          Les prix des pronostics et abonnements sont fixés librement par les pronostiqueurs,
-          dans les limites définies par la plateforme.
+          Les prix des pronostics et abonnements sont fixés librement par les pronostiqueurs, dans les limites définies par la plateforme.
         </Text>
       </Section>
 
@@ -55,8 +49,7 @@ const CGVScreen: React.FC = () => {
           ShareTips prélève une commission de 17% sur chaque transaction entre acheteur et vendeur.
         </Text>
         <Text style={styles.paragraph}>
-          Cette commission est automatiquement déduite du montant reçu par le vendeur.
-          L'acheteur paie le prix affiché sans frais supplémentaire.
+          {"Cette commission est automatiquement déduite du montant reçu par le vendeur. L'acheteur paie le prix affiché sans frais supplémentaire."}
         </Text>
         <View style={styles.example}>
           <Text style={styles.exampleTitle}>Exemple :</Text>
@@ -71,66 +64,55 @@ const CGVScreen: React.FC = () => {
 
       <Section title="5. Accès immédiat" styles={styles}>
         <Text style={styles.paragraph}>
-          L'accès au contenu acheté est fourni immédiatement après validation du paiement.
-          Dès la confirmation de l'achat, le contenu devient accessible dans votre compte.
+          {"L'accès au contenu acheté est fourni immédiatement après validation du paiement. Dès la confirmation de l'achat, le contenu devient accessible dans votre compte."}
         </Text>
         <Text style={styles.paragraph}>
-          En procédant à l'achat, vous reconnaissez expressément demander l'exécution immédiate
-          du service et renoncez à votre droit de rétractation conformément à l'article L221-28
-          du Code de la consommation.
+          {"En procédant à l'achat, vous reconnaissez expressément demander l'exécution immédiate du service et renoncez à votre droit de rétractation conformément à l'article L221-28 du Code de la consommation."}
         </Text>
       </Section>
 
       <Section title="6. Politique de remboursement" styles={styles}>
         <Text style={styles.paragraph}>
-          Compte tenu de la nature numérique des contenus et de leur accessibilité immédiate,
-          aucun remboursement ne peut être accordé une fois le contenu consulté.
+          {"Compte tenu de la nature numérique des contenus et de leur accessibilité immédiate, aucun remboursement ne peut être accordé une fois le contenu consulté."}
         </Text>
         <Text style={styles.paragraph}>
           Exceptions possibles (à la discrétion de ShareTips) :
         </Text>
-        <Text style={styles.bullet}>• Erreur technique empêchant l'accès au contenu</Text>
+        <Text style={styles.bullet}>{"• Erreur technique empêchant l'accès au contenu"}</Text>
         <Text style={styles.bullet}>• Contenu manifestement frauduleux ou trompeur</Text>
         <Text style={styles.bullet}>• Double facturation par erreur</Text>
         <Text style={styles.paragraph}>
-          Toute demande de remboursement doit être adressée à support@sharetips.app
-          dans un délai de 7 jours suivant l'achat.
+          {"Toute demande de remboursement doit être adressée à support@sharetips.app dans un délai de 7 jours suivant l'achat."}
         </Text>
       </Section>
 
       <Section title="7. Durée des abonnements" styles={styles}>
         <Text style={styles.paragraph}>
-          Les abonnements sont valables pour la durée indiquée lors de l'achat
-          (ex : 7 jours, 30 jours, 90 jours).
+          {"Les abonnements sont valables pour la durée indiquée lors de l'achat (ex : 7 jours, 30 jours, 90 jours)."}
         </Text>
         <Text style={styles.paragraph}>
-          À l'expiration, l'accès aux contenus privés du pronostiqueur est automatiquement
-          révoqué. Les abonnements ne sont pas renouvelés automatiquement.
+          {"À l'expiration, l'accès aux contenus privés du pronostiqueur est automatiquement révoqué. Les abonnements ne sont pas renouvelés automatiquement."}
         </Text>
       </Section>
 
       <Section title="8. Responsabilité" styles={styles}>
         <Text style={styles.paragraph}>
-          ShareTips ne garantit pas la qualité, l'exactitude ou les résultats des pronostics
-          vendus sur la plateforme. Les pronostics sont fournis par des utilisateurs tiers
-          sous leur seule responsabilité.
+          {"ShareTips ne garantit pas la qualité, l'exactitude ou les résultats des pronostics vendus sur la plateforme. Les pronostics sont fournis par des utilisateurs tiers sous leur seule responsabilité."}
         </Text>
         <Text style={styles.paragraph}>
-          L'achat d'un pronostic ne constitue en aucun cas une garantie de gain.
-          L'utilisateur reste seul responsable de l'utilisation qu'il fait des contenus achetés.
+          {"L'achat d'un pronostic ne constitue en aucun cas une garantie de gain. L'utilisateur reste seul responsable de l'utilisation qu'il fait des contenus achetés."}
         </Text>
       </Section>
 
       <Section title="9. Propriété intellectuelle" styles={styles}>
         <Text style={styles.paragraph}>
-          Les contenus achetés sont destinés à un usage personnel et non commercial.
-          Toute reproduction, diffusion ou revente des pronostics achetés est strictement interdite.
+          Les contenus achetés sont destinés à un usage personnel et non commercial. Toute reproduction, diffusion ou revente des pronostics achetés est strictement interdite.
         </Text>
       </Section>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          En effectuant un achat, vous acceptez ces conditions.
+          {"En effectuant un achat, vous acceptez ces conditions."}
         </Text>
         <Text style={styles.footerText}>
           Pour toute question : support@sharetips.app

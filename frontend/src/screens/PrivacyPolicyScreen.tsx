@@ -16,26 +16,25 @@ const PrivacyPolicyScreen: React.FC = () => {
       <Text style={styles.lastUpdate}>Dernière mise à jour : février 2026</Text>
 
       <Text style={styles.intro}>
-        ShareTips s'engage à protéger votre vie privée. Cette politique explique
-        quelles données nous collectons, pourquoi et comment nous les utilisons.
+        {"ShareTips s'engage à protéger votre vie privée. Cette politique explique quelles données nous collectons, pourquoi et comment nous les utilisons."}
       </Text>
 
       <Section title="1. Données collectées" styles={styles}>
         <Text style={styles.subtitle}>Données de compte</Text>
-        <Text style={styles.bullet}>• Email (pour l'authentification)</Text>
-        <Text style={styles.bullet}>• Nom d'utilisateur (affiché publiquement)</Text>
+        <Text style={styles.bullet}>{"• Email (pour l'authentification)"}</Text>
+        <Text style={styles.bullet}>{"• Nom d'utilisateur (affiché publiquement)"}</Text>
         <Text style={styles.bullet}>• Mot de passe (stocké de manière chiffrée)</Text>
         <Text style={styles.bullet}>• Date de création du compte</Text>
 
-        <Text style={styles.subtitle}>Données d'utilisation</Text>
+        <Text style={styles.subtitle}>{"Données d'utilisation"}</Text>
         <Text style={styles.bullet}>• Historique des achats et abonnements</Text>
         <Text style={styles.bullet}>• Pronostics créés</Text>
         <Text style={styles.bullet}>• Préférences de notification</Text>
 
         <Text style={styles.subtitle}>Données techniques</Text>
         <Text style={styles.bullet}>• Adresse IP (lors du consentement)</Text>
-        <Text style={styles.bullet}>• Type d'appareil et système d'exploitation</Text>
-        <Text style={styles.bullet}>• Version de l'application</Text>
+        <Text style={styles.bullet}>{"• Type d'appareil et système d'exploitation"}</Text>
+        <Text style={styles.bullet}>{"• Version de l'application"}</Text>
       </Section>
 
       <Section title="2. Utilisation des données" styles={styles}>
@@ -56,50 +55,44 @@ const PrivacyPolicyScreen: React.FC = () => {
         <Text style={styles.paragraph}>
           ShareTips utilise le stockage local de votre appareil pour :
         </Text>
-        <Text style={styles.bullet}>• Maintenir votre session (token d'authentification)</Text>
+        <Text style={styles.bullet}>{"• Maintenir votre session (token d'authentification)"}</Text>
         <Text style={styles.bullet}>• Stocker vos préférences (thème, notifications)</Text>
         <Text style={styles.bullet}>• Améliorer les performances (cache)</Text>
         <Text style={styles.paragraph}>
-          Ces données restent sur votre appareil et ne sont pas partagées avec des services
-          publicitaires tiers.
+          Ces données restent sur votre appareil et ne sont pas partagées avec des services publicitaires tiers.
         </Text>
       </Section>
 
       <Section title="4. Statistiques et analytics" styles={styles}>
         <Text style={styles.paragraph}>
-          Nous collectons des statistiques anonymisées pour comprendre comment l'application
-          est utilisée et l'améliorer :
+          {"Nous collectons des statistiques anonymisées pour comprendre comment l'application est utilisée et l'améliorer :"}
         </Text>
         <Text style={styles.bullet}>• Pages visitées</Text>
         <Text style={styles.bullet}>• Fonctionnalités utilisées</Text>
         <Text style={styles.bullet}>• Erreurs rencontrées</Text>
         <Text style={styles.paragraph}>
-          Ces données sont agrégées et ne permettent pas de vous identifier personnellement.
+          {"Ces données sont agrégées et ne permettent pas de vous identifier personnellement."}
         </Text>
       </Section>
 
       <Section title="5. Conservation des données" styles={styles}>
         <Text style={styles.paragraph}>
-          Vos données sont conservées tant que votre compte est actif.
-          L'historique des transactions est conservé 5 ans pour des raisons légales.
+          {"Vos données sont conservées tant que votre compte est actif. L'historique des transactions est conservé 5 ans pour des raisons légales."}
         </Text>
         <Text style={styles.paragraph}>
-          Après suppression de votre compte, vos données personnelles sont effacées
-          sous 30 jours, sauf obligation légale de conservation.
+          Après suppression de votre compte, vos données personnelles sont effacées sous 30 jours, sauf obligation légale de conservation.
         </Text>
       </Section>
 
       <Section title="6. Suppression de compte" styles={styles}>
         <Text style={styles.paragraph}>
-          Vous pouvez demander la suppression de votre compte à tout moment en contactant
-          notre support. La suppression entraîne :
+          Vous pouvez demander la suppression de votre compte à tout moment en contactant notre support. La suppression entraîne :
         </Text>
         <Text style={styles.bullet}>• Effacement de vos données personnelles</Text>
         <Text style={styles.bullet}>• Anonymisation de vos pronostics publiés</Text>
         <Text style={styles.bullet}>• Perte définitive de vos crédits non utilisés</Text>
         <Text style={styles.paragraph}>
-          Cette action est irréversible. Nous vous recommandons d'utiliser vos crédits
-          avant de demander la suppression.
+          {"Cette action est irréversible. Nous vous recommandons d'utiliser vos crédits avant de demander la suppression."}
         </Text>
       </Section>
 
@@ -107,13 +100,13 @@ const PrivacyPolicyScreen: React.FC = () => {
         <Text style={styles.paragraph}>
           Conformément au Règlement Général sur la Protection des Données, vous disposez des droits suivants :
         </Text>
-        <Text style={styles.bullet}>• Droit d'accès : obtenir une copie de vos données</Text>
+        <Text style={styles.bullet}>{"• Droit d'accès : obtenir une copie de vos données"}</Text>
         <Text style={styles.bullet}>• Droit de rectification : corriger vos informations</Text>
-        <Text style={styles.bullet}>• Droit à l'effacement : supprimer votre compte</Text>
+        <Text style={styles.bullet}>{"• Droit à l'effacement : supprimer votre compte"}</Text>
         <Text style={styles.bullet}>• Droit à la portabilité : exporter vos données</Text>
-        <Text style={styles.bullet}>• Droit d'opposition : refuser certains traitements</Text>
+        <Text style={styles.bullet}>{"• Droit d'opposition : refuser certains traitements"}</Text>
         <Text style={styles.paragraph}>
-          Pour exercer ces droits, contactez-nous à l'adresse ci-dessous.
+          {"Pour exercer ces droits, contactez-nous à l'adresse ci-dessous."}
         </Text>
       </Section>
 

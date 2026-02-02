@@ -76,17 +76,17 @@ const RankingScreen: React.FC = () => {
     [navigation]
   );
 
-  const getRankBadgeStyle = (rank: number) => {
+  const getRankBadgeStyle = useCallback((rank: number) => {
     if (rank === 1) return { backgroundColor: '#FFD700' }; // Gold
     if (rank === 2) return { backgroundColor: '#C0C0C0' }; // Silver
     if (rank === 3) return { backgroundColor: '#CD7F32' }; // Bronze
     return { backgroundColor: colors.surfaceSecondary };
-  };
+  }, [colors.surfaceSecondary]);
 
-  const getRankTextStyle = (rank: number) => {
+  const getRankTextStyle = useCallback((rank: number) => {
     if (rank <= 3) return { color: '#000' };
     return { color: colors.textSecondary };
-  };
+  }, [colors.textSecondary]);
 
   const renderItem = useCallback(
     ({ item }: { item: RankingEntryDto }) => (
@@ -142,7 +142,7 @@ const RankingScreen: React.FC = () => {
         />
       </TouchableOpacity>
     ),
-    [colors, styles, handleTipsterPress]
+    [colors, styles, handleTipsterPress, getRankBadgeStyle, getRankTextStyle]
   );
 
   const renderHeader = () => (

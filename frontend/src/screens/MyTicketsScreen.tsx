@@ -11,10 +11,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
 
 import { ticketApi } from '../api/ticket.api';
-import type { TicketDto } from '../types';
+import type { RootStackParamList, TicketDto } from '../types';
 import { useTheme, type ThemeColors } from '../theme';
 
 const PAGE_SIZE = 15;

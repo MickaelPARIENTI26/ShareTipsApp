@@ -483,7 +483,7 @@ const TicketDetailScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <Ionicons name="star" size={18} color={colors.textOnPrimary} />
-              <Text style={styles.subscribeBtnText}>S'abonner</Text>
+              <Text style={styles.subscribeBtnText}>{"S'abonner"}</Text>
             </TouchableOpacity>
             </View>
           ) : !ticket.isPublic && ticket.isSubscribedToCreator ? (

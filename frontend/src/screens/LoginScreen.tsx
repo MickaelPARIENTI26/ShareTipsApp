@@ -149,7 +149,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           disabled={loading}
           style={styles.registerLink}
         >
-          <Text style={styles.link}>Pas de compte ? S'inscrire</Text>
+          <Text style={styles.link}>{"Pas de compte ? S'inscrire"}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

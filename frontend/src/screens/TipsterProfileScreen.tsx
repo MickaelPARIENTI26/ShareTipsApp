@@ -529,13 +529,13 @@ const TipsterProfileScreen: React.FC = () => {
         }
         const success = await giveConsent();
         if (!success) {
-          Alert.alert('Erreur', 'Impossible d\'enregistrer le consentement');
+          Alert.alert('Erreur', "Impossible d'enregistrer le consentement");
           return;
         }
       }
 
       Alert.alert(
-        'Confirmer l\'abonnement',
+        "Confirmer l'abonnement",
         `S'abonner à "${plan.title}" pour ${plan.priceCredits} crédits (${plan.durationInDays} jours) ?`,
         [
           { text: 'Annuler', style: 'cancel' },
@@ -599,7 +599,7 @@ const TipsterProfileScreen: React.FC = () => {
         },
       ]
     );
-  }, [tipsterId, tipsterUsername]);
+  }, [tipsterId, tipsterUsername, subStatus]);
 
   const handleToggleFavorite = useCallback(
     (ticketId: string) => {
@@ -772,7 +772,7 @@ const TipsterProfileScreen: React.FC = () => {
                 ) : (
                   <>
                     <Ionicons name="star" size={16} color={colors.textOnPrimary} />
-                    <Text style={styles.subscribeBtnText}>S'abonner</Text>
+                    <Text style={styles.subscribeBtnText}>{"S'abonner"}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -820,8 +820,6 @@ const TipsterProfileScreen: React.FC = () => {
       : activeTab === 'private'
         ? 'Aucun ticket privé'
         : null;
-
-  const currentHasMore = activeTab === 'public' ? publicHasMore : privateHasMore;
 
   // Check if private tab requires subscription access
   const showPrivateGate =
@@ -894,7 +892,7 @@ const TipsterProfileScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Plans d'abonnement</Text>
+              <Text style={styles.modalTitle}>{"Plans d'abonnement"}</Text>
               <TouchableOpacity onPress={closePlansModal}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
@@ -908,13 +906,13 @@ const TipsterProfileScreen: React.FC = () => {
               <View style={styles.modalEmpty}>
                 <Ionicons name="pricetag-outline" size={48} color={colors.textTertiary} />
                 <Text style={styles.modalEmptyText}>
-                  Aucun plan d'abonnement disponible
+                  {"Aucun plan d'abonnement disponible"}
                 </Text>
               </View>
             ) : (
               <ScrollView style={styles.plansList} showsVerticalScrollIndicator={false}>
                 <Text style={styles.disclaimer}>
-                  L'abonnement donne accès aux pronostics. Aucun résultat n'est garanti. Vous restez seul responsable de vos décisions.
+                  {"L'abonnement donne accès aux pronostics. Aucun résultat n'est garanti. Vous restez seul responsable de vos décisions."}
                 </Text>
                 {/* Consent checkbox - shown if not already consented */}
                 {!hasConsented && (

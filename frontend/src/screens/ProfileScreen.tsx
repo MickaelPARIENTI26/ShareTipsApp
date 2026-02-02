@@ -51,10 +51,6 @@ const ProfileScreen: React.FC = () => {
     () => navigation.navigate('MesFavoris'),
     [navigation]
   );
-  const goToAchats = useCallback(
-    () => navigation.navigate('MesAchats'),
-    [navigation]
-  );
   const goToAbonnements = useCallback(
     () => navigation.navigate('MesAbonnements'),
     [navigation]
@@ -227,7 +223,7 @@ const ProfileScreen: React.FC = () => {
               <View style={styles.networkIconContainer}>
                 <Ionicons name="pricetag" size={20} color={colors.textOnPrimary} />
               </View>
-              <Text style={styles.networkLabel}>Mes plans d'abonnement</Text>
+              <Text style={styles.networkLabel}>{"Mes plans d'abonnement"}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
           </TouchableOpacity>

@@ -16,7 +16,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme, type ThemeColors } from '../theme';
 import type { AuthStackParamList } from '../types';
 import { authApi } from '../api/auth.api';
-import { validateEmail, validatePassword, isFormValid } from '../utils/validation';
+import { validateEmail, validatePassword } from '../utils/validation';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
@@ -146,14 +146,14 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.successTitle}>Email envoyé !</Text>
         <Text style={styles.successText}>
           Un lien de réinitialisation a été envoyé à {email}.
-          Cliquez sur le lien dans l'email pour continuer.
+          {"Cliquez sur le lien dans l'email pour continuer."}
         </Text>
       </View>
 
       <Text style={styles.orText}>— ou —</Text>
 
       <Text style={styles.instruction}>
-        Copiez le token depuis l'email et collez-le ci-dessous :
+        {"Copiez le token depuis l'email et collez-le ci-dessous :"}
       </Text>
 
       <TextInput
@@ -186,7 +186,7 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
           setError(null);
         }}
       >
-        <Text style={styles.link}>Renvoyer l'email</Text>
+        <Text style={styles.link}>{"Renvoyer l'email"}</Text>
       </TouchableOpacity>
     </>
   );

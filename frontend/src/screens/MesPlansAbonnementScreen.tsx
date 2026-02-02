@@ -234,7 +234,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
     () => (
       <View style={styles.emptyState}>
         <Ionicons name="pricetag-outline" size={64} color={colors.textTertiary} />
-        <Text style={styles.emptyTitle}>Aucun plan d'abonnement</Text>
+        <Text style={styles.emptyTitle}>{"Aucun plan d'abonnement"}</Text>
         <Text style={styles.emptySubtitle}>
           Créez votre premier plan pour que vos abonnés puissent vous suivre
         </Text>

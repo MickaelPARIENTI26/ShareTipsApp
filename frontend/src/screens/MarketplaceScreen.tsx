@@ -146,7 +146,7 @@ const MarketplaceTicketCard = React.memo<{
   onFollowCreator: (creatorId: string) => void;
   colors: ThemeColors;
   styles: ReturnType<typeof useStyles>;
-}>(({ ticket, isFavorited, isFollowingCreator, isOwnTicket, onToggleFavorite, onBuy, onTipsterPress, onCardPress, onFollowCreator, colors, styles }) => {
+}>(function MarketplaceTicketCard({ ticket, isFavorited, isFollowingCreator, isOwnTicket, onToggleFavorite, onBuy, onTipsterPress, onCardPress, onFollowCreator, colors, styles }) {
   const count = ticket.selectionCount ?? ticket.selections?.length ?? 0;
   const matchWord = count === 1 ? 'match' : 'matchs';
   const autoTitle = `${ticket.creatorUsername} – ${count} ${matchWord}`;

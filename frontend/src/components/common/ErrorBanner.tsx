@@ -4,11 +4,10 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type ThemeColors } from '../../theme';
-import { ErrorType, type AppError, isRetryableError } from '../../utils/errors';
+import { ErrorType, type AppError } from '../../utils/errors';
 
 interface ErrorBannerProps {
   error: string | AppError | null;

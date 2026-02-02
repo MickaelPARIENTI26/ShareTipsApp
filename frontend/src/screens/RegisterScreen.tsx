@@ -111,7 +111,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             styles.input,
             username.length > 0 && !usernameValidation.isValid && styles.inputError,
           ]}
-          placeholder="Nom d'utilisateur"
+          placeholder={"Nom d'utilisateur"}
           placeholderTextColor={colors.placeholder}
           value={username}
           onChangeText={clearOnChange(setUsername)}
@@ -207,7 +207,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           {loading ? (
             <ActivityIndicator color={colors.textOnPrimary} />
           ) : (
-            <Text style={styles.buttonText}>S'inscrire</Text>
+            <Text style={styles.buttonText}>{"S'inscrire"}</Text>
           )}
         </TouchableOpacity>
 

@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useStripe } from '@stripe/stripe-react-native';
+import { useStripeSafe } from '../hooks/useStripeSafe';
 
 import { userApi } from '../api/user.api';
 import { followApi, type FollowInfoDto } from '../api/follow.api';
@@ -302,7 +302,7 @@ const StatsContent: React.FC<{
 const TipsterProfileScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const { initPaymentSheet, presentPaymentSheet } = useStripeSafe();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 

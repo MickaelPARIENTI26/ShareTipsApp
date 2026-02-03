@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useStripe } from '@stripe/stripe-react-native';
+import { useStripeSafe } from '../hooks/useStripeSafe';
 
 import { ticketApi } from '../api/ticket.api';
 import { purchaseApi } from '../api/purchase.api';
@@ -31,7 +31,7 @@ const SPORT_LABELS: Record<string, string> = {
 const TicketDetailScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const { initPaymentSheet, presentPaymentSheet } = useStripeSafe();
 
   const route = useRoute();
   const navigation =

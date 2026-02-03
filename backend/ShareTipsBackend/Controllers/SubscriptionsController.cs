@@ -40,7 +40,7 @@ public class SubscriptionsController : ApiControllerBase
     }
 
     /// <summary>
-    /// Subscribe using a subscription plan
+    /// Subscribe using a subscription plan (legacy credits)
     /// </summary>
     [HttpPost("plan/{planId:guid}")]
     [ProducesResponseType(typeof(SubscriptionResultDto), StatusCodes.Status200OK)]
@@ -49,6 +49,43 @@ public class SubscriptionsController : ApiControllerBase
     {
         var userId = GetUserId();
         var result = await _subscriptionService.SubscribeWithPlanAsync(userId, planId);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Initiate a Stripe-based subscription with a plan
+    /// </summary>
+    [HttpPost("initiate/{planId:guid}")]
+    [ProducesResponseType(typeof(PaymentIntentResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> InitiateSubscription(Guid planId)
+    {
+        var userId = GetUserId();
+        var result = await _subscriptionService.InitiateSubscriptionWithPlanAsync(userId, planId);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Confirm a subscription after Stripe payment succeeded
+    /// </summary>
+    [HttpPost("confirm/{subscriptionId:guid}")]
+    [ProducesResponseType(typeof(SubscriptionResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ConfirmSubscription(Guid subscriptionId)
+    {
+        var result = await _subscriptionService.ConfirmSubscriptionAsync(subscriptionId);
 
         if (!result.Success)
         {

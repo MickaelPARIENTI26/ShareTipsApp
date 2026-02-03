@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useStripe } from '@stripe/stripe-react-native';
 
 import { userApi } from '../api/user.api';
 import { followApi, type FollowInfoDto } from '../api/follow.api';
@@ -301,6 +302,7 @@ const StatsContent: React.FC<{
 const TipsterProfileScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -529,40 +531,81 @@ const TipsterProfileScreen: React.FC = () => {
         }
       }
 
-      Alert.alert(
-        "Confirmer l'abonnement",
-        `S'abonner à "${plan.title}" pour ${plan.priceCredits} crédits (${plan.durationInDays} jours) ?`,
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: 'Confirmer',
-            onPress: async () => {
-              setSubLoading(true);
-              closePlansModal();
-              try {
-                const { data } = await subscriptionApi.subscribeWithPlan(plan.id);
-                if (data.success) {
-                  const statusRes =
-                    await subscriptionApi.getSubscriptionStatus(tipsterId);
-                  setSubStatus(statusRes.data);
-                  Alert.alert(
-                    'Abonnement activé',
-                    `Crédits restants : ${data.newBalance}`
-                  );
-                } else {
-                  Alert.alert('Erreur', data.message ?? 'Abonnement impossible');
-                }
-              } catch (err) {
-                Alert.alert('Erreur', getErrorMessage(err));
-              } finally {
-                setSubLoading(false);
-              }
-            },
-          },
-        ]
-      );
+      // Free plan - subscribe directly
+      if (plan.priceCredits <= 0) {
+        setSubLoading(true);
+        closePlansModal();
+        try {
+          const { data } = await subscriptionApi.subscribeWithPlan(plan.id);
+          if (data.success) {
+            const statusRes = await subscriptionApi.getSubscriptionStatus(tipsterId);
+            setSubStatus(statusRes.data);
+            Alert.alert('Abonnement activé', 'Vous êtes maintenant abonné !');
+          } else {
+            Alert.alert('Erreur', data.message ?? 'Abonnement impossible');
+          }
+        } catch (err) {
+          Alert.alert('Erreur', getErrorMessage(err));
+        } finally {
+          setSubLoading(false);
+        }
+        return;
+      }
+
+      // Paid plan - use Stripe Payment Sheet
+      setSubLoading(true);
+      closePlansModal();
+
+      try {
+        // 1. Create PaymentIntent on server
+        const { data: initData } = await subscriptionApi.initiateSubscription(plan.id);
+
+        if (!initData.success || !initData.clientSecret) {
+          Alert.alert('Erreur', initData.message ?? 'Impossible de créer le paiement');
+          setSubLoading(false);
+          return;
+        }
+
+        // 2. Initialize Payment Sheet
+        const { error: initError } = await initPaymentSheet({
+          paymentIntentClientSecret: initData.clientSecret,
+          merchantDisplayName: 'ShareTips',
+        });
+
+        if (initError) {
+          Alert.alert('Erreur', initError.message);
+          setSubLoading(false);
+          return;
+        }
+
+        // 3. Present Payment Sheet
+        const { error: presentError } = await presentPaymentSheet();
+
+        if (presentError) {
+          // User cancelled - not an error
+          if (presentError.code !== 'Canceled') {
+            Alert.alert('Erreur', presentError.message);
+          }
+          setSubLoading(false);
+          return;
+        }
+
+        // 4. Confirm subscription on server
+        if (initData.paymentId) {
+          await subscriptionApi.confirmSubscription(initData.paymentId);
+        }
+
+        // Refresh subscription status
+        const statusRes = await subscriptionApi.getSubscriptionStatus(tipsterId);
+        setSubStatus(statusRes.data);
+        Alert.alert('Abonnement activé', 'Vous êtes maintenant abonné !');
+      } catch (err) {
+        Alert.alert('Erreur', getErrorMessage(err));
+      } finally {
+        setSubLoading(false);
+      }
     },
-    [tipsterId, closePlansModal, hasConsented, consentChecked, giveConsent]
+    [tipsterId, closePlansModal, hasConsented, consentChecked, giveConsent, initPaymentSheet, presentPaymentSheet]
   );
 
   const handleUnsubscribe = useCallback(() => {

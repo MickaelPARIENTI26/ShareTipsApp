@@ -19,8 +19,9 @@ public class SubscriptionServiceTests
         var consentService = new Mock<IConsentService>();
         consentService.Setup(x => x.HasConsentAsync(It.IsAny<Guid>(), It.IsAny<string>()))
             .ReturnsAsync(true);
+        var stripeService = new Mock<IStripeConnectService>();
         var logger = new Mock<ILogger<SubscriptionService>>();
-        return new SubscriptionService(context, consentService.Object, logger.Object);
+        return new SubscriptionService(context, consentService.Object, stripeService.Object, logger.Object);
     }
 
     private async Task<(User subscriber, User tipster)> SetupUsersAsync(Data.ApplicationDbContext context)

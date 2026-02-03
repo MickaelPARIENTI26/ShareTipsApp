@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShareTipsBackend.Data;
 using ShareTipsBackend.Domain.Entities;
+using ShareTipsBackend.Domain.Enums;
 using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services.Interfaces;
 using ShareTipsBackend.Utilities;
@@ -12,15 +13,19 @@ public class SubscriptionService : ISubscriptionService
 {
     private readonly ApplicationDbContext _context;
     private readonly IConsentService _consentService;
+    private readonly IStripeConnectService _stripeService;
     private readonly ILogger<SubscriptionService> _logger;
+    private const decimal PlatformFeePercent = 0.10m; // 10% commission
 
     public SubscriptionService(
         ApplicationDbContext context,
         IConsentService consentService,
+        IStripeConnectService stripeService,
         ILogger<SubscriptionService> logger)
     {
         _context = context;
         _consentService = consentService;
+        _stripeService = stripeService;
         _logger = logger;
     }
 
@@ -548,6 +553,179 @@ public class SubscriptionService : ISubscriptionService
         }
 
         return expiredSubscriptions.Count;
+    }
+
+    /// <summary>
+    /// Initiate a Stripe-based subscription with a plan
+    /// </summary>
+    public async Task<PaymentIntentResultDto> InitiateSubscriptionWithPlanAsync(Guid subscriberId, Guid planId)
+    {
+        // Check consent first
+        var hasConsent = await _consentService.HasConsentAsync(subscriberId, ConsentTypes.NoGuarantee);
+        if (!hasConsent)
+        {
+            return new PaymentIntentResultDto(false, null, null, "Consentement requis");
+        }
+
+        // Fetch the subscription plan
+        var plan = await _context.SubscriptionPlans
+            .Include(p => p.Tipster)
+            .FirstOrDefaultAsync(p => p.Id == planId && p.IsActive);
+
+        if (plan == null)
+        {
+            return new PaymentIntentResultDto(false, null, null, "Plan introuvable ou inactif");
+        }
+
+        var tipsterId = plan.TipsterUserId;
+
+        // Business rule: Cannot subscribe to yourself
+        if (subscriberId == tipsterId)
+        {
+            return new PaymentIntentResultDto(false, null, null, "Impossible de s'abonner à soi-même");
+        }
+
+        // Check if already subscribed (active subscription)
+        var existingSubscription = await _context.Subscriptions
+            .FirstOrDefaultAsync(s => s.SubscriberId == subscriberId
+                && s.TipsterId == tipsterId
+                && s.Status == SubscriptionStatus.Active
+                && s.EndDate > DateTime.UtcNow);
+
+        if (existingSubscription != null)
+        {
+            return new PaymentIntentResultDto(false, null, null, "Déjà abonné à ce tipster");
+        }
+
+        // Use EUR cents price
+        var priceCents = plan.PriceCents;
+        if (priceCents <= 0)
+        {
+            // Fallback to credits conversion if PriceCents not set (1 credit = 10 cents)
+            priceCents = plan.PriceCredits * 10;
+        }
+
+        // Free plan - just subscribe directly without payment
+        if (priceCents <= 0)
+        {
+            var result = await SubscribeWithPlanAsync(subscriberId, planId);
+            return new PaymentIntentResultDto(result.Success, null, null, result.Message);
+        }
+
+        var commissionCents = (int)Math.Ceiling(priceCents * PlatformFeePercent);
+        var tipsterAmountCents = priceCents - commissionCents;
+
+        // Check for previous expired/cancelled subscription
+        var previousSubscription = await _context.Subscriptions
+            .FirstOrDefaultAsync(s => s.SubscriberId == subscriberId
+                && s.TipsterId == tipsterId
+                && (s.Status == SubscriptionStatus.Expired || s.Status == SubscriptionStatus.Cancelled));
+
+        // Create pending subscription record
+        var now = DateTime.UtcNow;
+        Subscription subscription;
+        if (previousSubscription != null)
+        {
+            // Reactivate existing record but keep as Pending
+            previousSubscription.SubscriptionPlanId = planId;
+            previousSubscription.PriceCents = priceCents;
+            previousSubscription.CommissionCents = commissionCents;
+            previousSubscription.TipsterAmountCents = tipsterAmountCents;
+            // Legacy fields for backward compatibility
+            previousSubscription.PriceCredits = priceCents / 10;
+            previousSubscription.CommissionCredits = commissionCents / 10;
+            previousSubscription.StartDate = now;
+            previousSubscription.EndDate = now.AddDays(plan.DurationInDays);
+            previousSubscription.Status = SubscriptionStatus.Pending;
+            previousSubscription.CancelledAt = null;
+            previousSubscription.NotifiedExpiringJ3 = false;
+            previousSubscription.NotifiedExpiringJ1 = false;
+            previousSubscription.NotifiedExpired = false;
+            subscription = previousSubscription;
+        }
+        else
+        {
+            subscription = new Subscription
+            {
+                Id = Guid.NewGuid(),
+                SubscriberId = subscriberId,
+                TipsterId = tipsterId,
+                SubscriptionPlanId = planId,
+                PriceCents = priceCents,
+                CommissionCents = commissionCents,
+                TipsterAmountCents = tipsterAmountCents,
+                // Legacy fields for backward compatibility
+                PriceCredits = priceCents / 10,
+                CommissionCredits = commissionCents / 10,
+                StartDate = now,
+                EndDate = now.AddDays(plan.DurationInDays),
+                Status = SubscriptionStatus.Pending,
+                CreatedAt = now
+            };
+            _context.Subscriptions.Add(subscription);
+        }
+
+        await _context.SaveChangesAsync();
+
+        // Create Stripe PaymentIntent
+        var stripeResult = await _stripeService.CreatePaymentIntentAsync(
+            subscriberId,
+            tipsterId,
+            priceCents,
+            PaymentType.Subscription,
+            subscription.Id,
+            $"Abonnement: {plan.Title}"
+        );
+
+        if (stripeResult.Success && stripeResult.PaymentId.HasValue)
+        {
+            subscription.StripePaymentId = stripeResult.PaymentId;
+            await _context.SaveChangesAsync();
+        }
+        else
+        {
+            // Remove failed subscription record
+            if (previousSubscription == null)
+            {
+                _context.Subscriptions.Remove(subscription);
+            }
+            else
+            {
+                subscription.Status = SubscriptionStatus.Cancelled;
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        return stripeResult;
+    }
+
+    /// <summary>
+    /// Confirm a subscription after Stripe payment succeeded
+    /// </summary>
+    public async Task<SubscriptionResultDto> ConfirmSubscriptionAsync(Guid subscriptionId)
+    {
+        var subscription = await _context.Subscriptions
+            .Include(s => s.StripePayment)
+            .Include(s => s.Subscriber)
+            .Include(s => s.Tipster)
+            .FirstOrDefaultAsync(s => s.Id == subscriptionId);
+
+        if (subscription == null)
+        {
+            return new SubscriptionResultDto(false, "Abonnement introuvable", null, 0);
+        }
+
+        if (subscription.StripePayment?.Status != StripePaymentStatus.Succeeded)
+        {
+            return new SubscriptionResultDto(false, "Paiement non confirmé", null, 0);
+        }
+
+        // Activate subscription
+        subscription.Status = SubscriptionStatus.Active;
+        await _context.SaveChangesAsync();
+
+        var subscriptionDto = MapToDto(subscription);
+        return new SubscriptionResultDto(true, "Abonnement activé", subscriptionDto, 0);
     }
 
     private static SubscriptionDto MapToDto(Subscription subscription)

@@ -394,8 +394,10 @@ using (var scope = app.Services.CreateScope())
 #endif
 }
 
-// Sentry tracing (must be early for performance monitoring) - skip in testing
-if (Environment.GetEnvironmentVariable("TESTING_ENVIRONMENT") != "true")
+// Sentry tracing (must be early for performance monitoring) - only if Sentry is configured
+var sentryDsnForTracing = Environment.GetEnvironmentVariable("SENTRY_DSN");
+var isTestingForTracing = Environment.GetEnvironmentVariable("TESTING_ENVIRONMENT") == "true";
+if (!string.IsNullOrEmpty(sentryDsnForTracing) && !isTestingForTracing)
 {
     app.UseSentryTracing();
 }

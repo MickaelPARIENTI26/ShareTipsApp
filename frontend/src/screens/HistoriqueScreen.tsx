@@ -150,10 +150,12 @@ const HistoriqueScreen: React.FC = () => {
         purchaseApi.getMyPurchases(),
         subscriptionApi.getMySubscriptions(),
       ]);
-      setPurchases(purchasesRes.data);
-      setSubscriptions(subscriptionsRes.data);
+      setPurchases(Array.isArray(purchasesRes.data) ? purchasesRes.data : []);
+      setSubscriptions(Array.isArray(subscriptionsRes.data) ? subscriptionsRes.data : []);
     } catch {
-      // Silent error handling
+      // Silent error handling - ensure arrays are set
+      setPurchases([]);
+      setSubscriptions([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -172,7 +174,7 @@ const HistoriqueScreen: React.FC = () => {
   // Transform data to unified format
   const purchaseItems: HistoryItem[] = useMemo(
     () =>
-      purchases.map((p) => ({
+      (purchases || []).map((p) => ({
         id: p.id,
         type: 'purchase' as const,
         title: p.ticketTitle,
@@ -188,7 +190,7 @@ const HistoriqueScreen: React.FC = () => {
 
   const subscriptionItems: HistoryItem[] = useMemo(
     () =>
-      subscriptions.map((s) => ({
+      (subscriptions || []).map((s) => ({
         id: s.id,
         type: 'subscription' as const,
         title: `Accès premium @${s.tipsterUsername}`,
@@ -248,7 +250,7 @@ const HistoriqueScreen: React.FC = () => {
           >
             Tickets achetés
           </Text>
-          {purchases.length > 0 && (
+          {(purchases?.length ?? 0) > 0 && (
             <View style={styles.tabBadge}>
               <Text style={styles.tabBadgeText}>{purchases.length}</Text>
             </View>
@@ -272,7 +274,7 @@ const HistoriqueScreen: React.FC = () => {
           >
             Souscriptions
           </Text>
-          {subscriptions.length > 0 && (
+          {(subscriptions?.length ?? 0) > 0 && (
             <View style={styles.tabBadge}>
               <Text style={styles.tabBadgeText}>{subscriptions.length}</Text>
             </View>

@@ -54,7 +54,7 @@ const useStyles = (colors: ThemeColors) =>
         button: {
           flex: 1,
           alignItems: 'center',
-          backgroundColor: colors.background,
+          backgroundColor: colors.surfaceSecondary,
           borderRadius: 8,
           paddingVertical: 10,
           paddingHorizontal: 4,
@@ -68,8 +68,10 @@ const useStyles = (colors: ThemeColors) =>
         },
         label: {
           fontSize: 11,
-          color: colors.textSecondary,
+          color: colors.text,
+          fontWeight: '500',
           marginBottom: 2,
+          opacity: 0.7,
         },
         odds: {
           fontSize: 15,

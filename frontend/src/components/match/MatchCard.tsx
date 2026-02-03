@@ -102,7 +102,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({ match }) => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.dateRow}>
-          <Ionicons name="time-outline" size={13} color={colors.textSecondary} />
+          <Ionicons name="time-outline" size={13} color={colors.text} />
           <Text style={styles.date}>{formatDate(match.startTime)}</Text>
         </View>
         <View style={styles.headerRight}>
@@ -183,7 +183,7 @@ const useStyles = (colors: ThemeColors) =>
         },
         date: {
           fontSize: 12,
-          color: colors.textSecondary,
+          color: colors.text,
         },
         headerRight: {
           flexDirection: 'row',

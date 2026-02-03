@@ -321,25 +321,8 @@ const WalletScreen: React.FC = () => {
         colors={colors}
       />
 
-      {/* User Balance card */}
-      <View style={styles.balanceCard}>
-        <Text style={styles.creditsLabel}>Solde disponible</Text>
-        <Text style={styles.creditsAmount}>
-          {(tipsterWallet?.availableBalance ?? 0).toFixed(2)}{' '}
-          <Text style={styles.creditsUnit}>EUR</Text>
-        </Text>
-
-        {/* Balance info banner */}
-        <View style={styles.creditsInfo}>
-          <Ionicons name="information-circle" size={16} color={colors.primary} />
-          <Text style={styles.creditsInfoText}>
-            Votre solde disponible pour retrait.
-          </Text>
-        </View>
-      </View>
-
       {/* Section title */}
-      <Text style={styles.sectionTitle}>Historique</Text>
+      <Text style={styles.sectionTitle}>Historique des transactions</Text>
     </View>
   );
 
@@ -514,51 +497,6 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.textTertiary,
           textAlign: 'center',
           marginTop: 8,
-        },
-
-        // Legacy Credits Balance card
-        balanceCard: {
-          backgroundColor: colors.surface,
-          borderRadius: 16,
-          padding: 24,
-          alignItems: 'center',
-          marginBottom: 20,
-        },
-        creditsLabel: {
-          fontSize: 14,
-          color: colors.textSecondary,
-          marginBottom: 8,
-        },
-        creditsAmount: {
-          fontSize: 36,
-          fontWeight: '800',
-          color: colors.text,
-        },
-        creditsUnit: {
-          fontSize: 16,
-          fontWeight: '400',
-          color: colors.textSecondary,
-        },
-        lockedText: {
-          fontSize: 13,
-          color: colors.warning,
-          marginTop: 6,
-        },
-        creditsInfo: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.primaryLight,
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          marginTop: 14,
-          gap: 8,
-        },
-        creditsInfoText: {
-          flex: 1,
-          fontSize: 12,
-          color: colors.primary,
-          lineHeight: 16,
         },
 
         // Section

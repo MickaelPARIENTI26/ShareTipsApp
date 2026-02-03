@@ -35,6 +35,42 @@ function formatDate(iso: string): string {
   });
 }
 
+function formatMatchDate(iso: string | null): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function getMatchDateRange(ticket: TicketDto): { start: string; end: string } | null {
+  const matchTimes = ticket.selections
+    .map(s => s.matchStartTime)
+    .filter((t): t is string => t !== null)
+    .map(t => new Date(t).getTime())
+    .sort((a, b) => a - b);
+
+  if (matchTimes.length === 0) return null;
+
+  const startDate = new Date(matchTimes[0]);
+  const endDate = new Date(matchTimes[matchTimes.length - 1]);
+
+  const formatShort = (d: Date) => d.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  return {
+    start: formatShort(startDate),
+    end: matchTimes.length > 1 ? formatShort(endDate) : '',
+  };
+}
+
 const TicketCard: React.FC<{
   ticket: TicketDto;
   colors: ThemeColors;
@@ -65,6 +101,8 @@ const TicketCard: React.FC<{
     Lose: 'Non validé',
   };
 
+  const dateRange = getMatchDateRange(ticket);
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.cardHeader}>
@@ -80,6 +118,18 @@ const TicketCard: React.FC<{
           <Text style={styles.statusText}>{statusLabels[ticket.status] ?? ticket.status}</Text>
         </View>
       </View>
+
+      {/* Match dates */}
+      {dateRange && (
+        <View style={styles.dateRangeContainer}>
+          <Ionicons name="calendar-outline" size={14} color={colors.textOnPrimary} />
+          <Text style={styles.dateRangeText}>
+            {dateRange.end
+              ? `${dateRange.start} → ${dateRange.end}`
+              : dateRange.start}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.cardMeta}>
         <View style={styles.metaRow}>
@@ -324,6 +374,21 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.textOnPrimary,
           fontSize: 11,
           fontWeight: '700',
+        },
+        dateRangeContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.primary,
+          borderRadius: 8,
+          paddingHorizontal: 10,
+          paddingVertical: 8,
+          marginBottom: 10,
+          gap: 6,
+        },
+        dateRangeText: {
+          fontSize: 12,
+          fontWeight: '600',
+          color: colors.textOnPrimary,
         },
         cardMeta: {
           backgroundColor: colors.surfaceSecondary,

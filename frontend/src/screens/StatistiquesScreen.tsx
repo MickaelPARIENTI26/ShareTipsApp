@@ -73,11 +73,6 @@ const StatistiquesScreen: React.FC = () => {
     );
   }
 
-  const revenuePerTicket =
-    stats && stats.ticketsSold > 0
-      ? (stats.revenueGross / stats.ticketsSold).toFixed(0)
-      : '0';
-
   return (
     <ScrollView
       style={styles.container}
@@ -157,13 +152,13 @@ const StatistiquesScreen: React.FC = () => {
           <StatRow
             icon="wallet-outline"
             label="Revenu total généré"
-            value={`${stats?.revenueGross ?? 0} cr.`}
+            value={`${(stats?.revenueGrossEur ?? 0).toFixed(2)} €`}
           />
           <View style={styles.divider} />
           <StatRow
             icon="pricetag-outline"
             label="Revenu moyen par ticket"
-            value={`${revenuePerTicket} cr.`}
+            value={`${stats && stats.ticketsSold > 0 ? (stats.revenueGrossEur / stats.ticketsSold).toFixed(2) : '0.00'} €`}
           />
         </View>
       </View>

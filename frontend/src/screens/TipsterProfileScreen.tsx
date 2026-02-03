@@ -264,12 +264,12 @@ const StatsContent: React.FC<{
       <View style={styles.statsRow}>
         <StatItem
           label="Brut"
-          value={`${tipsterStats.revenueGross} cr.`}
+          value={`${tipsterStats.revenueGrossEur.toFixed(2)} €`}
           styles={styles}
         />
         <StatItem
           label="Net"
-          value={`${tipsterStats.revenueNet.toFixed(0)} cr.`}
+          value={`${tipsterStats.revenueNetEur.toFixed(2)} €`}
           styles={styles}
         />
       </View>

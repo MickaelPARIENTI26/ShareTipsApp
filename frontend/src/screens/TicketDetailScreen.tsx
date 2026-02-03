@@ -17,6 +17,7 @@ import { ticketApi } from '../api/ticket.api';
 import { purchaseApi } from '../api/purchase.api';
 import { useFavoriteStore } from '../store/favorite.store';
 import { useConsentStore } from '../store/consent.store';
+import { useAuthStore } from '../store/auth.store';
 import { getErrorMessage } from '../utils/errors';
 import type { RootStackParamList, TicketDto } from '../types';
 import { useTheme, type ThemeColors } from '../theme';
@@ -74,6 +75,9 @@ const TicketDetailScreen: React.FC = () => {
   const isFavorited = useFavoriteStore((s) => s.favoritedIds.has(ticketId));
   const toggleFavorite = useFavoriteStore((s) => s.toggle);
   const hydrateFavorites = useFavoriteStore((s) => s.hydrate);
+
+  // Current user
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   // Consent store
   const hasConsented = useConsentStore((s) => s.hasConsented);
@@ -189,9 +193,11 @@ const TicketDetailScreen: React.FC = () => {
 
   if (!ticket) return null;
 
+  const isCreator = currentUserId === ticket.creatorId;
   const hasAccess =
-    ticket.isPurchasedByCurrentUser || ticket.isSubscribedToCreator;
+    isCreator || ticket.isPurchasedByCurrentUser || ticket.isSubscribedToCreator;
   const isPrivateLocked = !ticket.isPublic && !hasAccess;
+  const isTicketLocked = ticket.status === 'Locked' || ticket.status === 'Finished';
   const showSelections = !isPrivateLocked;
 
   const count = ticket.selectionCount ?? ticket.selections?.length ?? 0;
@@ -423,26 +429,34 @@ const TicketDetailScreen: React.FC = () => {
         {/* Locked content notice for private non-purchased */}
         {isPrivateLocked && (
           <View style={styles.lockedCard}>
-            <Ionicons name="lock-closed" size={32} color={colors.warning} />
+            <Ionicons name="lock-closed" size={32} color={isTicketLocked ? colors.textSecondary : colors.warning} />
             <Text style={styles.lockedTitle}>Contenu verrouillé</Text>
-            <Text style={styles.lockedText}>
-              Achetez ce ticket ou abonnez-vous à{' '}
-              {ticket.creatorUsername} pour voir{' '}
-              {count === 1
-                ? `la sélection`
-                : `les ${count} sélections`}.
-            </Text>
-            <Text style={styles.disclaimer}>
-              Ce pronostic ne garantit aucun résultat. Vous restez seul responsable de vos décisions.
-            </Text>
+            {isTicketLocked ? (
+              <Text style={styles.lockedText}>
+                Ce ticket est {ticket.status === 'Finished' ? 'terminé' : 'verrouillé'} et n'est plus disponible à l'achat.
+              </Text>
+            ) : (
+              <>
+                <Text style={styles.lockedText}>
+                  Achetez ce ticket ou abonnez-vous à{' '}
+                  {ticket.creatorUsername} pour voir{' '}
+                  {count === 1
+                    ? `la sélection`
+                    : `les ${count} sélections`}.
+                </Text>
+                <Text style={styles.disclaimer}>
+                  Ce pronostic ne garantit aucun résultat. Vous restez seul responsable de vos décisions.
+                </Text>
+              </>
+            )}
           </View>
         )}
       </ScrollView>
 
       {/* Footer actions */}
       <View style={styles.footer}>
-        {/* Consent checkbox for private locked tickets */}
-        {isPrivateLocked && !hasConsented && (
+        {/* Consent checkbox for private locked tickets - only show if ticket is still purchasable */}
+        {isPrivateLocked && !hasConsented && !isTicketLocked && (
           <TouchableOpacity
             style={styles.consentRow}
             onPress={() => setConsentChecked(!consentChecked)}
@@ -472,8 +486,13 @@ const TicketDetailScreen: React.FC = () => {
             />
           </TouchableOpacity>
 
-          {isPrivateLocked ? (
-            <View style={styles.footerActions}>
+          {isPrivateLocked && isTicketLocked ? (
+            // Ticket is locked/finished - cannot be purchased anymore
+            <View style={styles.lockedBadgeFooter}>
+              <Ionicons name="lock-closed" size={16} color={colors.textSecondary} />
+              <Text style={styles.lockedFooterText}>Ticket verrouillé</Text>
+            </View>
+          ) : isPrivateLocked ? (
             <TouchableOpacity
               style={[styles.buyBtn, buying && styles.buyBtnDisabled]}
               onPress={handleBuy}
@@ -491,15 +510,6 @@ const TicketDetailScreen: React.FC = () => {
                 </>
               )}
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.subscribeBtn}
-              onPress={handleTipsterPress}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="star" size={18} color={colors.textOnPrimary} />
-              <Text style={styles.subscribeBtnText}>{"S'abonner"}</Text>
-            </TouchableOpacity>
-            </View>
           ) : !ticket.isPublic && ticket.isSubscribedToCreator ? (
             <View style={styles.abonneBadgeFooter}>
               <Ionicons name="star" size={16} color={colors.warning} />
@@ -849,26 +859,6 @@ const useStyles = (colors: ThemeColors) =>
           fontWeight: '600',
           color: colors.primary,
         },
-        footerActions: {
-          flex: 1,
-          flexDirection: 'row',
-          gap: 8,
-        },
-        subscribeBtn: {
-          flex: 1,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.warning,
-          borderRadius: 10,
-          paddingVertical: 12,
-          gap: 6,
-        },
-        subscribeBtnText: {
-          color: colors.textOnPrimary,
-          fontSize: 16,
-          fontWeight: '700',
-        },
         abonneBadge: {
           flexDirection: 'row',
           alignItems: 'center',
@@ -898,6 +888,21 @@ const useStyles = (colors: ThemeColors) =>
           fontSize: 15,
           fontWeight: '600',
           color: colors.warning,
+        },
+        lockedBadgeFooter: {
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.surfaceSecondary,
+          borderRadius: 10,
+          paddingVertical: 12,
+          gap: 6,
+        },
+        lockedFooterText: {
+          fontSize: 15,
+          fontWeight: '600',
+          color: colors.textSecondary,
         },
       }),
     [colors]

@@ -303,8 +303,8 @@ export interface TipsterStatsDto {
   averageOdds: number;
   averageWinningOdds: number | null;
   averageConfidence: number;
-  revenueGross: number;
-  revenueNet: number;
+  revenueGrossEur: number;
+  revenueNetEur: number;
   highestWinningOdd: number | null;
   longestWinningStreak: number;
   longestLosingStreak: number;

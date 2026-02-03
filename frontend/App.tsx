@@ -15,6 +15,7 @@ import AuthNavigator from './src/navigation/AuthNavigator';
 import TicketBuilder from './src/components/ticketBuilder/TicketBuilder';
 import { navigationRef } from './src/navigation/navigationRef';
 import { ErrorBoundary } from './src/components/common';
+import { StripeProvider } from './src/providers/StripeProvider';
 import type { RootStackParamList } from './src/types';
 
 // Initialize Sentry
@@ -113,7 +114,9 @@ function App() {
     <GestureHandlerRootView style={styles.container}>
       <ErrorBoundary>
         <ThemeProvider>
-          <AppContent />
+          <StripeProvider>
+            <AppContent />
+          </StripeProvider>
         </ThemeProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>

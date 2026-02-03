@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using ShareTipsBackend.Data;
 using ShareTipsBackend.Domain.Entities;
 using ShareTipsBackend.Domain.Enums;
 using ShareTipsBackend.Services;
+using ShareTipsBackend.Services.Interfaces;
 using Xunit;
 
 namespace ShareTipsBackend.Tests.Services;
@@ -20,8 +22,9 @@ public class NotificationServicePreferencesTests
 
     private NotificationService CreateNotificationService(ApplicationDbContext context, NotificationPreferencesService preferencesService)
     {
+        var pushService = new Mock<IPushNotificationService>().Object;
         var logger = NullLogger<NotificationService>.Instance;
-        return new NotificationService(context, preferencesService, logger);
+        return new NotificationService(context, preferencesService, pushService, logger);
     }
 
     // --- Tests for NotifyUserAsync respecting preferences ---

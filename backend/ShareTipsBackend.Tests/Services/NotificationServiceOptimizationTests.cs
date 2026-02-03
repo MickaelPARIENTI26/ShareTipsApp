@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using ShareTipsBackend.Data;
 using ShareTipsBackend.Domain.Entities;
 using ShareTipsBackend.Domain.Enums;
 using ShareTipsBackend.Services;
+using ShareTipsBackend.Services.Interfaces;
 using Xunit;
 
 namespace ShareTipsBackend.Tests.Services;
@@ -21,8 +23,9 @@ public class NotificationServiceOptimizationTests
     private NotificationService CreateService(ApplicationDbContext context)
     {
         var preferencesService = new NotificationPreferencesService(context);
+        var pushService = new Mock<IPushNotificationService>().Object;
         var logger = NullLogger<NotificationService>.Instance;
-        return new NotificationService(context, preferencesService, logger);
+        return new NotificationService(context, preferencesService, pushService, logger);
     }
 
     // --- Anti-duplicate tests ---

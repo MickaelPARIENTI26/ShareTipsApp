@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -7,11 +6,10 @@ using ShareTipsBackend.Services.Interfaces;
 
 namespace ShareTipsBackend.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
 [EnableRateLimiting("financial")]
-public class WithdrawalsController : ControllerBase
+public class WithdrawalsController : ApiControllerBase
 {
     private readonly IWithdrawalService _withdrawalService;
 
@@ -83,18 +81,5 @@ public class WithdrawalsController : ControllerBase
         }
 
         return Ok(result);
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid user token");
-        }
-
-        return userId;
     }
 }

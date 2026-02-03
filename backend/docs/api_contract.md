@@ -7,7 +7,7 @@
 - Toutes les routes privées nécessitent `Authorization: Bearer <token>`
 - Timezone : UTC
 - Monnaie interne : **crédits** (1€ = 10 crédits)
-- Commission plateforme : **17%**
+- Commission plateforme : **10%**
 - Tous les montants sont stockés en **crédits** côté backend
 
 ---
@@ -252,8 +252,8 @@ Modification ticket
 
 **Effets**
 - Débit acheteur
-- Crédit vendeur (83%)
-- Crédit plateforme (17%)
+- Crédit vendeur (90%)
+- Crédit plateforme (10%)
 
 ---
 

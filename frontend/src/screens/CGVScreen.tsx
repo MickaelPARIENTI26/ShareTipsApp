@@ -46,7 +46,7 @@ const CGVScreen: React.FC = () => {
 
       <Section title="4. Commission plateforme" styles={styles}>
         <Text style={styles.paragraph}>
-          ShareTips prélève une commission de 17% sur chaque transaction entre acheteur et vendeur.
+          ShareTips prélève une commission de 10% sur chaque transaction entre acheteur et vendeur.
         </Text>
         <Text style={styles.paragraph}>
           {"Cette commission est automatiquement déduite du montant reçu par le vendeur. L'acheteur paie le prix affiché sans frais supplémentaire."}
@@ -56,8 +56,8 @@ const CGVScreen: React.FC = () => {
           <Text style={styles.exampleText}>
             Prix affiché : 100 crédits{'\n'}
             Acheteur paie : 100 crédits{'\n'}
-            Vendeur reçoit : 83 crédits{'\n'}
-            Commission ShareTips : 17 crédits
+            Vendeur reçoit : 90 crédits{'\n'}
+            Commission ShareTips : 10 crédits
           </Text>
         </View>
       </Section>

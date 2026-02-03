@@ -7,7 +7,13 @@ public class SubscriptionPlan
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int DurationInDays { get; set; }
+
+    // EUR cents (Stripe Connect)
+    public int PriceCents { get; set; }
+
+    // Legacy credits system (kept for backward compatibility)
     public int PriceCredits { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

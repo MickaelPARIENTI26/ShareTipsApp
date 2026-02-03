@@ -10,7 +10,7 @@ namespace ShareTipsBackend.Utilities;
 /// </summary>
 public static class WalletOperations
 {
-    public const decimal CommissionRate = 0.17m; // 17% platform commission
+    public const decimal CommissionRate = 0.10m; // 10% platform commission
 
     /// <summary>
     /// Locks two wallets in a consistent order to prevent deadlocks.

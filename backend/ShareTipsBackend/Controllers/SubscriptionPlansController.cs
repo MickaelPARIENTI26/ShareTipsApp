@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShareTipsBackend.DTOs;
@@ -6,10 +5,9 @@ using ShareTipsBackend.Services.Interfaces;
 
 namespace ShareTipsBackend.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class SubscriptionPlansController : ControllerBase
+public class SubscriptionPlansController : ApiControllerBase
 {
     private readonly ISubscriptionPlanService _subscriptionPlanService;
 
@@ -111,18 +109,5 @@ public class SubscriptionPlansController : ControllerBase
             return NotFound(new { error = "Plan not found or not owned by you" });
 
         return NoContent();
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid user token");
-        }
-
-        return userId;
     }
 }

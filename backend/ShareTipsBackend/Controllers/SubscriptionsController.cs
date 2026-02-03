@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShareTipsBackend.DTOs;
@@ -9,11 +8,10 @@ namespace ShareTipsBackend.Controllers;
 /// <summary>
 /// Gestion des abonnements aux pronostiqueurs
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
 [Tags("Abonnements")]
-public class SubscriptionsController : ControllerBase
+public class SubscriptionsController : ApiControllerBase
 {
     private readonly ISubscriptionService _subscriptionService;
 
@@ -113,18 +111,5 @@ public class SubscriptionsController : ControllerBase
         var userId = GetUserId();
         var status = await _subscriptionService.GetSubscriptionStatusAsync(userId, tipsterId);
         return Ok(status);
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid user token");
-        }
-
-        return userId;
     }
 }

@@ -21,8 +21,9 @@ public class PurchaseServiceTests
         var consentService = new Mock<IConsentService>();
         consentService.Setup(x => x.HasConsentAsync(It.IsAny<Guid>(), It.IsAny<string>()))
             .ReturnsAsync(true);
+        var stripeService = new Mock<IStripeConnectService>();
         var logger = new Mock<ILogger<PurchaseService>>();
-        return new PurchaseService(context, consentService.Object, logger.Object);
+        return new PurchaseService(context, consentService.Object, stripeService.Object, logger.Object);
     }
 
     private async Task<(User buyer, User seller, Ticket ticket)> SetupBuyerSellerTicketAsync(
@@ -115,7 +116,7 @@ public class PurchaseServiceTests
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
             PriceCredits = 100,
-            CommissionCredits = 17,
+            CommissionCredits = 10, // 10% commission
             CreatedAt = DateTime.UtcNow
         };
         context.TicketPurchases.Add(purchase);
@@ -161,7 +162,7 @@ public class PurchaseServiceTests
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
             PriceCredits = 200,
-            CommissionCredits = 34, // 17% of 200
+            CommissionCredits = 20, // 10% of 200
             CreatedAt = DateTime.UtcNow
         };
         context.TicketPurchases.Add(purchase);
@@ -175,8 +176,8 @@ public class PurchaseServiceTests
         result[0].TicketId.Should().Be(ticket.Id);
         result[0].SellerUsername.Should().Be("seller");
         result[0].PriceCredits.Should().Be(200);
-        result[0].CommissionCredits.Should().Be(34);
-        result[0].SellerCredits.Should().Be(166); // 200 - 34
+        result[0].CommissionCredits.Should().Be(20);
+        result[0].SellerCredits.Should().Be(180); // 200 - 20
     }
 
     [Fact]
@@ -214,7 +215,7 @@ public class PurchaseServiceTests
                 TicketId = ticket.Id,
                 BuyerId = buyer.Id,
                 PriceCredits = ticket.PriceCredits,
-                CommissionCredits = (int)(ticket.PriceCredits * 0.17m),
+                CommissionCredits = (int)(ticket.PriceCredits * 0.10m), // 10% commission
                 CreatedAt = DateTime.UtcNow.AddHours(-i) // Older purchases first
             };
             purchases.Add(purchase);
@@ -239,14 +240,14 @@ public class PurchaseServiceTests
         var purchaseService = CreateService(context);
         var (buyer, seller, ticket) = await SetupBuyerSellerTicketAsync(context, ticketPrice: 1000);
 
-        // Create purchase with 17% commission
+        // Create purchase with 10% commission
         var purchase = new TicketPurchase
         {
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
             PriceCredits = 1000,
-            CommissionCredits = 170, // 17%
+            CommissionCredits = 100, // 10%
             CreatedAt = DateTime.UtcNow
         };
         context.TicketPurchases.Add(purchase);
@@ -257,50 +258,7 @@ public class PurchaseServiceTests
 
         // Assert
         result.PriceCredits.Should().Be(1000);
-        result.CommissionCredits.Should().Be(170);
-        result.SellerCredits.Should().Be(830); // 1000 - 170 = 830 (83%)
+        result.CommissionCredits.Should().Be(100);
+        result.SellerCredits.Should().Be(900); // 1000 - 100 = 900 (90%)
     }
-
-    // Note: PurchaseTicketAsync cannot be fully tested with InMemory database
-    // because it uses PostgreSQL-specific "FOR UPDATE" locking.
-    // Below are integration-style tests that would need PostgreSQL.
-    // They are commented out but show the expected behavior.
-
-    /*
-    [Fact]
-    public async Task PurchaseTicketAsync_TicketNotFound_ReturnsError()
-    {
-        // Requires PostgreSQL
-    }
-
-    [Fact]
-    public async Task PurchaseTicketAsync_BuyOwnTicket_ReturnsError()
-    {
-        // Requires PostgreSQL
-    }
-
-    [Fact]
-    public async Task PurchaseTicketAsync_TicketNotOpen_ReturnsError()
-    {
-        // Requires PostgreSQL
-    }
-
-    [Fact]
-    public async Task PurchaseTicketAsync_AlreadyPurchased_ReturnsError()
-    {
-        // Requires PostgreSQL
-    }
-
-    [Fact]
-    public async Task PurchaseTicketAsync_InsufficientBalance_ReturnsError()
-    {
-        // Requires PostgreSQL
-    }
-
-    [Fact]
-    public async Task PurchaseTicketAsync_ValidPurchase_TransfersCredits()
-    {
-        // Requires PostgreSQL
-    }
-    */
 }

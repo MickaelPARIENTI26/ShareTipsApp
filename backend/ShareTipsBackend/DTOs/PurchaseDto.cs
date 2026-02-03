@@ -20,7 +20,3 @@ public record PurchaseResultDto(
     PurchaseDto? Purchase,
     int NewBuyerBalance
 );
-
-public record PurchaseTicketRequest(
-    Guid TicketId
-);

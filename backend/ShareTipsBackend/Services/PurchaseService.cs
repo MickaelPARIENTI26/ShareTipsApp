@@ -3,9 +3,9 @@ using Microsoft.Extensions.Logging;
 using ShareTipsBackend.Common;
 using ShareTipsBackend.Data;
 using ShareTipsBackend.Domain.Entities;
+using ShareTipsBackend.Domain.Enums;
 using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services.Interfaces;
-using ShareTipsBackend.Utilities;
 
 namespace ShareTipsBackend.Services;
 
@@ -13,148 +13,139 @@ public class PurchaseService : IPurchaseService
 {
     private readonly ApplicationDbContext _context;
     private readonly IConsentService _consentService;
+    private readonly IStripeConnectService _stripeService;
     private readonly ILogger<PurchaseService> _logger;
+    private const decimal PlatformFeePercent = 0.10m; // 10% commission
 
     public PurchaseService(
         ApplicationDbContext context,
         IConsentService consentService,
+        IStripeConnectService stripeService,
         ILogger<PurchaseService> logger)
     {
         _context = context;
         _consentService = consentService;
+        _stripeService = stripeService;
         _logger = logger;
     }
 
-    public async Task<PurchaseResultDto> PurchaseTicketAsync(Guid buyerId, Guid ticketId)
+    /// <summary>
+    /// Initiate a Stripe-based ticket purchase
+    /// </summary>
+    public async Task<PaymentIntentResultDto> InitiatePurchaseAsync(Guid buyerId, Guid ticketId)
     {
-        // Check consent first (before any transaction)
+        // Check consent first
         var hasConsent = await _consentService.HasConsentAsync(buyerId, ConsentTypes.NoGuarantee);
         if (!hasConsent)
         {
-            return new PurchaseResultDto(false, "Consent required", null, 0);
+            return new PaymentIntentResultDto(false, null, null, "Consentement requis");
         }
 
-        // Use transaction for atomicity
-        await using var transaction = await _context.Database.BeginTransactionAsync();
+        // Validate ticket
+        var ticket = await _context.Tickets
+            .Include(t => t.Creator)
+            .FirstOrDefaultAsync(t => t.Id == ticketId && t.DeletedAt == null);
 
-        try
+        if (ticket == null)
         {
-            // Get ticket with creator
-            var ticket = await _context.Tickets
-                .Include(t => t.Creator)
-                .FirstOrDefaultAsync(t => t.Id == ticketId && t.DeletedAt == null);
+            return new PaymentIntentResultDto(false, null, null, "Ticket introuvable");
+        }
 
-            if (ticket == null)
-            {
-                return new PurchaseResultDto(false, "Ticket not found", null, 0);
-            }
+        if (ticket.Status != TicketStatus.Open)
+        {
+            return new PaymentIntentResultDto(false, null, null, "Ticket non disponible");
+        }
 
-            // Business rule: Cannot buy own ticket
-            if (ticket.CreatorId == buyerId)
-            {
-                return new PurchaseResultDto(false, "Cannot buy your own ticket", null, 0);
-            }
+        if (ticket.CreatorId == buyerId)
+        {
+            return new PaymentIntentResultDto(false, null, null, "Impossible d'acheter son propre ticket");
+        }
 
-            // Business rule: Ticket must be OPEN
-            if (ticket.Status != TicketStatus.Open)
-            {
-                return new PurchaseResultDto(false, "Ticket is not available for purchase", null, 0);
-            }
+        // Check if already purchased
+        var alreadyPurchased = await _context.TicketPurchases
+            .AnyAsync(p => p.TicketId == ticketId && p.BuyerId == buyerId);
+        if (alreadyPurchased)
+        {
+            return new PaymentIntentResultDto(false, null, null, "Déjà acheté");
+        }
 
-            // Check if already purchased by this buyer
-            var alreadyPurchased = await _context.TicketPurchases
-                .AnyAsync(p => p.TicketId == ticketId && p.BuyerId == buyerId);
+        // Use EUR cents price
+        var priceCents = ticket.PriceCents;
+        if (priceCents <= 0)
+        {
+            // Fallback to credits conversion if PriceCents not set (1 credit = 10 cents)
+            priceCents = ticket.PriceCredits * 10;
+        }
 
-            if (alreadyPurchased)
-            {
-                return new PurchaseResultDto(false, "You have already purchased this ticket", null, 0);
-            }
+        var commissionCents = (int)Math.Ceiling(priceCents * PlatformFeePercent);
+        var sellerAmountCents = priceCents - commissionCents;
 
-            // Lock wallets in consistent order to prevent deadlocks
-            var sellerId = ticket.CreatorId;
-            var (buyerWallet, sellerWallet) = await WalletOperations.LockWalletsInOrderAsync(
-                _context, buyerId, sellerId);
+        // Create pending purchase record
+        var purchase = new TicketPurchase
+        {
+            Id = Guid.NewGuid(),
+            TicketId = ticketId,
+            BuyerId = buyerId,
+            PriceCents = priceCents,
+            CommissionCents = commissionCents,
+            SellerAmountCents = sellerAmountCents,
+            // Legacy fields for backward compatibility
+            PriceCredits = priceCents / 10,
+            CommissionCredits = commissionCents / 10,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.TicketPurchases.Add(purchase);
+        await _context.SaveChangesAsync();
 
-            if (buyerWallet == null)
-            {
-                return new PurchaseResultDto(false, "Buyer wallet not found", null, 0);
-            }
+        // Create Stripe PaymentIntent
+        var result = await _stripeService.CreatePaymentIntentAsync(
+            buyerId,
+            ticket.CreatorId,
+            priceCents,
+            PaymentType.TicketPurchase,
+            purchase.Id,
+            $"Achat ticket: {ticket.Title}"
+        );
 
-            if (sellerWallet == null)
-            {
-                return new PurchaseResultDto(false, "Seller wallet not found", null, buyerWallet.BalanceCredits);
-            }
-
-            // Business rule: Sufficient credits (accounting for locked credits)
-            var availableCredits = buyerWallet.BalanceCredits - buyerWallet.LockedCredits;
-            if (availableCredits < ticket.PriceCredits)
-            {
-                return new PurchaseResultDto(false, "Insufficient credits", null, availableCredits);
-            }
-
-            // Calculate amounts using shared utility
-            var totalPrice = ticket.PriceCredits;
-            var (commissionCredits, sellerCredits) = WalletOperations.CalculateCommission(totalPrice);
-
-            // Transfer credits and create transaction records
-            WalletOperations.TransferCreditsWithCommission(
-                _context,
-                buyerWallet,
-                sellerWallet,
-                totalPrice,
-                ticketId,
-                TransactionType.Purchase,
-                TransactionType.Sale);
-
-            // Create purchase record
-            var purchase = new TicketPurchase
-            {
-                Id = Guid.NewGuid(),
-                TicketId = ticketId,
-                BuyerId = buyerId,
-                PriceCredits = totalPrice,
-                CommissionCredits = commissionCredits,
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.TicketPurchases.Add(purchase);
-
-            // Save and commit
+        if (result.Success && result.PaymentId.HasValue)
+        {
+            purchase.StripePaymentId = result.PaymentId;
             await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            // Load buyer info for response
-            var buyer = await _context.Users.FindAsync(buyerId);
-
-            var purchaseDto = new PurchaseDto(
-                purchase.Id,
-                ticket.Id,
-                ticket.Title,
-                ticket.CreatorId,
-                ticket.Creator?.Username ?? "Unknown",
-                buyerId,
-                buyer?.Username ?? "Unknown",
-                totalPrice,
-                commissionCredits,
-                sellerCredits,
-                purchase.CreatedAt
-            );
-
-            return new PurchaseResultDto(true, "Purchase successful", purchaseDto, buyerWallet.BalanceCredits);
         }
-        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate key") == true ||
-                                            ex.InnerException?.Message.Contains("unique constraint") == true)
+        else
         {
-            // Race condition: another request already purchased the ticket
-            _logger.LogWarning("Duplicate purchase attempt: BuyerId={BuyerId}, TicketId={TicketId}", buyerId, ticketId);
-            await transaction.RollbackAsync();
-            return new PurchaseResultDto(false, "You have already purchased this ticket", null, 0);
+            // Remove failed purchase record
+            _context.TicketPurchases.Remove(purchase);
+            await _context.SaveChangesAsync();
         }
-        catch (Exception ex)
+
+        return result;
+    }
+
+    /// <summary>
+    /// Confirm a purchase after Stripe payment succeeded
+    /// </summary>
+    public async Task<PurchaseResultDto> ConfirmPurchaseAsync(Guid purchaseId)
+    {
+        var purchase = await _context.TicketPurchases
+            .Include(p => p.StripePayment)
+            .Include(p => p.Ticket)
+                .ThenInclude(t => t!.Creator)
+            .Include(p => p.Buyer)
+            .FirstOrDefaultAsync(p => p.Id == purchaseId);
+
+        if (purchase == null)
         {
-            _logger.LogError(ex, "Purchase failed: BuyerId={BuyerId}, TicketId={TicketId}", buyerId, ticketId);
-            await transaction.RollbackAsync();
-            throw;
+            return new PurchaseResultDto(false, "Achat introuvable", null, 0);
         }
+
+        if (purchase.StripePayment?.Status != StripePaymentStatus.Succeeded)
+        {
+            return new PurchaseResultDto(false, "Paiement non confirmé", null, 0);
+        }
+
+        var purchaseDto = MapToDto(purchase);
+        return new PurchaseResultDto(true, "Achat réussi", purchaseDto, 0);
     }
 
     public async Task<IEnumerable<PurchaseDto>> GetPurchasesByBuyerAsync(Guid buyerId)

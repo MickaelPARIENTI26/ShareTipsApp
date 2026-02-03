@@ -168,7 +168,7 @@ Un pick est défini par :
 
 ### 8.2 Effets
 - Débit immédiat du wallet acheteur
-- Calcul et prélèvement automatique de la commission plateforme (17%)
+- Calcul et prélèvement automatique de la commission plateforme (10%)
 - Crédit du créateur = prix ticket - commission
 - Création transaction PURCHASE pour l’acheteur
 - Création transaction COMMISSION pour la plateforme
@@ -271,7 +271,7 @@ Périodes :
 - Tests obligatoires
 - Pas de logique financière côté client
 - Toute règle métier est appliquée côté serveur
-- Commission plateforme obligatoire (17%)
+- Commission plateforme obligatoire (10%)
 
 ---
 
@@ -286,7 +286,7 @@ Périodes :
 - Abonnement mensuel
 - Prix défini par le pronostiqueur
 - Paiement en crédits
-- Commission plateforme applicable (17%)
+- Commission plateforme applicable (10%)
 - Résiliation possible à tout moment
 
 ⚠️ Cette feature sera développée après le MVP

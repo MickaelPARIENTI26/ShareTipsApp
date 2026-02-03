@@ -90,82 +90,35 @@ public class WalletControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    // Note: AddCredits endpoint removed with MoonPay deprecation
+    // Credit/Debit endpoints are now admin-only via /api/wallet/credit and /api/wallet/debit
+
     [Fact]
-    public async Task AddCredits_ValidAmount_UpdatesBalance()
+    public async Task Credit_NonAdmin_ReturnsForbidden()
     {
-        // Arrange
+        // Arrange - create a regular user (not admin)
         await CreateAuthenticatedUserAsync();
-
-        // Get initial balance
-        var initialResponse = await Client.GetAsync("/api/wallet");
-        var initialWallet = JsonSerializer.Deserialize<WalletDto>(
-            await initialResponse.Content.ReadAsStringAsync(), JsonOptions);
-
-        var addRequest = new { amount = 100 };
+        var creditRequest = new { amount = 100, description = "Test credit" };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/add", addRequest);
+        var response = await Client.PostAsJsonAsync("/api/wallet/credit", creditRequest);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        // Verify balance increased
-        var finalResponse = await Client.GetAsync("/api/wallet");
-        var finalWallet = JsonSerializer.Deserialize<WalletDto>(
-            await finalResponse.Content.ReadAsStringAsync(), JsonOptions);
-
-        finalWallet!.Balance.Should().Be(initialWallet!.Balance + 100);
+        // Assert - non-admin should be forbidden
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
-    public async Task AddCredits_NegativeAmount_ReturnsBadRequest()
+    public async Task Debit_NonAdmin_ReturnsForbidden()
     {
-        // Arrange
+        // Arrange - create a regular user (not admin)
         await CreateAuthenticatedUserAsync();
-        var addRequest = new { amount = -50 };
+        var debitRequest = new { amount = 50, description = "Test debit" };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/add", addRequest);
+        var response = await Client.PostAsJsonAsync("/api/wallet/debit", debitRequest);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task AddCredits_ZeroAmount_ReturnsBadRequest()
-    {
-        // Arrange
-        await CreateAuthenticatedUserAsync();
-        var addRequest = new { amount = 0 };
-
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/add", addRequest);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-
-    [Fact]
-    public async Task GetTransactions_AfterAddCredits_ShowsTransaction()
-    {
-        // Arrange
-        await CreateAuthenticatedUserAsync();
-
-        // Add credits
-        var addRequest = new { amount = 250 };
-        await Client.PostAsJsonAsync("/api/wallet/add", addRequest);
-
-        // Act
-        var response = await Client.GetAsync("/api/wallet/transactions");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var content = await response.Content.ReadAsStringAsync();
-        var transactions = JsonSerializer.Deserialize<List<TransactionDto>>(content, JsonOptions);
-
-        transactions.Should().NotBeNull();
-        transactions!.Should().Contain(t => t.Amount == 250);
+        // Assert - non-admin should be forbidden
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]

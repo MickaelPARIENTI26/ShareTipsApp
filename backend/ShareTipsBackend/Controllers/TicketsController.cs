@@ -1,7 +1,4 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using ShareTipsBackend.Common;
 using ShareTipsBackend.Data;
@@ -13,11 +10,10 @@ namespace ShareTipsBackend.Controllers;
 /// <summary>
 /// Gestion des tickets de pronostics
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
 [Tags("Tickets")]
-public class TicketsController : ControllerBase
+public class TicketsController : ApiControllerBase
 {
     private readonly ITicketService _ticketService;
     private readonly IAccessControlService _accessControl;
@@ -225,49 +221,5 @@ public class TicketsController : ControllerBase
         {
             return BadRequest(new { error = ex.Message });
         }
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid user token");
-        }
-
-        return userId;
-    }
-
-    private Guid? GetUserIdOrNull()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return null;
-        }
-
-        return userId;
-    }
-
-    /// <summary>
-    /// Explicitly authenticate on anonymous endpoints to get user ID if token is provided
-    /// </summary>
-    private async Task<Guid?> GetUserIdFromAuthAsync()
-    {
-        var authResult = await HttpContext.AuthenticateAsync();
-        if (authResult.Succeeded && authResult.Principal != null)
-        {
-            var userIdClaim = authResult.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? authResult.Principal.FindFirst("sub")?.Value;
-            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
-            {
-                return userId;
-            }
-        }
-        return null;
     }
 }

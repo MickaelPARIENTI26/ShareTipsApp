@@ -6,7 +6,13 @@ public class Ticket
     public Guid CreatorId { get; set; }
     public string Title { get; set; } = string.Empty;
     public bool IsPublic { get; set; }
+
+    // EUR cents (Stripe Connect)
+    public int PriceCents { get; set; }
+
+    // Legacy credits system (kept for backward compatibility)
     public int PriceCredits { get; set; }
+
     public int ConfidenceIndex { get; set; }
     public decimal AvgOdds { get; set; }
     public string[] Sports { get; set; } = Array.Empty<string>();

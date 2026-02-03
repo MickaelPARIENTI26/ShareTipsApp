@@ -121,7 +121,7 @@ Stack cible :
 
 ### Backend
 - Achat ticket par un utilisateur
-- Commission plateforme 17%
+- Commission plateforme 10%
 - Transaction atomique : débit acheteur, crédit vendeur, crédit plateforme
 - Historique TicketPurchase
 

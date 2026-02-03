@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ShareTipsBackend.Domain.Entities;
+using ShareTipsBackend.Domain.Enums;
 
 namespace ShareTipsBackend.Data;
 
@@ -33,6 +34,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
     public DbSet<UserConsent> UserConsents => Set<UserConsent>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<StripePayment> StripePayments => Set<StripePayment>();
+    public DbSet<StripePayout> StripePayouts => Set<StripePayout>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -366,6 +369,58 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.DeviceTokens)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // StripePayment
+        modelBuilder.Entity<StripePayment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.StripePaymentIntentId).IsUnique();
+            entity.HasIndex(e => e.BuyerId);
+            entity.HasIndex(e => e.SellerId);
+            entity.HasIndex(e => e.Status);
+            entity.Property(e => e.Type).HasConversion<string>();
+            entity.Property(e => e.Status).HasConversion<string>();
+            entity.HasOne(e => e.Buyer)
+                .WithMany()
+                .HasForeignKey(e => e.BuyerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Seller)
+                .WithMany()
+                .HasForeignKey(e => e.SellerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // StripePayout
+        modelBuilder.Entity<StripePayout>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.StripePayoutId).IsUnique();
+            entity.HasIndex(e => e.TipsterId);
+            entity.HasIndex(e => e.Status);
+            entity.Property(e => e.Status).HasConversion<string>();
+            entity.HasOne(e => e.Tipster)
+                .WithMany()
+                .HasForeignKey(e => e.TipsterId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TicketPurchase - Add StripePayment navigation
+        modelBuilder.Entity<TicketPurchase>(entity =>
+        {
+            entity.HasOne(e => e.StripePayment)
+                .WithMany()
+                .HasForeignKey(e => e.StripePaymentId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Subscription - Add StripePayment navigation
+        modelBuilder.Entity<Subscription>(entity =>
+        {
+            entity.HasOne(e => e.StripePayment)
+                .WithMany()
+                .HasForeignKey(e => e.StripePaymentId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Seed Sports Data

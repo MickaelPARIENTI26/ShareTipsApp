@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,37 +10,17 @@ namespace ShareTipsBackend.Controllers;
 /// <summary>
 /// Achat de tickets
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
 [EnableRateLimiting("financial")]
 [Tags("Achats")]
-public class PurchasesController : ControllerBase
+public class PurchasesController : ApiControllerBase
 {
     private readonly IPurchaseService _purchaseService;
 
     public PurchasesController(IPurchaseService purchaseService)
     {
         _purchaseService = purchaseService;
-    }
-
-    /// <summary>
-    /// Purchase a ticket
-    /// </summary>
-    [HttpPost]
-    [ProducesResponseType(typeof(PurchaseResultDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Purchase([FromBody] PurchaseTicketRequest request)
-    {
-        var userId = GetUserId();
-        var result = await _purchaseService.PurchaseTicketAsync(userId, request.TicketId);
-
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
-
-        return Ok(result);
     }
 
     /// <summary>
@@ -70,16 +49,40 @@ public class PurchasesController : ControllerBase
         return Ok(sales);
     }
 
-    private Guid GetUserId()
+    /// <summary>
+    /// Initiate a Stripe-based ticket purchase
+    /// </summary>
+    [HttpPost("initiate")]
+    [ProducesResponseType(typeof(PaymentIntentResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> InitiatePurchase([FromBody] InitiatePurchaseRequest request)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
+        var userId = GetUserId();
+        var result = await _purchaseService.InitiatePurchaseAsync(userId, request.TicketId);
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        if (!result.Success)
         {
-            throw new UnauthorizedAccessException("Invalid user token");
+            return BadRequest(result);
         }
 
-        return userId;
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Confirm a purchase after Stripe payment succeeded
+    /// </summary>
+    [HttpPost("confirm/{purchaseId:guid}")]
+    [ProducesResponseType(typeof(PurchaseResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ConfirmPurchase(Guid purchaseId)
+    {
+        var result = await _purchaseService.ConfirmPurchaseAsync(purchaseId);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
     }
 }

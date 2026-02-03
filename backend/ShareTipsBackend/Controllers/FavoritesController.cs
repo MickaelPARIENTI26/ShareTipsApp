@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShareTipsBackend.Common;
@@ -7,10 +6,9 @@ using ShareTipsBackend.Services.Interfaces;
 
 namespace ShareTipsBackend.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class FavoritesController : ControllerBase
+public class FavoritesController : ApiControllerBase
 {
     private readonly IFavoriteService _favoriteService;
 
@@ -55,18 +53,5 @@ public class FavoritesController : ControllerBase
         var userId = GetUserId();
         var isFavorited = await _favoriteService.IsFavoritedAsync(userId, ticketId);
         return Ok(new { isFavorited });
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid user token");
-        }
-
-        return userId;
     }
 }

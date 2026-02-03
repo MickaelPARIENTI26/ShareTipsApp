@@ -62,9 +62,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Use Serilog
 builder.Host.UseSerilog();
 
-// Sentry - Error monitoring
+// Sentry - Error monitoring (skip in testing environment)
 var sentryDsn = Environment.GetEnvironmentVariable("SENTRY_DSN");
-if (!string.IsNullOrEmpty(sentryDsn))
+var isTesting = Environment.GetEnvironmentVariable("TESTING_ENVIRONMENT") == "true";
+if (!string.IsNullOrEmpty(sentryDsn) && !isTesting)
 {
     builder.WebHost.UseSentry(options =>
     {
@@ -86,7 +87,7 @@ if (!string.IsNullOrEmpty(sentryDsn))
     });
     Log.Information("Sentry initialized for environment {Environment}", builder.Environment.EnvironmentName);
 }
-else
+else if (!isTesting)
 {
     Log.Warning("Sentry DSN not configured - error monitoring disabled");
 }
@@ -102,18 +103,31 @@ var connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username=
 // Override configuration with environment variables if they exist
 var jwtSecretEnv = Environment.GetEnvironmentVariable("JWT_SECRET");
 var oddsApiKeyEnv = Environment.GetEnvironmentVariable("ODDS_API_KEY");
-var moonPaySecretEnv = Environment.GetEnvironmentVariable("MOONPAY_WEBHOOK_SECRET");
 
 if (!string.IsNullOrEmpty(jwtSecretEnv))
     builder.Configuration["Jwt:Secret"] = jwtSecretEnv;
 if (!string.IsNullOrEmpty(oddsApiKeyEnv))
     builder.Configuration["TheOddsApi:ApiKey"] = oddsApiKeyEnv;
-if (!string.IsNullOrEmpty(moonPaySecretEnv))
-    builder.Configuration["MoonPay:WebhookSecret"] = moonPaySecretEnv;
 
-// Database - PostgreSQL with EF Core
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+// Database - PostgreSQL with EF Core (skip if in testing environment)
+var isTestingEnvironment = Environment.GetEnvironmentVariable("TESTING_ENVIRONMENT") == "true";
+if (!isTestingEnvironment)
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(connectionString));
+}
+
+// Stripe Configuration
+var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+if (!string.IsNullOrEmpty(stripeSecretKey))
+{
+    Stripe.StripeConfiguration.ApiKey = stripeSecretKey;
+    Log.Information("Stripe API configured");
+}
+else
+{
+    Log.Warning("STRIPE_SECRET_KEY not configured - Stripe payments will be disabled");
+}
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"];
@@ -218,6 +232,7 @@ builder.Services.AddScoped<IAccessControlService, AccessControlService>();
 builder.Services.AddScoped<IConsentService, ConsentService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+builder.Services.AddScoped<IStripeConnectService, StripeConnectService>();
 
 // The Odds API integration
 builder.Services.Configure<TheOddsApiConfig>(
@@ -232,10 +247,17 @@ builder.Services.AddHostedService<TicketLockingService>();
 builder.Services.AddHostedService<MatchResultService>();
 builder.Services.AddHostedService<SubscriptionExpirationService>();
 
-// Rate Limiting
+// Rate Limiting (disabled in testing environment)
+var disableRateLimiting = Environment.GetEnvironmentVariable("DISABLE_RATE_LIMITING") == "true";
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // When rate limiting is disabled, allow unlimited requests
+    var permitLimit = disableRateLimiting ? int.MaxValue : 100;
+    var authPermitLimit = disableRateLimiting ? int.MaxValue : 10;
+    var financialPermitLimit = disableRateLimiting ? int.MaxValue : 20;
+    var passwordResetPermitLimit = disableRateLimiting ? int.MaxValue : 5;
 
     // Global rate limit: 100 requests per minute per IP
     options.AddPolicy("fixed", context =>
@@ -243,7 +265,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 100,
+                PermitLimit = permitLimit,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
@@ -254,7 +276,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
+                PermitLimit = authPermitLimit,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
@@ -265,7 +287,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.User?.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 20,
+                PermitLimit = financialPermitLimit,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
@@ -276,7 +298,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 5,
+                PermitLimit = passwordResetPermitLimit,
                 Window = TimeSpan.FromMinutes(15),
                 QueueLimit = 0
             }));
@@ -372,8 +394,11 @@ using (var scope = app.Services.CreateScope())
 #endif
 }
 
-// Sentry tracing (must be early for performance monitoring)
-app.UseSentryTracing();
+// Sentry tracing (must be early for performance monitoring) - skip in testing
+if (Environment.GetEnvironmentVariable("TESTING_ENVIRONMENT") != "true")
+{
+    app.UseSentryTracing();
+}
 
 // Response compression (must be early in pipeline)
 app.UseResponseCompression();

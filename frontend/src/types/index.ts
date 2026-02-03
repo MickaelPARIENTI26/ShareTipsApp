@@ -385,3 +385,42 @@ export type HomeStackParamList = {
   LeagueList: { sportCode: string; sportName: string };
   MatchList: { sportCode: string; sportName: string; leagueName?: string };
 };
+
+// --- Stripe ---
+export type StripeOnboardingStatus = 'None' | 'Pending' | 'Completed';
+
+export interface OnboardingLinkDto {
+  url: string;
+  expiresAt: string;
+}
+
+export interface ConnectedAccountStatusDto {
+  status: StripeOnboardingStatus;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  requirementsMessage: string | null;
+}
+
+export interface PaymentIntentResultDto {
+  success: boolean;
+  clientSecret: string | null;
+  paymentId: string | null;
+  message: string | null;
+}
+
+export interface TipsterWalletDto {
+  availableBalance: number;
+  pendingPayout: number;
+  totalEarned: number;
+}
+
+export interface PayoutResultDto {
+  success: boolean;
+  message: string | null;
+  amount: number | null;
+  payoutId: string | null;
+}
+
+export interface PayoutRequest {
+  amountCents: number | null;
+}

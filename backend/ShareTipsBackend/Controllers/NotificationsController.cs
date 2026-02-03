@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShareTipsBackend.Common;
@@ -10,11 +9,10 @@ namespace ShareTipsBackend.Controllers;
 /// <summary>
 /// Gestion des notifications utilisateur
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
 [Tags("Notifications")]
-public class NotificationsController : ControllerBase
+public class NotificationsController : ApiControllerBase
 {
     private readonly INotificationService _notificationService;
 
@@ -103,18 +101,5 @@ public class NotificationsController : ControllerBase
             return NotFound(new { error = "Notification not found" });
 
         return NoContent();
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid user token");
-        }
-
-        return userId;
     }
 }

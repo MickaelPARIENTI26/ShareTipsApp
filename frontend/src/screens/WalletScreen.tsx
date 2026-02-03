@@ -15,10 +15,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { userApi } from '../api/user.api';
+import { stripeApi } from '../api/stripe.api';
 import type {
   WalletDto,
   WalletTransactionDto,
 } from '../types/user.types';
+import type {
+  TipsterWalletDto,
+  ConnectedAccountStatusDto,
+} from '../types';
 import { useTheme, type ThemeColors } from '../theme';
 
 const DEPOSIT_AMOUNTS = [5, 10, 20, 50] as const;
@@ -26,7 +31,7 @@ const CREDITS_PER_EURO = 10;
 
 // --- Transaction row ---
 const TRANSACTION_TYPE_LABELS: Record<string, string> = {
-  Deposit: 'Dépôt',
+  Deposit: 'Depot',
   Purchase: 'Achat',
   Sale: 'Vente',
   Commission: 'Commission',
@@ -108,8 +113,114 @@ const TransactionRow: React.FC<{
 
 const STATUS_LABELS: Record<string, string> = {
   Pending: 'En attente',
-  Completed: 'Terminé',
-  Failed: 'Échoué',
+  Completed: 'Termine',
+  Failed: 'Echoue',
+};
+
+// --- Tipster Earnings Section ---
+const TipsterEarningsCard: React.FC<{
+  tipsterWallet: TipsterWalletDto | null;
+  stripeStatus: ConnectedAccountStatusDto | null;
+  onSetupStripe: () => void;
+  onRequestPayout: () => void;
+  loading: boolean;
+  styles: ReturnType<typeof useStyles>;
+  colors: ThemeColors;
+}> = ({
+  tipsterWallet,
+  stripeStatus,
+  onSetupStripe,
+  onRequestPayout,
+  loading,
+  styles,
+  colors,
+}) => {
+  const isStripeConfigured = stripeStatus?.status === 'Completed';
+  const canRequestPayout =
+    isStripeConfigured && (tipsterWallet?.availableBalance ?? 0) >= 10;
+
+  if (!isStripeConfigured) {
+    return (
+      <View style={styles.earningsCard}>
+        <View style={styles.earningsHeader}>
+          <Ionicons name="wallet-outline" size={24} color={colors.primary} />
+          <Text style={styles.earningsTitle}>Mes revenus tipster</Text>
+        </View>
+        <Text style={styles.setupText}>
+          Configurez Stripe pour recevoir vos paiements et retirer vos gains.
+        </Text>
+        <TouchableOpacity
+          style={styles.setupBtn}
+          onPress={onSetupStripe}
+          disabled={loading}
+        >
+          <Ionicons name="card-outline" size={18} color={colors.textOnPrimary} />
+          <Text style={styles.setupBtnText}>Configurer mes paiements</Text>
+        </TouchableOpacity>
+        {stripeStatus?.status === 'Pending' && (
+          <Text style={styles.pendingText}>
+            Configuration en cours... Terminez votre inscription Stripe.
+          </Text>
+        )}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.earningsCard}>
+      <View style={styles.earningsHeader}>
+        <Ionicons name="wallet" size={24} color={colors.success} />
+        <Text style={styles.earningsTitle}>Mes revenus</Text>
+      </View>
+
+      <View style={styles.balanceRow}>
+        <Text style={styles.balanceLabel}>Solde disponible</Text>
+        <Text style={styles.balanceValue}>
+          {tipsterWallet?.availableBalance.toFixed(2) ?? '0.00'} EUR
+        </Text>
+      </View>
+
+      {(tipsterWallet?.pendingPayout ?? 0) > 0 && (
+        <View style={styles.pendingRow}>
+          <Text style={styles.pendingLabel}>En cours de virement</Text>
+          <Text style={styles.pendingValue}>
+            {tipsterWallet?.pendingPayout.toFixed(2)} EUR
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>Total gagne</Text>
+        <Text style={styles.totalValue}>
+          {tipsterWallet?.totalEarned.toFixed(2) ?? '0.00'} EUR
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        style={[
+          styles.payoutBtn,
+          !canRequestPayout && styles.payoutBtnDisabled,
+        ]}
+        onPress={onRequestPayout}
+        disabled={!canRequestPayout || loading}
+      >
+        <Ionicons
+          name="arrow-up-circle-outline"
+          size={18}
+          color={canRequestPayout ? colors.textOnPrimary : colors.textTertiary}
+        />
+        <Text
+          style={[
+            styles.payoutBtnText,
+            !canRequestPayout && styles.payoutBtnTextDisabled,
+          ]}
+        >
+          Demander un virement
+        </Text>
+      </TouchableOpacity>
+      <Text style={styles.minText}>Minimum: 10 EUR</Text>
+    </View>
+  );
 };
 
 // --- Main screen ---
@@ -119,8 +230,14 @@ const WalletScreen: React.FC = () => {
 
   const [wallet, setWallet] = useState<WalletDto | null>(null);
   const [transactions, setTransactions] = useState<WalletTransactionDto[]>([]);
+  const [tipsterWallet, setTipsterWallet] = useState<TipsterWalletDto | null>(
+    null
+  );
+  const [stripeStatus, setStripeStatus] =
+    useState<ConnectedAccountStatusDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(false);
 
   // Deposit modal
   const [showDeposit, setShowDeposit] = useState(false);
@@ -128,14 +245,18 @@ const WalletScreen: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [walletRes, txRes] = await Promise.all([
+      const [walletRes, txRes, tipsterRes, statusRes] = await Promise.all([
         userApi.getWallet(),
         userApi.getTransactions(),
+        stripeApi.getTipsterWallet().catch(() => ({ data: null })),
+        stripeApi.getStatus().catch(() => ({ data: null })),
       ]);
       setWallet(walletRes.data);
       setTransactions(txRes.data);
+      setTipsterWallet(tipsterRes.data);
+      setStripeStatus(statusRes.data);
     } catch {
-      Alert.alert('Erreur', 'Impossible de charger les crédits');
+      Alert.alert('Erreur', 'Impossible de charger les donnees');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -153,6 +274,53 @@ const WalletScreen: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
+  // --- Stripe Setup ---
+  const handleSetupStripe = useCallback(async () => {
+    setStripeLoading(true);
+    try {
+      const { data } = await stripeApi.startOnboarding();
+      await Linking.openURL(data.url);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de lancer la configuration Stripe');
+    } finally {
+      setStripeLoading(false);
+    }
+  }, []);
+
+  // --- Payout ---
+  const handleRequestPayout = useCallback(async () => {
+    const amount = tipsterWallet?.availableBalance ?? 0;
+    Alert.alert(
+      'Demander un virement',
+      `Virer ${amount.toFixed(2)} EUR vers votre compte bancaire ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Confirmer',
+          onPress: async () => {
+            setStripeLoading(true);
+            try {
+              const { data } = await stripeApi.requestPayout();
+              if (data.success) {
+                Alert.alert(
+                  'Succes',
+                  `Virement de ${data.amount?.toFixed(2)} EUR initie`
+                );
+                fetchData();
+              } else {
+                Alert.alert('Erreur', data.message ?? 'Impossible de creer le virement');
+              }
+            } catch {
+              Alert.alert('Erreur', 'Impossible de creer le virement');
+            } finally {
+              setStripeLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [tipsterWallet, fetchData]);
+
   // --- Deposit ---
   const handleDeposit = useCallback(
     async (amountEur: number) => {
@@ -160,7 +328,7 @@ const WalletScreen: React.FC = () => {
       try {
         const { data } = await userApi.deposit(amountEur);
         if (!data.success) {
-          Alert.alert('Erreur', data.message ?? 'Impossible de créer le dépôt');
+          Alert.alert('Erreur', data.message ?? 'Impossible de creer le depot');
           return;
         }
         setShowDeposit(false);
@@ -168,12 +336,12 @@ const WalletScreen: React.FC = () => {
           await Linking.openURL(data.moonPayUrl);
         }
         Alert.alert(
-          'Dépôt initié',
-          `${data.creditsToReceive} crédits seront ajoutés après confirmation du paiement.`
+          'Depot initie',
+          `${data.creditsToReceive} credits seront ajoutes apres confirmation du paiement.`
         );
         fetchData();
       } catch {
-        Alert.alert('Erreur', 'Impossible de créer le dépôt');
+        Alert.alert('Erreur', 'Impossible de creer le depot');
       } finally {
         setDepositing(false);
       }
@@ -184,16 +352,27 @@ const WalletScreen: React.FC = () => {
   // --- Header ---
   const renderHeader = () => (
     <View>
-      {/* Balance card */}
+      {/* Tipster Earnings Card */}
+      <TipsterEarningsCard
+        tipsterWallet={tipsterWallet}
+        stripeStatus={stripeStatus}
+        onSetupStripe={handleSetupStripe}
+        onRequestPayout={handleRequestPayout}
+        loading={stripeLoading}
+        styles={styles}
+        colors={colors}
+      />
+
+      {/* Legacy Credits Balance card */}
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Crédits disponibles</Text>
-        <Text style={styles.balanceAmount}>
+        <Text style={styles.creditsLabel}>Credits disponibles</Text>
+        <Text style={styles.creditsAmount}>
           {wallet?.availableCredits ?? 0}{' '}
-          <Text style={styles.balanceUnit}>crédits</Text>
+          <Text style={styles.creditsUnit}>credits</Text>
         </Text>
         {wallet && wallet.lockedCredits > 0 && (
           <Text style={styles.lockedText}>
-            {wallet.lockedCredits} crédits réservés
+            {wallet.lockedCredits} credits reserves
           </Text>
         )}
 
@@ -201,7 +380,7 @@ const WalletScreen: React.FC = () => {
         <View style={styles.creditsInfo}>
           <Ionicons name="information-circle" size={16} color={colors.primary} />
           <Text style={styles.creditsInfoText}>
-            Les crédits servent uniquement à accéder aux contenus premium.
+            Les credits servent uniquement a acceder aux contenus premium.
           </Text>
         </View>
 
@@ -211,8 +390,12 @@ const WalletScreen: React.FC = () => {
             onPress={() => setShowDeposit(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-down-circle-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.depositBtnText}>Acheter des crédits</Text>
+            <Ionicons
+              name="arrow-down-circle-outline"
+              size={18}
+              color={colors.textOnPrimary}
+            />
+            <Text style={styles.depositBtnText}>Acheter des credits</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -235,7 +418,9 @@ const WalletScreen: React.FC = () => {
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <TransactionRow tx={item} styles={styles} colors={colors} />}
+        renderItem={({ item }) => (
+          <TransactionRow tx={item} styles={styles} colors={colors} />
+        )}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -261,17 +446,12 @@ const WalletScreen: React.FC = () => {
           activeOpacity={1}
           onPress={() => setShowDeposit(false)}
         >
-          <View
-            style={styles.modalContent}
-            onStartShouldSetResponder={() => true}
-          >
-            <Text style={styles.modalTitle}>Acheter des crédits</Text>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text style={styles.modalTitle}>Acheter des credits</Text>
             <Text style={styles.modalSubtitle}>
-              1 € = {CREDITS_PER_EURO} crédits
+              1 EUR = {CREDITS_PER_EURO} credits
             </Text>
-            <Text style={styles.modalInfo}>
-              Non convertibles en argent réel
-            </Text>
+            <Text style={styles.modalInfo}>Non convertibles en argent reel</Text>
             <View style={styles.amountGrid}>
               {DEPOSIT_AMOUNTS.map((amount) => (
                 <TouchableOpacity
@@ -281,9 +461,9 @@ const WalletScreen: React.FC = () => {
                   disabled={depositing}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.amountValue}>{amount} €</Text>
+                  <Text style={styles.amountValue}>{amount} EUR</Text>
                   <Text style={styles.amountCredits}>
-                    {amount * CREDITS_PER_EURO} crédits
+                    {amount * CREDITS_PER_EURO} credits
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -327,7 +507,128 @@ const useStyles = (colors: ThemeColors) =>
           paddingBottom: 32,
         },
 
-        // Balance card
+        // Tipster Earnings Card
+        earningsCard: {
+          backgroundColor: colors.surface,
+          borderRadius: 16,
+          padding: 20,
+          marginBottom: 16,
+          borderWidth: 1,
+          borderColor: colors.success + '30',
+        },
+        earningsHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          marginBottom: 16,
+        },
+        earningsTitle: {
+          fontSize: 18,
+          fontWeight: '700',
+          color: colors.text,
+        },
+        setupText: {
+          fontSize: 14,
+          color: colors.textSecondary,
+          marginBottom: 16,
+          lineHeight: 20,
+        },
+        setupBtn: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.primary,
+          borderRadius: 12,
+          paddingVertical: 14,
+          gap: 8,
+        },
+        setupBtnText: {
+          fontSize: 15,
+          fontWeight: '700',
+          color: colors.textOnPrimary,
+        },
+        pendingText: {
+          fontSize: 12,
+          color: colors.warning,
+          marginTop: 12,
+          textAlign: 'center',
+        },
+        balanceRow: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 8,
+        },
+        balanceLabel: {
+          fontSize: 14,
+          color: colors.textSecondary,
+        },
+        balanceValue: {
+          fontSize: 24,
+          fontWeight: '800',
+          color: colors.success,
+        },
+        pendingRow: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 8,
+        },
+        pendingLabel: {
+          fontSize: 13,
+          color: colors.textTertiary,
+        },
+        pendingValue: {
+          fontSize: 14,
+          fontWeight: '600',
+          color: colors.warning,
+        },
+        totalRow: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingTop: 12,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          marginBottom: 16,
+        },
+        totalLabel: {
+          fontSize: 13,
+          color: colors.textSecondary,
+        },
+        totalValue: {
+          fontSize: 14,
+          fontWeight: '600',
+          color: colors.text,
+        },
+        payoutBtn: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.success,
+          borderRadius: 12,
+          paddingVertical: 14,
+          gap: 8,
+        },
+        payoutBtnDisabled: {
+          backgroundColor: colors.border,
+        },
+        payoutBtnText: {
+          fontSize: 15,
+          fontWeight: '700',
+          color: colors.textOnPrimary,
+        },
+        payoutBtnTextDisabled: {
+          color: colors.textTertiary,
+        },
+        minText: {
+          fontSize: 11,
+          color: colors.textTertiary,
+          textAlign: 'center',
+          marginTop: 8,
+        },
+
+        // Legacy Credits Balance card
         balanceCard: {
           backgroundColor: colors.surface,
           borderRadius: 16,
@@ -335,17 +636,17 @@ const useStyles = (colors: ThemeColors) =>
           alignItems: 'center',
           marginBottom: 20,
         },
-        balanceLabel: {
+        creditsLabel: {
           fontSize: 14,
           color: colors.textSecondary,
           marginBottom: 8,
         },
-        balanceAmount: {
+        creditsAmount: {
           fontSize: 36,
           fontWeight: '800',
           color: colors.text,
         },
-        balanceUnit: {
+        creditsUnit: {
           fontSize: 16,
           fontWeight: '400',
           color: colors.textSecondary,

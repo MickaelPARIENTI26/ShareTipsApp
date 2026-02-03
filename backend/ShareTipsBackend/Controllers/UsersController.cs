@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +11,9 @@ namespace ShareTipsBackend.Controllers;
 /// <summary>
 /// Gestion des utilisateurs et profils
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Tags("Utilisateurs")]
-public class UsersController : ControllerBase
+public class UsersController : ApiControllerBase
 {
     private readonly IUserService _userService;
     private readonly IFollowService _followService;
@@ -385,18 +383,5 @@ public class UsersController : ControllerBase
             longestWinStreak,
             longestLoseStreak
         );
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedAccessException("Invalid user token");
-        }
-
-        return userId;
     }
 }

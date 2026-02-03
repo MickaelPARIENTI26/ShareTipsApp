@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using FluentAssertions;
 using ShareTipsBackend.DTOs;
@@ -123,10 +124,11 @@ public class TicketsControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var tickets = JsonSerializer.Deserialize<List<TicketDto>>(content, JsonOptions);
+        var result = JsonSerializer.Deserialize<PaginatedResult<TicketDto>>(content, JsonOptions);
 
-        tickets.Should().NotBeNull();
-        tickets!.Count.Should().BeGreaterThanOrEqualTo(2);
+        result.Should().NotBeNull();
+        result!.Items.Should().NotBeNull();
+        result.Items.Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
@@ -195,14 +197,20 @@ public class TicketsControllerTests : IntegrationTestBase
             Selections: null
         );
 
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/tickets/{createdTicket!.Id}", updateDto);
+        // Act - Use PATCH method (controller uses [HttpPatch])
+        var json = JsonSerializer.Serialize(updateDto, JsonOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/tickets/{createdTicket!.Id}")
+        {
+            Content = content
+        };
+        var response = await Client.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
-        var updatedTicket = JsonSerializer.Deserialize<TicketDto>(content, JsonOptions);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        var updatedTicket = JsonSerializer.Deserialize<TicketDto>(responseContent, JsonOptions);
 
         updatedTicket.Should().NotBeNull();
         updatedTicket!.Title.Should().Be("Updated Title");
@@ -230,8 +238,14 @@ public class TicketsControllerTests : IntegrationTestBase
             Selections: null
         );
 
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/tickets/{createdTicket!.Id}", updateDto);
+        // Act - Use PATCH method (controller uses [HttpPatch])
+        var json = JsonSerializer.Serialize(updateDto, JsonOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/tickets/{createdTicket!.Id}")
+        {
+            Content = content
+        };
+        var response = await Client.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);

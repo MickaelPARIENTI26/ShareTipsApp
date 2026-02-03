@@ -31,28 +31,3 @@ public record WalletOperationResponse(
     int NewBalance,
     string? Message = null
 );
-
-// --- MoonPay Deposit ---
-public record DepositRequest(
-    [Required][Range(1, 10000)] decimal AmountEur
-);
-
-public record DepositResponse(
-    bool Success,
-    Guid TransactionId,
-    int CreditsToReceive,
-    string? MoonPayUrl,
-    string? Message = null
-);
-
-public record MoonPayWebhookPayload(
-    string Type,
-    MoonPayWebhookData Data
-);
-
-public record MoonPayWebhookData(
-    string Id,
-    string Status,
-    string? ExternalTransactionId,
-    decimal? BaseCurrencyAmount
-);

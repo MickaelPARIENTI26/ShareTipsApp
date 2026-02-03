@@ -3,27 +3,18 @@ using Microsoft.AspNetCore.Mvc;
 using ShareTipsBackend.Domain.Entities;
 using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services.Interfaces;
-using System.Security.Claims;
 
 namespace ShareTipsBackend.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ConsentController : ControllerBase
+public class ConsentController : ApiControllerBase
 {
     private readonly IConsentService _consentService;
 
     public ConsentController(IConsentService consentService)
     {
         _consentService = consentService;
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        return Guid.Parse(userIdClaim!);
     }
 
     /// <summary>

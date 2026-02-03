@@ -83,8 +83,8 @@
   - wallet >= prix
   - ticket non acheté par l’utilisateur
 - Débit acheteur
-- Crédit vendeur (83%)
-- Crédit plateforme (17%)
+- Crédit vendeur (90%)
+- Crédit plateforme (10%)
 - Une seule transaction DB
 
 ---

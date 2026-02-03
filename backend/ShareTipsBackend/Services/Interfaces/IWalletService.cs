@@ -8,6 +8,4 @@ public interface IWalletService
     Task<IEnumerable<WalletTransactionDto>> GetTransactionsAsync(Guid userId);
     Task<WalletOperationResponse> CreditAsync(Guid userId, int amount, string? description = null);
     Task<WalletOperationResponse> DebitAsync(Guid userId, int amount, string? description = null);
-    Task<DepositResponse> InitiateDepositAsync(Guid userId, decimal amountEur);
-    Task<bool> ConfirmDepositAsync(string moonPayTransactionId);
 }

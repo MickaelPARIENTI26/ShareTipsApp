@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +10,10 @@ namespace ShareTipsBackend.Controllers;
 /// <summary>
 /// Gestion des tokens de notification push
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
 [Tags("Notifications Push")]
-public class DeviceTokensController : ControllerBase
+public class DeviceTokensController : ApiControllerBase
 {
     private readonly IPushNotificationService _pushService;
     private readonly ApplicationDbContext _context;
@@ -108,12 +106,5 @@ public class DeviceTokensController : ControllerBase
             .ToListAsync();
 
         return Ok(tokens);
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        return Guid.Parse(userIdClaim!);
     }
 }

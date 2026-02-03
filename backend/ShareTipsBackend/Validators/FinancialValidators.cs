@@ -61,25 +61,6 @@ public class DebitWalletRequestValidator : AbstractValidator<DebitWalletRequest>
     }
 }
 
-public class DepositRequestValidator : AbstractValidator<DepositRequest>
-{
-    public DepositRequestValidator()
-    {
-        RuleFor(x => x.AmountEur)
-            .GreaterThan(0).WithMessage("Amount must be greater than 0")
-            .LessThanOrEqualTo(10000).WithMessage("Amount must not exceed 10,000 EUR");
-    }
-}
-
-public class PurchaseTicketRequestValidator : AbstractValidator<PurchaseTicketRequest>
-{
-    public PurchaseTicketRequestValidator()
-    {
-        RuleFor(x => x.TicketId)
-            .NotEmpty().WithMessage("Ticket ID is required");
-    }
-}
-
 public class FavoriteToggleRequestValidator : AbstractValidator<FavoriteToggleRequest>
 {
     public FavoriteToggleRequestValidator()

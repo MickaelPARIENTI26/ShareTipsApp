@@ -6,7 +6,6 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  Modal,
   Alert,
   Linking,
   RefreshControl,

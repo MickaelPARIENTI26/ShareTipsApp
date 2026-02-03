@@ -221,19 +221,19 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </View>
           <Text style={styles.checkboxLabel}>
-            J'ai lu et j'accepte les{' '}
+            {"J'ai lu et j'accepte les "}
             <Text
               style={styles.linkText}
               onPress={() => navigation.navigate('CGV')}
             >
               Conditions Générales de Vente
             </Text>
-            {' '}et les{' '}
+            {" et les "}
             <Text
               style={styles.linkText}
               onPress={() => navigation.navigate('CGU')}
             >
-              Conditions d'Utilisation
+              {"Conditions d'Utilisation"}
             </Text>
           </Text>
         </TouchableOpacity>

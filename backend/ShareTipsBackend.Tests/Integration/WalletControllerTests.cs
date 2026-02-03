@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
 using ShareTipsBackend.DTOs;
@@ -39,10 +38,10 @@ public class WalletControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var wallet = JsonSerializer.Deserialize<WalletDto>(content, JsonOptions);
+        var wallet = JsonSerializer.Deserialize<TipsterWalletTestDto>(content, JsonOptions);
 
         wallet.Should().NotBeNull();
-        wallet!.Balance.Should().BeGreaterThanOrEqualTo(0);
+        wallet!.AvailableBalance.Should().BeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
@@ -71,10 +70,10 @@ public class WalletControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var transactions = JsonSerializer.Deserialize<List<TransactionDto>>(content, JsonOptions);
+        var transactions = JsonSerializer.Deserialize<List<WalletTransactionTestDto>>(content, JsonOptions);
 
         transactions.Should().NotBeNull();
-        // New user may have 0 or more transactions (welcome bonus, etc.)
+        // New user may have 0 or more transactions
     }
 
     [Fact]
@@ -90,39 +89,11 @@ public class WalletControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    // Note: AddCredits endpoint removed with MoonPay deprecation
-    // Credit/Debit endpoints are now admin-only via /api/wallet/credit and /api/wallet/debit
+    // Note: AddCredits, Credit, and Debit endpoints removed with EUR migration
+    // Wallet now uses TipsterWalletDto with EUR values
 
     [Fact]
-    public async Task Credit_NonAdmin_ReturnsForbidden()
-    {
-        // Arrange - create a regular user (not admin)
-        await CreateAuthenticatedUserAsync();
-        var creditRequest = new { amount = 100, description = "Test credit" };
-
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/credit", creditRequest);
-
-        // Assert - non-admin should be forbidden
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
-    public async Task Debit_NonAdmin_ReturnsForbidden()
-    {
-        // Arrange - create a regular user (not admin)
-        await CreateAuthenticatedUserAsync();
-        var debitRequest = new { amount = 50, description = "Test debit" };
-
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/debit", debitRequest);
-
-        // Assert - non-admin should be forbidden
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-    }
-
-    [Fact]
-    public async Task WalletBalance_NewUser_StartsWithInitialBalance()
+    public async Task WalletBalance_NewUser_StartsWithZero()
     {
         // Arrange & Act
         await CreateAuthenticatedUserAsync();
@@ -132,27 +103,29 @@ public class WalletControllerTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var wallet = JsonSerializer.Deserialize<WalletDto>(content, JsonOptions);
+        var wallet = JsonSerializer.Deserialize<TipsterWalletTestDto>(content, JsonOptions);
 
         wallet.Should().NotBeNull();
-        // New users should have some initial balance (could be 0 or welcome bonus)
-        wallet!.Balance.Should().BeGreaterThanOrEqualTo(0);
+        // New users start with 0 EUR balance (no more welcome bonus)
+        wallet!.AvailableBalance.Should().Be(0);
+        wallet.PendingPayout.Should().Be(0);
+        wallet.TotalEarned.Should().Be(0);
     }
 }
 
-// DTOs for wallet responses
-public class WalletDto
+// Test DTOs matching TipsterWalletDto and WalletTransactionDto
+public class TipsterWalletTestDto
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public int Balance { get; set; }
+    public decimal AvailableBalance { get; set; }
+    public decimal PendingPayout { get; set; }
+    public decimal TotalEarned { get; set; }
 }
 
-public class TransactionDto
+public class WalletTransactionTestDto
 {
     public Guid Id { get; set; }
-    public int Amount { get; set; }
     public string Type { get; set; } = string.Empty;
-    public string? Description { get; set; }
+    public decimal AmountEur { get; set; }
+    public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }

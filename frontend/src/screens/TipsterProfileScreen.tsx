@@ -18,13 +18,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { userApi } from '../api/user.api';
 import { followApi, type FollowInfoDto } from '../api/follow.api';
 import { marketplaceApi } from '../api/marketplace.api';
-import { purchaseApi } from '../api/purchase.api';
 import { subscriptionApi } from '../api/subscription.api';
 import { subscriptionPlanApi } from '../api/subscriptionPlan.api';
 import { useAuthStore } from '../store/auth.store';
 import { useFavoriteStore } from '../store/favorite.store';
 import { useFollowStore } from '../store/follow.store';
-import { useWalletStore } from '../store/wallet.store';
 import { useConsentStore } from '../store/consent.store';
 import { getErrorMessage } from '../utils/errors';
 import { SubscriptionGate } from '../components/SubscriptionGate';
@@ -321,9 +319,6 @@ const TipsterProfileScreen: React.FC = () => {
   const setGlobalFollowing = useFollowStore((s) => s.setFollowing);
   const hydrateFollows = useFollowStore((s) => s.hydrate);
 
-  // Global wallet store
-  const setWalletBalance = useWalletStore((s) => s.setBalance);
-
   // Consent store
   const hasConsented = useConsentStore((s) => s.hasConsented);
   const hydrateConsent = useConsentStore((s) => s.hydrate);
@@ -609,34 +604,9 @@ const TipsterProfileScreen: React.FC = () => {
   );
 
   const handleBuy = useCallback((ticket: TicketDto) => {
-    Alert.alert(
-      'Acheter ce ticket',
-      `Confirmer l'achat pour ${ticket.priceCredits} crédits ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Acheter',
-          onPress: async () => {
-            try {
-              const { data } = await purchaseApi.purchaseTicket(ticket.id);
-              if (data.success) {
-                // Update global wallet balance
-                setWalletBalance(data.newBuyerBalance);
-                Alert.alert(
-                  'Achat réussi',
-                  `Crédits restants : ${data.newBuyerBalance}`
-                );
-              } else {
-                Alert.alert('Erreur', data.message ?? 'Achat impossible');
-              }
-            } catch (err) {
-              Alert.alert('Erreur', getErrorMessage(err));
-            }
-          },
-        },
-      ]
-    );
-  }, [setWalletBalance]);
+    // Navigate to ticket detail for Stripe payment
+    navigation.navigate('TicketDetail', { ticketId: ticket.id });
+  }, [navigation]);
 
   if (loading) {
     return (

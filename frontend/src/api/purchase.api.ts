@@ -7,11 +7,7 @@ import type {
 } from '../types';
 
 export const purchaseApi = {
-  // Legacy credits-based purchase
-  purchaseTicket: (ticketId: string) =>
-    apiClient.post<PurchaseResultDto>('/api/purchases', { ticketId }),
-
-  // Stripe-based purchase (new)
+  // Stripe-based purchase
   initiatePurchase: (ticketId: string) =>
     apiClient.post<PaymentIntentResultDto>('/api/purchases/initiate', { ticketId }),
 

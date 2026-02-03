@@ -11,11 +11,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useStripe } from '@stripe/stripe-react-native';
 
 import { ticketApi } from '../api/ticket.api';
 import { purchaseApi } from '../api/purchase.api';
 import { useFavoriteStore } from '../store/favorite.store';
-import { useWalletStore } from '../store/wallet.store';
 import { useConsentStore } from '../store/consent.store';
 import { getErrorMessage } from '../utils/errors';
 import type { RootStackParamList, TicketDto } from '../types';
@@ -31,6 +31,7 @@ const SPORT_LABELS: Record<string, string> = {
 const TicketDetailScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const route = useRoute();
   const navigation =
@@ -73,9 +74,6 @@ const TicketDetailScreen: React.FC = () => {
   const isFavorited = useFavoriteStore((s) => s.favoritedIds.has(ticketId));
   const toggleFavorite = useFavoriteStore((s) => s.toggle);
   const hydrateFavorites = useFavoriteStore((s) => s.hydrate);
-
-  // Global wallet store
-  const setWalletBalance = useWalletStore((s) => s.setBalance);
 
   // Consent store
   const hasConsented = useConsentStore((s) => s.hasConsented);
@@ -123,39 +121,55 @@ const TicketDetailScreen: React.FC = () => {
       }
     }
 
-    Alert.alert(
-      'Acheter ce ticket',
-      `Confirmer l'achat pour ${ticket.priceCredits} crédits ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Acheter',
-          onPress: async () => {
-            setBuying(true);
-            try {
-              const { data } = await purchaseApi.purchaseTicket(ticket.id);
-              if (data.success) {
-                // Update global wallet balance
-                setWalletBalance(data.newBuyerBalance);
-                Alert.alert(
-                  'Achat réussi',
-                  `Crédits restants : ${data.newBuyerBalance}`
-                );
-                // Refetch ticket to unlock selections
-                await fetchTicket();
-              } else {
-                Alert.alert('Erreur', data.message ?? 'Achat impossible');
-              }
-            } catch (err) {
-              Alert.alert('Erreur', getErrorMessage(err));
-            } finally {
-              setBuying(false);
-            }
-          },
-        },
-      ]
-    );
-  }, [ticket, buying, fetchTicket, setWalletBalance, hasConsented, consentChecked, giveConsent]);
+    setBuying(true);
+    try {
+      // 1. Create PaymentIntent on server
+      const { data: initData } = await purchaseApi.initiatePurchase(ticket.id);
+
+      if (!initData.success || !initData.clientSecret) {
+        Alert.alert('Erreur', initData.message ?? 'Impossible de créer le paiement');
+        setBuying(false);
+        return;
+      }
+
+      // 2. Initialize Payment Sheet
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: initData.clientSecret,
+        merchantDisplayName: 'ShareTips',
+      });
+
+      if (initError) {
+        Alert.alert('Erreur', initError.message);
+        setBuying(false);
+        return;
+      }
+
+      // 3. Present Payment Sheet
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        // User cancelled - not an error
+        if (presentError.code !== 'Canceled') {
+          Alert.alert('Erreur', presentError.message);
+        }
+        setBuying(false);
+        return;
+      }
+
+      // 4. Confirm purchase on server
+      if (initData.paymentId) {
+        await purchaseApi.confirmPurchase(initData.paymentId);
+      }
+
+      Alert.alert('Achat réussi', 'Vous avez maintenant accès au ticket.');
+      // Refetch ticket to unlock selections
+      await fetchTicket();
+    } catch (err) {
+      Alert.alert('Erreur', getErrorMessage(err));
+    } finally {
+      setBuying(false);
+    }
+  }, [ticket, buying, fetchTicket, hasConsented, consentChecked, giveConsent, initPaymentSheet, presentPaymentSheet]);
 
   const handleTipsterPress = useCallback(() => {
     if (!ticket) return;
@@ -472,7 +486,7 @@ const TicketDetailScreen: React.FC = () => {
                 <>
                   <Ionicons name="cart" size={18} color={colors.textOnPrimary} />
                   <Text style={styles.buyBtnText}>
-                    {ticket.priceCredits} cr.
+                    {(ticket.priceCredits / 10).toFixed(2)} €
                   </Text>
                 </>
               )}

@@ -18,11 +18,9 @@ import {
   marketplaceApi,
   type MarketplaceFilters,
 } from '../api/marketplace.api';
-import { purchaseApi } from '../api/purchase.api';
 import { useAuthStore } from '../store/auth.store';
 import { useFavoriteStore } from '../store/favorite.store';
 import { useFollowStore } from '../store/follow.store';
-import { useWalletStore } from '../store/wallet.store';
 import FilterModal from '../components/marketplace/FilterPanel';
 import { ErrorBanner } from '../components/common';
 import { parseError, getErrorMessage, type AppError } from '../utils/errors';
@@ -291,9 +289,6 @@ const MarketplaceScreen: React.FC = () => {
   const toggleFollow = useFollowStore((s) => s.toggle);
   const followedIds = useFollowStore((s) => s.followedIds);
 
-  // Global wallet store
-  const setWalletBalance = useWalletStore((s) => s.setBalance);
-
   const [tickets, setTickets] = useState<TicketDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -371,37 +366,10 @@ const MarketplaceScreen: React.FC = () => {
 
   const handleBuy = useCallback(
     (ticket: TicketDto) => {
-      Alert.alert(
-        'Acheter ce ticket',
-        `Confirmer l'achat pour ${ticket.priceCredits} crédits ?`,
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: 'Acheter',
-            onPress: async () => {
-              try {
-                const { data } = await purchaseApi.purchaseTicket(ticket.id);
-                if (data.success) {
-                  // Update global wallet balance
-                  setWalletBalance(data.newBuyerBalance);
-                  Alert.alert(
-                    'Achat réussi',
-                    `Crédits restants : ${data.newBuyerBalance}`
-                  );
-                  // Refresh to update purchased status
-                  fetchTickets(1);
-                } else {
-                  Alert.alert('Erreur', data.message ?? 'Achat impossible');
-                }
-              } catch (err) {
-                Alert.alert('Erreur', getErrorMessage(err));
-              }
-            },
-          },
-        ]
-      );
+      // Navigate to ticket detail for Stripe payment
+      navigation.navigate('TicketDetail', { ticketId: ticket.id });
     },
-    [fetchTickets, setWalletBalance]
+    [navigation]
   );
 
   const handleTipsterPress = useCallback(

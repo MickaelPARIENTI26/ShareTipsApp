@@ -8,6 +8,7 @@ import { useTicketBuilderStore } from './ticketBuilder.store';
 import { useWalletStore } from './wallet.store';
 import { useNotificationStore } from './notification.store';
 import { useConsentStore } from './consent.store';
+import { useProfileStore } from './profile.store';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -155,6 +156,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     useWalletStore.getState().clear();
     useNotificationStore.getState().clear();
     useConsentStore.getState().reset();
+    useProfileStore.getState().invalidate();
     set({
       user: null,
       token: null,

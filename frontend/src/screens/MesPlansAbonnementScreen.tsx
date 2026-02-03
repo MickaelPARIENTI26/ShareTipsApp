@@ -13,6 +13,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  InputAccessoryView,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -23,6 +25,8 @@ import type {
   UpdateSubscriptionPlanRequest,
 } from '../types';
 import { useTheme, type ThemeColors } from '../theme';
+
+const PLAN_INPUT_ACCESSORY_ID = 'planInputAccessory';
 
 const MesPlansAbonnementScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -43,6 +47,8 @@ const MesPlansAbonnementScreen: React.FC = () => {
   const [durationInDays, setDurationInDays] = useState('30');
   const [priceEur, setPriceEur] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [durationFocused, setDurationFocused] = useState(false);
+  const [priceFocused, setPriceFocused] = useState(false);
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -319,26 +325,54 @@ const MesPlansAbonnementScreen: React.FC = () => {
               <View style={styles.rowInputs}>
                 <View style={[styles.inputGroup, styles.halfInput]}>
                   <Text style={styles.inputLabel}>Durée (jours) *</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={durationInDays}
-                    onChangeText={setDurationInDays}
-                    placeholder="30"
-                    placeholderTextColor={colors.textTertiary}
-                    keyboardType="number-pad"
-                  />
+                  <View style={styles.inputWithButton}>
+                    <TextInput
+                      style={[styles.textInput, styles.textInputFlex]}
+                      value={durationInDays}
+                      onChangeText={setDurationInDays}
+                      placeholder="30"
+                      placeholderTextColor={colors.textTertiary}
+                      keyboardType="number-pad"
+                      onFocus={() => setDurationFocused(true)}
+                      onBlur={() => setDurationFocused(false)}
+                      inputAccessoryViewID={Platform.OS === 'ios' ? PLAN_INPUT_ACCESSORY_ID : undefined}
+                    />
+                    {durationFocused && (
+                      <TouchableOpacity
+                        style={styles.inlineOkButton}
+                        onPress={() => Keyboard.dismiss()}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.inlineOkButtonText}>OK</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
 
                 <View style={[styles.inputGroup, styles.halfInput]}>
                   <Text style={styles.inputLabel}>Prix (EUR) *</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={priceEur}
-                    onChangeText={setPriceEur}
-                    placeholder="9.99"
-                    placeholderTextColor={colors.textTertiary}
-                    keyboardType="decimal-pad"
-                  />
+                  <View style={styles.inputWithButton}>
+                    <TextInput
+                      style={[styles.textInput, styles.textInputFlex]}
+                      value={priceEur}
+                      onChangeText={setPriceEur}
+                      placeholder="9.99"
+                      placeholderTextColor={colors.textTertiary}
+                      keyboardType="decimal-pad"
+                      onFocus={() => setPriceFocused(true)}
+                      onBlur={() => setPriceFocused(false)}
+                      inputAccessoryViewID={Platform.OS === 'ios' ? PLAN_INPUT_ACCESSORY_ID : undefined}
+                    />
+                    {priceFocused && (
+                      <TouchableOpacity
+                        style={styles.inlineOkButton}
+                        onPress={() => Keyboard.dismiss()}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.inlineOkButtonText}>OK</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               </View>
 
@@ -385,6 +419,22 @@ const MesPlansAbonnementScreen: React.FC = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* InputAccessoryView for numeric keyboards on iOS */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={PLAN_INPUT_ACCESSORY_ID}>
+          <View style={styles.accessoryBar}>
+            <View style={styles.accessoryBarSpacer} />
+            <TouchableOpacity
+              style={styles.accessoryBtn}
+              onPress={() => Keyboard.dismiss()}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.accessoryBtnText}>Terminé</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </View>
   );
 };
@@ -561,6 +611,25 @@ const useStyles = (colors: ThemeColors) =>
         halfInput: {
           flex: 1,
         },
+        inputWithButton: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+        },
+        textInputFlex: {
+          flex: 1,
+        },
+        inlineOkButton: {
+          backgroundColor: colors.primary,
+          borderRadius: 8,
+          paddingHorizontal: 14,
+          paddingVertical: 14,
+        },
+        inlineOkButtonText: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: colors.textOnPrimary,
+        },
         switchRow: {
           flexDirection: 'row',
           justifyContent: 'space-between',
@@ -608,6 +677,29 @@ const useStyles = (colors: ThemeColors) =>
           fontSize: 16,
           fontWeight: '600',
           color: colors.textOnPrimary,
+        },
+        accessoryBar: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.surface,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.border,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+        },
+        accessoryBarSpacer: {
+          flex: 1,
+        },
+        accessoryBtn: {
+          backgroundColor: colors.primary,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          borderRadius: 6,
+        },
+        accessoryBtnText: {
+          color: colors.textOnPrimary,
+          fontSize: 15,
+          fontWeight: '600',
         },
       }),
     [colors]

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   Keyboard,
-  InputAccessoryView,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,7 +13,7 @@ import type { TicketVisibility } from '../../store/ticketBuilder.store';
 import { useTheme, type ThemeColors } from '../../theme';
 import { validateTicketPrice, RULES } from '../../utils/validation';
 
-const PRICE_INPUT_ACCESSORY_ID = 'priceInputAccessory';
+export const PRICE_INPUT_ACCESSORY_ID = 'priceInputAccessory';
 
 interface VisibilitySelectorProps {
   visibility: TicketVisibility;
@@ -33,6 +32,7 @@ const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
   const styles = useStyles(colors);
   const [priceText, setPriceText] = useState(priceEur != null ? String(priceEur) : '');
   const [touched, setTouched] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const isPrivate = visibility === 'PRIVATE';
   const priceValidation = validateTicketPrice(priceText, isPrivate);
@@ -118,30 +118,26 @@ const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
               placeholderTextColor={colors.textTertiary}
               value={priceText}
               onChangeText={handlePriceChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               onSubmitEditing={() => Keyboard.dismiss()}
               inputAccessoryViewID={Platform.OS === 'ios' ? PRICE_INPUT_ACCESSORY_ID : undefined}
             />
             <Text style={styles.priceSuffix}>EUR</Text>
+            {isFocused && (
+              <TouchableOpacity
+                style={styles.okButton}
+                onPress={() => Keyboard.dismiss()}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.okButtonText}>OK</Text>
+              </TouchableOpacity>
+            )}
           </View>
           {touched && !priceValidation.isValid && (
             <Text style={styles.priceError}>{priceValidation.error}</Text>
           )}
         </View>
-      )}
-
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID={PRICE_INPUT_ACCESSORY_ID}>
-          <View style={styles.accessoryBar}>
-            <View style={styles.accessoryBarSpacer} />
-            <TouchableOpacity
-              style={styles.accessoryBtn}
-              onPress={() => Keyboard.dismiss()}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.accessoryBtnText}>Valider</Text>
-            </TouchableOpacity>
-          </View>
-        </InputAccessoryView>
       )}
     </View>
   );
@@ -203,29 +199,6 @@ const useStyles = (colors: ThemeColors) =>
           borderRadius: 8,
           paddingHorizontal: 12,
         },
-        accessoryBar: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.surface,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.border,
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-        },
-        accessoryBarSpacer: {
-          flex: 1,
-        },
-        accessoryBtn: {
-          backgroundColor: colors.primary,
-          paddingHorizontal: 16,
-          paddingVertical: 8,
-          borderRadius: 6,
-        },
-        accessoryBtnText: {
-          color: colors.textOnPrimary,
-          fontSize: 15,
-          fontWeight: '600',
-        },
         priceInput: {
           flex: 1,
           fontSize: 16,
@@ -241,6 +214,18 @@ const useStyles = (colors: ThemeColors) =>
           fontSize: 14,
           fontWeight: '600',
           color: colors.textSecondary,
+        },
+        okButton: {
+          backgroundColor: colors.primary,
+          borderRadius: 6,
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          marginLeft: 8,
+        },
+        okButtonText: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: colors.textOnPrimary,
         },
         priceError: {
           color: colors.danger,

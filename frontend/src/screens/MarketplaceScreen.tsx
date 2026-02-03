@@ -47,6 +47,26 @@ function formatDate(iso: string): string {
   });
 }
 
+function formatDateRange(firstMatchTime: string, lastMatchTime: string, selectionCount: number): string {
+  const first = new Date(firstMatchTime);
+  const last = new Date(lastMatchTime);
+
+  const formatShort = (d: Date) => d.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  // Single selection or same time - show only start
+  if (selectionCount <= 1 || first.getTime() === last.getTime()) {
+    return formatShort(first);
+  }
+
+  // Multiple selections with different times - show range
+  return `${formatShort(first)} → ${formatShort(last)}`;
+}
+
 function countActiveFilters(filters: MarketplaceFilters): number {
   let count = 0;
   if (filters.sports?.length) count++;
@@ -202,6 +222,14 @@ const MarketplaceTicketCard = React.memo<{
         {autoTitle}
       </Text>
       <Text style={styles.cardSubtitle}>{subtitle}</Text>
+
+      {/* Date range */}
+      <View style={styles.dateRangeRow}>
+        <Ionicons name="calendar-outline" size={13} color={colors.textSecondary} />
+        <Text style={styles.dateRangeText}>
+          {formatDateRange(ticket.firstMatchTime, ticket.lastMatchTime, count)}
+        </Text>
+      </View>
 
       {/* Meta */}
       <View style={styles.cardMeta}>
@@ -620,7 +648,18 @@ const useStyles = (colors: ThemeColors) =>
         cardSubtitle: {
           fontSize: 13,
           color: colors.textSecondary,
+          marginBottom: 6,
+        },
+        dateRangeRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 5,
           marginBottom: 10,
+        },
+        dateRangeText: {
+          fontSize: 12,
+          color: colors.textSecondary,
+          fontWeight: '500',
         },
         cardMeta: {
           flexDirection: 'row',

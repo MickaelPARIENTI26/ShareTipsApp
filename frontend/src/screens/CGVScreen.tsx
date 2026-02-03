@@ -1,18 +1,35 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme, type ThemeColors } from '../theme';
 
 const CGVScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
+  const navigation = useNavigation();
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={styles.title}>Conditions Générales de Vente</Text>
+    <SafeAreaView style={styles.safeArea}>
+      {/* Header with close button */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="close" size={28} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>CGV</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Conditions Générales de Vente</Text>
       <Text style={styles.lastUpdate}>Dernière mise à jour : février 2026</Text>
 
       <Section title="1. Objet" styles={styles}>
@@ -116,6 +133,7 @@ const CGVScreen: React.FC = () => {
         </Text>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -136,6 +154,30 @@ const useStyles = (colors: ThemeColors) =>
   useMemo(
     () =>
       StyleSheet.create({
+        safeArea: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        closeButton: {
+          padding: 4,
+        },
+        headerTitle: {
+          fontSize: 17,
+          fontWeight: '600',
+          color: colors.text,
+        },
+        headerSpacer: {
+          width: 36,
+        },
         container: {
           flex: 1,
           backgroundColor: colors.background,

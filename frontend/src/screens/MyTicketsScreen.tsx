@@ -46,17 +46,9 @@ function formatMatchDate(iso: string | null): string {
   });
 }
 
-function getMatchDateRange(ticket: TicketDto): { start: string; end: string } | null {
-  const matchTimes = ticket.selections
-    .map(s => s.matchStartTime)
-    .filter((t): t is string => t !== null)
-    .map(t => new Date(t).getTime())
-    .sort((a, b) => a - b);
-
-  if (matchTimes.length === 0) return null;
-
-  const startDate = new Date(matchTimes[0]);
-  const endDate = new Date(matchTimes[matchTimes.length - 1]);
+function formatDateRange(firstMatchTime: string, lastMatchTime: string, selectionCount: number): string {
+  const first = new Date(firstMatchTime);
+  const last = new Date(lastMatchTime);
 
   const formatShort = (d: Date) => d.toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -65,10 +57,13 @@ function getMatchDateRange(ticket: TicketDto): { start: string; end: string } | 
     minute: '2-digit',
   });
 
-  return {
-    start: formatShort(startDate),
-    end: matchTimes.length > 1 ? formatShort(endDate) : '',
-  };
+  // Single selection or same time - show only start
+  if (selectionCount <= 1 || first.getTime() === last.getTime()) {
+    return formatShort(first);
+  }
+
+  // Multiple selections with different times
+  return `${formatShort(first)} → ${formatShort(last)}`;
 }
 
 const TicketCard: React.FC<{
@@ -101,7 +96,8 @@ const TicketCard: React.FC<{
     Lose: 'Non validé',
   };
 
-  const dateRange = getMatchDateRange(ticket);
+  const selectionCount = ticket.selectionCount ?? ticket.selections?.length ?? 0;
+  const dateRangeText = formatDateRange(ticket.firstMatchTime, ticket.lastMatchTime, selectionCount);
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
@@ -120,16 +116,10 @@ const TicketCard: React.FC<{
       </View>
 
       {/* Match dates */}
-      {dateRange && (
-        <View style={styles.dateRangeContainer}>
-          <Ionicons name="calendar-outline" size={14} color={colors.textOnPrimary} />
-          <Text style={styles.dateRangeText}>
-            {dateRange.end
-              ? `${dateRange.start} → ${dateRange.end}`
-              : dateRange.start}
-          </Text>
-        </View>
-      )}
+      <View style={styles.dateRangeContainer}>
+        <Ionicons name="calendar-outline" size={14} color={colors.textOnPrimary} />
+        <Text style={styles.dateRangeText}>{dateRangeText}</Text>
+      </View>
 
       <View style={styles.cardMeta}>
         <View style={styles.metaRow}>
@@ -283,6 +273,7 @@ const MyTicketsScreen: React.FC = () => {
     <FlatList
       data={tickets}
       keyExtractor={(item) => item.id}
+      style={styles.container}
       contentContainerStyle={styles.list}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -312,6 +303,10 @@ const useStyles = (colors: ThemeColors) =>
   useMemo(
     () =>
       StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
         center: {
           flex: 1,
           justifyContent: 'center',
@@ -322,7 +317,7 @@ const useStyles = (colors: ThemeColors) =>
         list: {
           padding: 12,
           paddingBottom: 24,
-          backgroundColor: colors.background,
+          flexGrow: 1,
         },
         errorText: {
           color: colors.danger,

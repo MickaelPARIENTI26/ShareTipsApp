@@ -14,6 +14,7 @@ public class Ticket
     public decimal AvgOdds { get; set; }
     public string[] Sports { get; set; } = Array.Empty<string>();
     public DateTime FirstMatchTime { get; set; }
+    public DateTime LastMatchTime { get; set; }
     public TicketStatus Status { get; set; }
     public TicketResult Result { get; set; }
     public DateTime CreatedAt { get; set; }

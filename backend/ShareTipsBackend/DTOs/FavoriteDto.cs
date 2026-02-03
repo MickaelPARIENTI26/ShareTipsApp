@@ -12,6 +12,7 @@ public record FavoriteTicketDto(
     decimal AvgOdds,
     string[] Sports,
     DateTime FirstMatchTime,
+    DateTime LastMatchTime,
     string Status,
     string Result,
     DateTime FavoritedAt

@@ -1,11 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   Animated,
   Dimensions,
   ScrollView,
   Keyboard,
+  InputAccessoryView,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,7 +19,7 @@ import { navigationRef } from '../../navigation/navigationRef';
 import TicketBuilderHeader from './TicketBuilderHeader';
 import SelectionItem from './SelectionItem';
 import ConfidenceSelector from './ConfidenceSelector';
-import VisibilitySelector from './VisibilitySelector';
+import VisibilitySelector, { PRICE_INPUT_ACCESSORY_ID } from './VisibilitySelector';
 import TicketBuilderFooter from './TicketBuilderFooter';
 import type { TicketDraft } from '../../types';
 
@@ -63,6 +67,20 @@ const TicketBuilder: React.FC = () => {
       setActiveRoute(route.name);
     }
   }, []);
+
+  // Wrapper to dismiss keyboard when closing the ticket builder
+  const handleToggle = useCallback(() => {
+    if (isOpen) {
+      Keyboard.dismiss();
+    }
+    toggleTicketBuilder();
+  }, [isOpen, toggleTicketBuilder]);
+
+  // Wrapper to dismiss keyboard when clearing selections
+  const handleClear = useCallback(() => {
+    Keyboard.dismiss();
+    clear();
+  }, [clear]);
 
   useEffect(() => {
     // Initial sync once navigator is ready
@@ -112,60 +130,78 @@ const TicketBuilder: React.FC = () => {
   };
 
   return (
-    <View style={[styles.wrapper, { bottom: bottomOffset }]}>
-      <View style={styles.container}>
-        <TicketBuilderHeader
-          count={selections.length}
-          isOpen={isOpen}
-          totalOdds={totalOdds()}
-          onToggle={toggleTicketBuilder}
-        />
-        <Animated.View style={[styles.body, { maxHeight: bodyHeight }]}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Selections list */}
-            {selections.map((sel) => (
-              <SelectionItem
-                key={sel.selectionId}
-                item={sel}
-                onRemove={removeSelection}
-              />
-            ))}
-
-            {/* Confidence index */}
-            <View style={styles.section}>
-              <ConfidenceSelector
-                value={confidenceIndex}
-                onChange={setConfidenceIndex}
-              />
-            </View>
-
-            {/* Visibility */}
-            <View style={styles.section}>
-              <VisibilitySelector
-                visibility={visibility}
-                priceEur={priceEur}
-                onVisibilityChange={setVisibility}
-                onPriceChange={setPriceEur}
-              />
-            </View>
-          </ScrollView>
-
-          <TicketBuilderFooter
-            totalOdds={totalOdds()}
+    <>
+      <View style={[styles.wrapper, { bottom: bottomOffset }]}>
+        <View style={styles.container}>
+          <TicketBuilderHeader
             count={selections.length}
-            confidenceIndex={confidenceIndex}
-            visibility={visibility}
-            priceEur={priceEur}
-            onClear={clear}
-            onSubmit={handleSubmit}
+            isOpen={isOpen}
+            totalOdds={totalOdds()}
+            onToggle={handleToggle}
           />
-        </Animated.View>
+          <Animated.View style={[styles.body, { maxHeight: bodyHeight }]}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* Selections list */}
+              {selections.map((sel) => (
+                <SelectionItem
+                  key={sel.selectionId}
+                  item={sel}
+                  onRemove={removeSelection}
+                />
+              ))}
+
+              {/* Confidence index */}
+              <View style={styles.section}>
+                <ConfidenceSelector
+                  value={confidenceIndex}
+                  onChange={setConfidenceIndex}
+                />
+              </View>
+
+              {/* Visibility */}
+              <View style={styles.section}>
+                <VisibilitySelector
+                  visibility={visibility}
+                  priceEur={priceEur}
+                  onVisibilityChange={setVisibility}
+                  onPriceChange={setPriceEur}
+                />
+              </View>
+            </ScrollView>
+
+            <TicketBuilderFooter
+              totalOdds={totalOdds()}
+              count={selections.length}
+              confidenceIndex={confidenceIndex}
+              visibility={visibility}
+              priceEur={priceEur}
+              onClear={handleClear}
+              onSubmit={handleSubmit}
+            />
+          </Animated.View>
+        </View>
       </View>
-    </View>
+
+      {/* InputAccessoryView must be rendered outside animated/overflow views */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={PRICE_INPUT_ACCESSORY_ID}>
+          <View style={styles.accessoryBar}>
+            <View style={styles.accessoryBarSpacer} />
+            <TouchableOpacity
+              style={styles.accessoryBtn}
+              onPress={() => Keyboard.dismiss()}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.accessoryBtnText}>Terminé</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
+    </>
   );
 };
 
@@ -200,6 +236,29 @@ const useStyles = (colors: ThemeColors) =>
         },
         section: {
           marginTop: 8,
+        },
+        accessoryBar: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.surface,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.border,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+        },
+        accessoryBarSpacer: {
+          flex: 1,
+        },
+        accessoryBtn: {
+          backgroundColor: colors.primary,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          borderRadius: 6,
+        },
+        accessoryBtnText: {
+          color: colors.textOnPrimary,
+          fontSize: 15,
+          fontWeight: '600',
         },
       }),
     [colors]

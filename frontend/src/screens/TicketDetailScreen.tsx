@@ -29,6 +29,51 @@ const SPORT_LABELS: Record<string, string> = {
   ESPORT: 'Esport',
 };
 
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDateRangeSummary(firstMatchTime: string, lastMatchTime: string): {
+  isSameDay: boolean;
+  firstDate: string;
+  lastDate: string;
+  duration: string;
+} {
+  const first = new Date(firstMatchTime);
+  const last = new Date(lastMatchTime);
+
+  const isSameDay = first.toDateString() === last.toDateString();
+
+  const firstDate = formatDateTime(firstMatchTime);
+  const lastDate = formatDateTime(lastMatchTime);
+
+  // Calculate duration in days/hours
+  const diffMs = last.getTime() - first.getTime();
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  const remainingHours = diffHours % 24;
+
+  let duration = '';
+  if (diffDays > 0) {
+    duration = `${diffDays}j`;
+    if (remainingHours > 0) {
+      duration += ` ${remainingHours}h`;
+    }
+  } else if (diffHours > 0) {
+    duration = `${diffHours}h`;
+  } else {
+    duration = 'Même heure';
+  }
+
+  return { isSameDay, firstDate, lastDate, duration };
+}
+
 const TicketDetailScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
@@ -297,6 +342,47 @@ const TicketDetailScreen: React.FC = () => {
               </Text>
             </View>
           </View>
+        </View>
+
+        {/* Timeline */}
+        <View style={styles.timelineCard}>
+          <View style={styles.timelineTitleRow}>
+            <Ionicons name="time-outline" size={16} color={colors.primary} />
+            <Text style={styles.timelineTitle}>Chronologie</Text>
+          </View>
+          {(() => {
+            const { isSameDay, firstDate, lastDate, duration } = formatDateRangeSummary(
+              ticket.firstMatchTime,
+              ticket.lastMatchTime
+            );
+            return (
+              <>
+                <View style={styles.timelineRow}>
+                  <View style={styles.timelineDot} />
+                  <View style={styles.timelineContent}>
+                    <Text style={styles.timelineLabel}>Début</Text>
+                    <Text style={styles.timelineValue}>{firstDate}</Text>
+                  </View>
+                </View>
+                {!isSameDay && (
+                  <>
+                    <View style={styles.timelineLine} />
+                    <View style={styles.timelineRow}>
+                      <View style={[styles.timelineDot, styles.timelineDotEnd]} />
+                      <View style={styles.timelineContent}>
+                        <Text style={styles.timelineLabel}>Fin</Text>
+                        <Text style={styles.timelineValue}>{lastDate}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.durationBadge}>
+                      <Ionicons name="hourglass-outline" size={12} color={colors.textSecondary} />
+                      <Text style={styles.durationText}>Durée: {duration}</Text>
+                    </View>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </View>
 
         {/* Sports */}
@@ -632,6 +718,73 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           gap: 4,
+        },
+
+        // Timeline
+        timelineCard: {
+          backgroundColor: colors.surface,
+          borderRadius: 12,
+          padding: 14,
+          marginBottom: 12,
+        },
+        timelineTitleRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          marginBottom: 12,
+        },
+        timelineTitle: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: colors.primary,
+        },
+        timelineRow: {
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          gap: 10,
+        },
+        timelineDot: {
+          width: 12,
+          height: 12,
+          borderRadius: 6,
+          backgroundColor: colors.primary,
+          marginTop: 4,
+        },
+        timelineDotEnd: {
+          backgroundColor: colors.success,
+        },
+        timelineLine: {
+          width: 2,
+          height: 20,
+          backgroundColor: colors.border,
+          marginLeft: 5,
+          marginVertical: 4,
+        },
+        timelineContent: {
+          flex: 1,
+        },
+        timelineLabel: {
+          fontSize: 12,
+          color: colors.textSecondary,
+        },
+        timelineValue: {
+          fontSize: 14,
+          fontWeight: '600',
+          color: colors.text,
+          marginTop: 2,
+        },
+        durationBadge: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          marginTop: 10,
+          paddingTop: 10,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.border,
+        },
+        durationText: {
+          fontSize: 12,
+          color: colors.textSecondary,
         },
 
         // Sports

@@ -158,32 +158,25 @@ public class TicketService : ITicketService
         var ticketIds = tickets.Select(t => t.Id).ToList();
         var creatorIds = tickets.Select(t => t.CreatorId).Distinct().ToList();
 
-        // Run auxiliary queries in parallel (only for the fetched tickets/creators)
-        var purchasedIdsTask = currentUserId.HasValue
-            ? _context.TicketPurchases
+        // Run auxiliary queries SEQUENTIALLY (DbContext is not thread-safe)
+        var purchasedIds = currentUserId.HasValue
+            ? (await _context.TicketPurchases
                 .Where(p => p.BuyerId == currentUserId.Value && ticketIds.Contains(p.TicketId))
                 .Select(p => p.TicketId)
-                .ToListAsync()
-            : Task.FromResult(new List<Guid>());
+                .ToListAsync()).ToHashSet()
+            : new HashSet<Guid>();
 
-        var subscribedTipsterIdsTask = currentUserId.HasValue
-            ? _context.Subscriptions
+        var subscribedTipsterIds = currentUserId.HasValue
+            ? (await _context.Subscriptions
                 .Where(s => s.SubscriberId == currentUserId.Value
                     && creatorIds.Contains(s.TipsterId)
                     && s.Status == SubscriptionStatus.Active
                     && s.EndDate > DateTime.UtcNow)
                 .Select(s => s.TipsterId)
-                .ToListAsync()
-            : Task.FromResult(new List<Guid>());
+                .ToListAsync()).ToHashSet()
+            : new HashSet<Guid>();
 
-        var matchInfoTask = ResolveMatchInfoAsync(tickets);
-
-        // Await all in parallel
-        await Task.WhenAll(purchasedIdsTask, subscribedTipsterIdsTask, matchInfoTask);
-
-        var purchasedIds = (await purchasedIdsTask).ToHashSet();
-        var subscribedTipsterIds = (await subscribedTipsterIdsTask).ToHashSet();
-        var matchInfo = await matchInfoTask;
+        var matchInfo = await ResolveMatchInfoAsync(tickets);
 
         // Map to DTOs, stripping selections for private tickets without access
         var dtos = tickets.Select(t =>
@@ -265,6 +258,10 @@ public class TicketService : ITicketService
             ? matches.Min(m => m.StartTime)
             : DateTime.UtcNow.AddDays(1);
 
+        var lastMatchTime = matches.Any()
+            ? matches.Max(m => m.StartTime)
+            : firstMatchTime;
+
         // Extract sports from selections
         var sports = dto.Selections.Select(s => s.Sport).Distinct().ToArray();
 
@@ -280,6 +277,7 @@ public class TicketService : ITicketService
             AvgOdds = avgOdds,
             Sports = sports,
             FirstMatchTime = firstMatchTime,
+            LastMatchTime = lastMatchTime,
             Status = TicketStatus.Open,
             Result = TicketResult.Pending,
             CreatedAt = DateTime.UtcNow,
@@ -445,6 +443,10 @@ public class TicketService : ITicketService
                 ? matches.Min(m => m.StartTime)
                 : DateTime.UtcNow.AddDays(1);
 
+            ticket.LastMatchTime = matches.Any()
+                ? matches.Max(m => m.StartTime)
+                : ticket.FirstMatchTime;
+
             // Recalculate sports
             ticket.Sports = dto.Selections.Select(s => s.Sport).Distinct().ToArray();
         }
@@ -588,6 +590,8 @@ public class TicketService : ITicketService
             ticket.AvgOdds,
             ticket.Sports,
             ticket.FirstMatchTime,
+            // Use FirstMatchTime as fallback if LastMatchTime is not set (legacy data)
+            ticket.LastMatchTime > DateTime.MinValue ? ticket.LastMatchTime : ticket.FirstMatchTime,
             ticket.Status.ToString(),
             ticket.Result.ToString(),
             ticket.CreatedAt,

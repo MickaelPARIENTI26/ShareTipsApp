@@ -148,7 +148,9 @@ const MatchListScreen: React.FC = () => {
       }
       renderItem={({ item: group }) => (
         <View>
-          <Text style={styles.dateHeader}>{group.dateLabel}</Text>
+          <View style={styles.dateHeaderContainer}>
+            <Text style={styles.dateHeader}>{group.dateLabel}</Text>
+          </View>
           {group.matches.map((match) => (
             <View key={match.id} style={styles.matchWrapper}>
               {!leagueName && (
@@ -177,15 +179,21 @@ const useStyles = (colors: ThemeColors) =>
         list: {
           padding: 12,
           paddingBottom: 24,
+          backgroundColor: colors.background,
+        },
+        dateHeaderContainer: {
+          backgroundColor: colors.surfaceSecondary,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          marginTop: 16,
+          marginBottom: 10,
         },
         dateHeader: {
           fontSize: 15,
           fontWeight: '700',
           color: colors.text,
           textTransform: 'capitalize',
-          marginTop: 16,
-          marginBottom: 10,
-          paddingHorizontal: 4,
         },
         matchWrapper: {
           marginBottom: 8,

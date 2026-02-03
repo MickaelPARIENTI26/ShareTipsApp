@@ -122,6 +122,7 @@ export interface TicketDto {
   avgOdds: number;
   sports: string[];
   firstMatchTime: string;
+  lastMatchTime: string;
   status: string;
   result: string;
   createdAt: string;
@@ -251,6 +252,7 @@ export interface FavoriteTicketDto {
   avgOdds: number;
   sports: string[];
   firstMatchTime: string;
+  lastMatchTime: string;
   status: string;
   result: string;
   favoritedAt: string;

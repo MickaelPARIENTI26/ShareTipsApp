@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  type TextInput as TextInputType,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -38,6 +39,12 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { loading, error, register, clearError } = useAuthStore();
   const { colors, isDark } = useTheme();
   const styles = useStyles(colors);
+
+  // Refs for input focus navigation
+  const emailRef = useRef<TextInputType>(null);
+  const passwordRef = useRef<TextInputType>(null);
+  const confirmPasswordRef = useRef<TextInputType>(null);
+  const dateOfBirthRef = useRef<TextInputType>(null);
 
   const usernameValidation = validateUsername(username);
   const emailValidation = validateEmail(email);
@@ -122,12 +129,16 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           textContentType="username"
           autoComplete="username"
           editable={!loading}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => emailRef.current?.focus()}
         />
         {username.length > 0 && !usernameValidation.isValid && (
           <Text style={styles.fieldError}>{usernameValidation.error}</Text>
         )}
 
         <TextInput
+          ref={emailRef}
           style={[
             styles.input,
             email.length > 0 && !emailValidation.isValid && styles.inputError,
@@ -141,12 +152,16 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           textContentType="emailAddress"
           autoComplete="email"
           editable={!loading}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
         {email.length > 0 && !emailValidation.isValid && (
           <Text style={styles.fieldError}>{emailValidation.error}</Text>
         )}
 
         <TextInput
+          ref={passwordRef}
           style={[
             styles.input,
             password.length > 0 && !passwordValidation.isValid && styles.inputError,
@@ -159,12 +174,16 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           textContentType="newPassword"
           autoComplete="new-password"
           editable={!loading}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => confirmPasswordRef.current?.focus()}
         />
         {password.length > 0 && !passwordValidation.isValid && (
           <Text style={styles.fieldError}>{passwordValidation.error}</Text>
         )}
 
         <TextInput
+          ref={confirmPasswordRef}
           style={[
             styles.input,
             confirmPassword.length > 0 && !confirmValidation.isValid && styles.inputError,
@@ -176,12 +195,16 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           secureTextEntry
           textContentType="newPassword"
           editable={!loading}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => dateOfBirthRef.current?.focus()}
         />
         {confirmPassword.length > 0 && !confirmValidation.isValid && (
           <Text style={styles.fieldError}>{confirmValidation.error}</Text>
         )}
 
         <TextInput
+          ref={dateOfBirthRef}
           style={[
             styles.input,
             dateOfBirth.length > 0 && !dobValidation.isValid && styles.inputError,
@@ -193,6 +216,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           keyboardType="number-pad"
           maxLength={10}
           editable={!loading}
+          returnKeyType="done"
+          onSubmitEditing={handleRegister}
         />
         {dateOfBirth.length > 0 && !dobValidation.isValid && (
           <Text style={styles.fieldError}>{dobValidation.error}</Text>

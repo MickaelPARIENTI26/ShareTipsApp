@@ -11,6 +11,7 @@ public record TicketDto(
     decimal AvgOdds,
     string[] Sports,
     DateTime FirstMatchTime,
+    DateTime LastMatchTime,
     string Status,
     string Result,
     DateTime CreatedAt,

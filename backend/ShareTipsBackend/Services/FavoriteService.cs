@@ -113,6 +113,7 @@ public class FavoriteService : IFavoriteService
             f.Ticket?.AvgOdds ?? 0,
             f.Ticket?.Sports ?? Array.Empty<string>(),
             f.Ticket?.FirstMatchTime ?? DateTime.MinValue,
+            f.Ticket?.LastMatchTime ?? f.Ticket?.FirstMatchTime ?? DateTime.MinValue,
             f.Ticket?.Status.ToString() ?? "Unknown",
             f.Ticket?.Result.ToString() ?? "Unknown",
             f.CreatedAt

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ShareTipsBackend.Common;
 using ShareTipsBackend.Data;
@@ -15,7 +16,7 @@ public class NotificationService : INotificationService
 {
     private readonly ApplicationDbContext _context;
     private readonly INotificationPreferencesService _preferencesService;
-    private readonly IPushNotificationService _pushService;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<NotificationService> _logger;
 
     // Configuration constants
@@ -25,12 +26,12 @@ public class NotificationService : INotificationService
     public NotificationService(
         ApplicationDbContext context,
         INotificationPreferencesService preferencesService,
-        IPushNotificationService pushService,
+        IServiceProvider serviceProvider,
         ILogger<NotificationService> logger)
     {
         _context = context;
         _preferencesService = preferencesService;
-        _pushService = pushService;
+        _serviceProvider = serviceProvider;
         _logger = logger;
     }
 
@@ -77,11 +78,14 @@ public class NotificationService : INotificationService
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
 
-        // Send push notification (fire and forget)
+        // Send push notification (fire and forget with its own scope to avoid DbContext issues)
         _ = Task.Run(async () =>
         {
             try
             {
+                using var scope = _serviceProvider.CreateScope();
+                var pushService = scope.ServiceProvider.GetRequiredService<IPushNotificationService>();
+
                 var pushData = new Dictionary<string, string>
                 {
                     { "notificationId", notification.Id.ToString() },
@@ -91,7 +95,7 @@ public class NotificationService : INotificationService
                 {
                     pushData["data"] = JsonSerializer.Serialize(data);
                 }
-                await _pushService.SendToUserAsync(userId, title, message, pushData);
+                await pushService.SendToUserAsync(userId, title, message, pushData);
             }
             catch (Exception ex)
             {
@@ -177,13 +181,16 @@ public class NotificationService : INotificationService
             _logger.LogDebug("Batch saved: {BatchCount} notifications", notifications.Count);
         }
 
-        // Send push notifications to all users (fire and forget)
+        // Send push notifications to all users (fire and forget with its own scope)
         if (allUserIdsToNotify.Count > 0)
         {
             _ = Task.Run(async () =>
             {
                 try
                 {
+                    using var scope = _serviceProvider.CreateScope();
+                    var pushService = scope.ServiceProvider.GetRequiredService<IPushNotificationService>();
+
                     var pushData = new Dictionary<string, string>
                     {
                         { "type", type.ToString() }
@@ -192,7 +199,7 @@ public class NotificationService : INotificationService
                     {
                         pushData["data"] = JsonSerializer.Serialize(data);
                     }
-                    await _pushService.SendToUsersAsync(allUserIdsToNotify, title, message, pushData);
+                    await pushService.SendToUsersAsync(allUserIdsToNotify, title, message, pushData);
                 }
                 catch (Exception ex)
                 {

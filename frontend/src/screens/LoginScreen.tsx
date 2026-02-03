@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  type TextInput as TextInputType,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -27,6 +28,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { loading, error, login, clearError } = useAuthStore();
   const { colors, isDark } = useTheme();
   const styles = useStyles(colors);
+
+  // Ref for password input focus navigation
+  const passwordRef = useRef<TextInputType>(null);
 
   const emailValidation = validateEmail(email);
   const passwordValidation = validateLoginPassword(password);
@@ -87,6 +91,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           textContentType="emailAddress"
           autoComplete="email"
           editable={!loading}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
         {email.length > 0 && !emailValidation.isValid && (
           <Text style={styles.fieldError}>{emailValidation.error}</Text>
@@ -94,6 +101,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.passwordContainer}>
           <TextInput
+            ref={passwordRef}
             style={[
               styles.input,
               styles.passwordInput,
@@ -107,6 +115,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             textContentType="password"
             autoComplete="password"
             editable={!loading}
+            returnKeyType="go"
+            onSubmitEditing={handleLogin}
           />
           <TouchableOpacity
             style={styles.eyeButton}

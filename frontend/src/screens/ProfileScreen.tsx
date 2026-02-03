@@ -1,12 +1,12 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/auth.store';
 import { useNotificationStore } from '../store/notification.store';
-import { userApi } from '../api/user.api';
-import type { RootStackParamList, UserStatsDto } from '../types';
+import { useProfileStore } from '../store/profile.store';
+import type { RootStackParamList } from '../types';
 import { useTheme, type ThemeColors } from '../theme';
 
 const ProfileScreen: React.FC = () => {
@@ -18,30 +18,18 @@ const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { unreadCount, fetchUnreadCount } = useNotificationStore();
 
-  const [stats, setStats] = useState<UserStatsDto | null>(null);
-  const [loadingStats, setLoadingStats] = useState(false);
+  // Use profile store for cached stats (no flickering on navigation)
+  const stats = useProfileStore((s) => s.stats);
+  const loadingStats = useProfileStore((s) => s.loading && !s.stats);
+  const hydrateProfile = useProfileStore((s) => s.hydrate);
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Fetch unread count and user stats when screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      fetchUnreadCount();
-
-      const fetchStats = async () => {
-        setLoadingStats(true);
-        try {
-          const { data } = await userApi.getMe();
-          setStats(data.stats);
-        } catch {
-          // Ignore errors, stats will show as 0
-        } finally {
-          setLoadingStats(false);
-        }
-      };
-      fetchStats();
-    }, [fetchUnreadCount])
-  );
+  // Hydrate profile data on mount (uses cache if available)
+  useEffect(() => {
+    hydrateProfile();
+    fetchUnreadCount();
+  }, [hydrateProfile, fetchUnreadCount]);
 
   const goToMyTickets = useCallback(
     () => navigation.navigate('MyTickets'),

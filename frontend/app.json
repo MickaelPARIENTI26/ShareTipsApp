@@ -46,6 +46,13 @@
       ],
       "expo-secure-store",
       [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.sharetips",
+          "enableGooglePay": true
+        }
+      ],
+      [
         "@sentry/react-native",
         {
           "organization": "sharetips",

@@ -7,21 +7,11 @@ import type {
 } from '../types';
 
 export const subscriptionApi = {
-  // Free follow (0 credits)
-  subscribe: (tipsterId: string, priceCredits = 0) =>
-    apiClient.post<SubscriptionResultDto>(
-      `/api/subscriptions/${tipsterId}`,
-      { tipsterId, priceCredits }
-    ),
-
-  // Legacy credits-based
-  subscribeWithPlan: (planId: string) =>
-    apiClient.post<SubscriptionResultDto>(`/api/subscriptions/plan/${planId}`),
-
-  // Stripe-based subscription
+  // Stripe-based subscription initiation
   initiateSubscription: (planId: string) =>
     apiClient.post<PaymentIntentResultDto>(`/api/subscriptions/initiate/${planId}`),
 
+  // Confirm subscription after Stripe payment
   confirmSubscription: (subscriptionId: string) =>
     apiClient.post<SubscriptionResultDto>(`/api/subscriptions/confirm/${subscriptionId}`),
 

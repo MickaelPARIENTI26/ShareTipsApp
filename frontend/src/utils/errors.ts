@@ -47,8 +47,8 @@ const BACKEND_ERROR_MESSAGES: Record<string, string> = {
   'Token expired': 'Session expirée. Veuillez vous reconnecter.',
 
   // Wallet errors
-  'Insufficient credits': 'Crédits insuffisants.',
-  'Insufficient balance': 'Crédits insuffisants.',
+  'Insufficient credits': 'Solde insuffisant.',
+  'Insufficient balance': 'Solde insuffisant.',
   'Invalid amount': 'Montant invalide.',
 
   // Ticket errors

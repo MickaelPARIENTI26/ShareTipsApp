@@ -11,6 +11,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/auth.store';
 import { useTheme, type ThemeColors } from '../theme';
@@ -33,6 +34,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [acceptedCGV, setAcceptedCGV] = useState(false);
   const { loading, error, register, clearError } = useAuthStore();
   const { colors, isDark } = useTheme();
   const styles = useStyles(colors);
@@ -42,7 +44,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const passwordValidation = validatePassword(password);
   const confirmValidation = validatePasswordMatch(password, confirmPassword);
   const dobValidation = validateDateOfBirth(dateOfBirth);
-  const formValid = isFormValid(usernameValidation, emailValidation, passwordValidation, confirmValidation, dobValidation);
+  const fieldsValid = isFormValid(usernameValidation, emailValidation, passwordValidation, confirmValidation, dobValidation);
+  const formValid = fieldsValid && acceptedCGV;
 
   const logo = isDark
     ? require('../../assets/logos/logo_wbg.png')
@@ -198,6 +201,43 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.ageHint}>Vous devez avoir 18 ans minimum</Text>
         )}
 
+        {/* Disclaimer */}
+        <View style={styles.disclaimerBox}>
+          <Ionicons name="warning-outline" size={18} color={colors.warning} />
+          <Text style={styles.disclaimerText}>
+            ShareTips est une plateforme de partage de pronostics sportifs. Les paris sportifs comportent des risques de pertes financières. Pariez de manière responsable et dans la limite de vos moyens.
+          </Text>
+        </View>
+
+        {/* CGV Checkbox */}
+        <TouchableOpacity
+          style={styles.checkboxRow}
+          onPress={() => setAcceptedCGV(!acceptedCGV)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, acceptedCGV && styles.checkboxChecked]}>
+            {acceptedCGV && (
+              <Ionicons name="checkmark" size={16} color={colors.textOnPrimary} />
+            )}
+          </View>
+          <Text style={styles.checkboxLabel}>
+            J'ai lu et j'accepte les{' '}
+            <Text
+              style={styles.linkText}
+              onPress={() => navigation.navigate('CGV')}
+            >
+              Conditions Générales de Vente
+            </Text>
+            {' '}et les{' '}
+            <Text
+              style={styles.linkText}
+              onPress={() => navigation.navigate('CGU')}
+            >
+              Conditions d'Utilisation
+            </Text>
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.button, (!formValid || loading) && styles.buttonDisabled]}
           onPress={handleRegister}
@@ -284,6 +324,53 @@ const useStyles = (colors: ThemeColors) =>
           fontSize: 12,
           marginBottom: 8,
           marginLeft: 4,
+        },
+        disclaimerBox: {
+          flexDirection: 'row',
+          backgroundColor: colors.warningLight,
+          borderWidth: 1,
+          borderColor: colors.warning,
+          borderRadius: 8,
+          padding: 12,
+          marginTop: 12,
+          marginBottom: 16,
+          gap: 10,
+        },
+        disclaimerText: {
+          flex: 1,
+          color: colors.text,
+          fontSize: 12,
+          lineHeight: 18,
+        },
+        checkboxRow: {
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          marginBottom: 8,
+          gap: 10,
+        },
+        checkbox: {
+          width: 22,
+          height: 22,
+          borderRadius: 4,
+          borderWidth: 2,
+          borderColor: colors.inputBorder,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 2,
+        },
+        checkboxChecked: {
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
+        },
+        checkboxLabel: {
+          flex: 1,
+          color: colors.textSecondary,
+          fontSize: 13,
+          lineHeight: 20,
+        },
+        linkText: {
+          color: colors.primary,
+          textDecorationLine: 'underline',
         },
         button: {
           backgroundColor: colors.primary,

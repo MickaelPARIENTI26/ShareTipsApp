@@ -4,7 +4,7 @@ public record WithdrawalDto(
     Guid Id,
     Guid UserId,
     string Username,
-    int AmountCredits,
+    decimal AmountEur,
     string Method,
     string Status,
     string? AdminNotes,
@@ -13,7 +13,7 @@ public record WithdrawalDto(
 );
 
 public record CreateWithdrawalRequest(
-    int AmountCredits,
+    decimal AmountEur,
     string Method
 );
 
@@ -21,8 +21,8 @@ public record WithdrawalResultDto(
     bool Success,
     string? Message,
     WithdrawalDto? Withdrawal,
-    int NewBalance,
-    int NewLockedCredits
+    decimal NewBalanceEur,
+    decimal NewPendingPayoutEur
 );
 
 public record ProcessWithdrawalRequest(

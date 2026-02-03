@@ -326,8 +326,8 @@ public class DevController : ControllerBase
 
                     if (buyerWallet != null)
                     {
-                        var winnings = (int)Math.Floor(purchase.PriceCredits * ticket.AvgOdds);
-                        buyerWallet.BalanceCredits += winnings;
+                        var winningsCents = (int)Math.Floor(purchase.PriceCents * ticket.AvgOdds);
+                        buyerWallet.TipsterBalanceCents += winningsCents;
                         buyerWallet.UpdatedAt = DateTime.UtcNow;
 
                         _context.WalletTransactions.Add(new WalletTransaction
@@ -335,7 +335,7 @@ public class DevController : ControllerBase
                             Id = Guid.NewGuid(),
                             WalletId = buyerWallet.Id,
                             Type = TransactionType.Win,
-                            AmountCredits = winnings,
+                            AmountCents = winningsCents,
                             ReferenceId = ticket.Id,
                             Status = TransactionStatus.Completed,
                             CreatedAt = DateTime.UtcNow

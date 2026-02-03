@@ -71,11 +71,6 @@ public class PurchaseService : IPurchaseService
 
         // Use EUR cents price
         var priceCents = ticket.PriceCents;
-        if (priceCents <= 0)
-        {
-            // Fallback to credits conversion if PriceCents not set (1 credit = 10 cents)
-            priceCents = ticket.PriceCredits * 10;
-        }
 
         var commissionCents = (int)Math.Ceiling(priceCents * PlatformFeePercent);
         var sellerAmountCents = priceCents - commissionCents;
@@ -89,9 +84,6 @@ public class PurchaseService : IPurchaseService
             PriceCents = priceCents,
             CommissionCents = commissionCents,
             SellerAmountCents = sellerAmountCents,
-            // Legacy fields for backward compatibility
-            PriceCredits = priceCents / 10,
-            CommissionCredits = commissionCents / 10,
             CreatedAt = DateTime.UtcNow
         };
         _context.TicketPurchases.Add(purchase);
@@ -197,7 +189,10 @@ public class PurchaseService : IPurchaseService
 
     private static PurchaseDto MapToDto(TicketPurchase purchase)
     {
-        var sellerCredits = purchase.PriceCredits - purchase.CommissionCredits;
+        // Convert cents to EUR for DTO
+        var priceEur = purchase.PriceCents / 100m;
+        var commissionEur = purchase.CommissionCents / 100m;
+        var sellerEarningsEur = purchase.SellerAmountCents / 100m;
 
         return new PurchaseDto(
             purchase.Id,
@@ -207,9 +202,9 @@ public class PurchaseService : IPurchaseService
             purchase.Ticket?.Creator?.Username ?? "Unknown",
             purchase.BuyerId,
             purchase.Buyer?.Username ?? "Unknown",
-            purchase.PriceCredits,
-            purchase.CommissionCredits,
-            sellerCredits,
+            priceEur,
+            commissionEur,
+            sellerEarningsEur,
             purchase.CreatedAt
         );
     }

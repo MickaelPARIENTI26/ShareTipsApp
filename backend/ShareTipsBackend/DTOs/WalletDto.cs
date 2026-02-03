@@ -1,33 +1,17 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace ShareTipsBackend.DTOs;
 
-public record WalletDto(
-    int Credits,
-    int LockedCredits,
-    int AvailableCredits
-);
+// Note: TipsterWalletDto is defined in StripeDto.cs
 
 public record WalletTransactionDto(
     Guid Id,
     string Type,
-    int AmountCredits,
+    decimal AmountEur,
     string Status,
     DateTime CreatedAt
 );
 
-public record CreditWalletRequest(
-    [Required][Range(1, int.MaxValue)] int Amount,
-    string? Description = null
-);
-
-public record DebitWalletRequest(
-    [Required][Range(1, int.MaxValue)] int Amount,
-    string? Description = null
-);
-
 public record WalletOperationResponse(
     bool Success,
-    int NewBalance,
+    decimal NewBalanceEur,
     string? Message = null
 );

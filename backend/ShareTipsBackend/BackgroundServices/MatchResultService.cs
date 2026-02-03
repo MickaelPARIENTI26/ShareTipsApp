@@ -329,10 +329,10 @@ public class MatchResultService : BackgroundService
 
             if (buyerWallet != null)
             {
-                // Calculate winnings based on odds
-                var winnings = (int)Math.Floor(purchase.PriceCredits * ticket.AvgOdds);
+                // Calculate winnings based on odds (in cents)
+                var winningsCents = (int)Math.Floor(purchase.PriceCents * ticket.AvgOdds);
 
-                buyerWallet.BalanceCredits += winnings;
+                buyerWallet.TipsterBalanceCents += winningsCents;
                 buyerWallet.UpdatedAt = DateTime.UtcNow;
 
                 // Create WIN transaction
@@ -341,15 +341,15 @@ public class MatchResultService : BackgroundService
                     Id = Guid.NewGuid(),
                     WalletId = buyerWallet.Id,
                     Type = TransactionType.Win,
-                    AmountCredits = winnings,
+                    AmountCents = winningsCents,
                     ReferenceId = ticket.Id,
                     Status = TransactionStatus.Completed,
                     CreatedAt = DateTime.UtcNow
                 };
                 context.WalletTransactions.Add(winTransaction);
 
-                _logger.LogInformation("Credited {Winnings} credits to user {UserId} for winning ticket {TicketId}",
-                    winnings, purchase.BuyerId, ticket.Id);
+                _logger.LogInformation("Credited {WinningsCents} cents to user {UserId} for winning ticket {TicketId}",
+                    winningsCents, purchase.BuyerId, ticket.Id);
             }
         }
     }

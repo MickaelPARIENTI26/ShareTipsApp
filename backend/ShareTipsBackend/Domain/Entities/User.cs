@@ -14,7 +14,6 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
-    public int SubscriptionPriceCredits { get; set; }
 
     // Password reset (token is stored as SHA256 hash)
     public string? PasswordResetTokenHash { get; set; }

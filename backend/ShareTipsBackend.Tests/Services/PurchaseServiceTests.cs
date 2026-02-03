@@ -59,7 +59,7 @@ public class PurchaseServiceTests
             CreatorId = seller.Id,
             Title = "Premium Ticket",
             IsPublic = false,
-            PriceCredits = ticketPrice,
+            PriceCents = ticketPrice,
             ConfidenceIndex = 8,
             AvgOdds = 2.5m,
             Sports = new[] { "soccer" },
@@ -115,8 +115,9 @@ public class PurchaseServiceTests
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
-            PriceCredits = 100,
-            CommissionCredits = 10, // 10% commission
+            PriceCents = 1000,
+            CommissionCents = 170, // 17% commission
+            SellerAmountCents = 830,
             CreatedAt = DateTime.UtcNow
         };
         context.TicketPurchases.Add(purchase);
@@ -129,7 +130,7 @@ public class PurchaseServiceTests
         result.Should().HaveCount(1);
         result[0].TicketId.Should().Be(ticket.Id);
         result[0].BuyerId.Should().Be(buyer.Id);
-        result[0].PriceCredits.Should().Be(100);
+        result[0].PriceEur.Should().Be(10.00m);
     }
 
     [Fact]
@@ -161,8 +162,9 @@ public class PurchaseServiceTests
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
-            PriceCredits = 200,
-            CommissionCredits = 20, // 10% of 200
+            PriceCents = 2000,
+            CommissionCents = 340, // 17% of 2000
+            SellerAmountCents = 1660,
             CreatedAt = DateTime.UtcNow
         };
         context.TicketPurchases.Add(purchase);
@@ -175,9 +177,9 @@ public class PurchaseServiceTests
         result.Should().HaveCount(1);
         result[0].TicketId.Should().Be(ticket.Id);
         result[0].SellerUsername.Should().Be("seller");
-        result[0].PriceCredits.Should().Be(200);
-        result[0].CommissionCredits.Should().Be(20);
-        result[0].SellerCredits.Should().Be(180); // 200 - 20
+        result[0].PriceEur.Should().Be(20.00m);
+        result[0].CommissionEur.Should().Be(3.40m);
+        result[0].SellerEarningsEur.Should().Be(16.60m); // 2000 - 340 cents
     }
 
     [Fact]
@@ -198,7 +200,7 @@ public class PurchaseServiceTests
                 CreatorId = seller.Id,
                 Title = $"Ticket {i}",
                 IsPublic = false,
-                PriceCredits = 50 * (i + 1),
+                PriceCents = 500 * (i + 1),
                 ConfidenceIndex = 5,
                 AvgOdds = 2.0m,
                 Sports = new[] { "soccer" },
@@ -209,13 +211,15 @@ public class PurchaseServiceTests
             };
             context.Tickets.Add(ticket);
 
+            var commissionCents = (int)(ticket.PriceCents * 0.17m); // 17% commission
             var purchase = new TicketPurchase
             {
                 Id = Guid.NewGuid(),
                 TicketId = ticket.Id,
                 BuyerId = buyer.Id,
-                PriceCredits = ticket.PriceCredits,
-                CommissionCredits = (int)(ticket.PriceCredits * 0.10m), // 10% commission
+                PriceCents = ticket.PriceCents,
+                CommissionCents = commissionCents,
+                SellerAmountCents = ticket.PriceCents - commissionCents,
                 CreatedAt = DateTime.UtcNow.AddHours(-i) // Older purchases first
             };
             purchases.Add(purchase);
@@ -228,26 +232,27 @@ public class PurchaseServiceTests
 
         // Assert - most recent first
         result.Should().HaveCount(3);
-        result[0].PriceCredits.Should().Be(50); // Most recent (i=0)
-        result[2].PriceCredits.Should().Be(150); // Oldest (i=2)
+        result[0].PriceEur.Should().Be(5.00m); // Most recent (i=0)
+        result[2].PriceEur.Should().Be(15.00m); // Oldest (i=2)
     }
 
     [Fact]
-    public async Task PurchaseDto_CalculatesSellerCreditsCorrectly()
+    public async Task PurchaseDto_CalculatesSellerEarningsCorrectly()
     {
         // Arrange
         using var context = DbContextFactory.Create();
         var purchaseService = CreateService(context);
-        var (buyer, seller, ticket) = await SetupBuyerSellerTicketAsync(context, ticketPrice: 1000);
+        var (buyer, seller, ticket) = await SetupBuyerSellerTicketAsync(context, ticketPrice: 10000);
 
-        // Create purchase with 10% commission
+        // Create purchase with 17% commission
         var purchase = new TicketPurchase
         {
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
-            PriceCredits = 1000,
-            CommissionCredits = 100, // 10%
+            PriceCents = 10000,
+            CommissionCents = 1700, // 17%
+            SellerAmountCents = 8300,
             CreatedAt = DateTime.UtcNow
         };
         context.TicketPurchases.Add(purchase);
@@ -257,8 +262,8 @@ public class PurchaseServiceTests
         var result = (await purchaseService.GetSalesBySellerAsync(seller.Id)).First();
 
         // Assert
-        result.PriceCredits.Should().Be(1000);
-        result.CommissionCredits.Should().Be(100);
-        result.SellerCredits.Should().Be(900); // 1000 - 100 = 900 (90%)
+        result.PriceEur.Should().Be(100.00m);
+        result.CommissionEur.Should().Be(17.00m);
+        result.SellerEarningsEur.Should().Be(83.00m); // 10000 - 1700 = 8300 cents (83%)
     }
 }

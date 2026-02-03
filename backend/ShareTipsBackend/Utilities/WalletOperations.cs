@@ -43,37 +43,37 @@ public static class WalletOperations
     }
 
     /// <summary>
-    /// Calculates commission and net amounts.
+    /// Calculates commission and net amounts in cents.
     /// </summary>
-    public static (int CommissionCredits, int ReceiverCredits) CalculateCommission(int totalPrice)
+    public static (int CommissionCents, int ReceiverCents) CalculateCommission(int totalPriceCents)
     {
-        var commissionCredits = (int)Math.Ceiling(totalPrice * CommissionRate);
-        var receiverCredits = totalPrice - commissionCredits;
-        return (commissionCredits, receiverCredits);
+        var commissionCents = (int)Math.Ceiling(totalPriceCents * CommissionRate);
+        var receiverCents = totalPriceCents - commissionCents;
+        return (commissionCents, receiverCents);
     }
 
     /// <summary>
-    /// Transfers credits between wallets with commission deduction.
+    /// Transfers cents between wallets with commission deduction.
     /// Updates wallet balances and creates transaction records.
     /// </summary>
-    public static void TransferCreditsWithCommission(
+    public static void TransferCentsWithCommission(
         ApplicationDbContext context,
         Wallet payerWallet,
         Wallet receiverWallet,
-        int totalPrice,
+        int totalPriceCents,
         Guid referenceId,
         TransactionType payerTransactionType,
         TransactionType receiverTransactionType)
     {
-        var (commissionCredits, receiverCredits) = CalculateCommission(totalPrice);
+        var (commissionCents, receiverCents) = CalculateCommission(totalPriceCents);
         var now = DateTime.UtcNow;
 
         // 1. Debit payer
-        payerWallet.BalanceCredits -= totalPrice;
+        payerWallet.TipsterBalanceCents -= totalPriceCents;
         payerWallet.UpdatedAt = now;
 
         // 2. Credit receiver (after commission)
-        receiverWallet.BalanceCredits += receiverCredits;
+        receiverWallet.TipsterBalanceCents += receiverCents;
         receiverWallet.UpdatedAt = now;
 
         // 3. Create payer transaction
@@ -82,7 +82,7 @@ public static class WalletOperations
             Id = Guid.NewGuid(),
             WalletId = payerWallet.Id,
             Type = payerTransactionType,
-            AmountCredits = -totalPrice,
+            AmountCents = -totalPriceCents,
             ReferenceId = referenceId,
             Status = TransactionStatus.Completed,
             CreatedAt = now
@@ -94,7 +94,7 @@ public static class WalletOperations
             Id = Guid.NewGuid(),
             WalletId = receiverWallet.Id,
             Type = receiverTransactionType,
-            AmountCredits = receiverCredits,
+            AmountCents = receiverCents,
             ReferenceId = referenceId,
             Status = TransactionStatus.Completed,
             CreatedAt = now
@@ -106,7 +106,7 @@ public static class WalletOperations
             Id = Guid.NewGuid(),
             WalletId = receiverWallet.Id,
             Type = TransactionType.Commission,
-            AmountCredits = -commissionCredits,
+            AmountCents = -commissionCents,
             ReferenceId = referenceId,
             Status = TransactionStatus.Completed,
             CreatedAt = now

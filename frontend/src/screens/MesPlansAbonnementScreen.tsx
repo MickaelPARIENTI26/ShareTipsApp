@@ -41,7 +41,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [durationInDays, setDurationInDays] = useState('30');
-  const [priceCredits, setPriceCredits] = useState('');
+  const [priceEur, setPriceEur] = useState('');
   const [isActive, setIsActive] = useState(true);
 
   const fetchPlans = useCallback(async () => {
@@ -71,7 +71,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
     setTitle('');
     setDescription('');
     setDurationInDays('30');
-    setPriceCredits('');
+    setPriceEur('');
     setIsActive(true);
     setEditingPlan(null);
   }, []);
@@ -86,7 +86,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
     setTitle(plan.title);
     setDescription(plan.description ?? '');
     setDurationInDays(plan.durationInDays.toString());
-    setPriceCredits(plan.priceCredits.toString());
+    setPriceEur(plan.priceEur.toString());
     setIsActive(plan.isActive);
     setModalVisible(true);
   }, []);
@@ -103,7 +103,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
     }
 
     const duration = parseInt(durationInDays, 10);
-    const price = parseInt(priceCredits, 10);
+    const price = parseInt(priceEur, 10);
 
     if (isNaN(duration) || duration <= 0) {
       Alert.alert('Erreur', 'La durée doit être un nombre positif');
@@ -122,7 +122,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
           title: title.trim(),
           description: description.trim() || undefined,
           durationInDays: duration,
-          priceCredits: price,
+          priceEur: price,
           isActive,
         };
         await subscriptionPlanApi.update(editingPlan.id, request);
@@ -131,7 +131,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
           title: title.trim(),
           description: description.trim() || undefined,
           durationInDays: duration,
-          priceCredits: price,
+          priceEur: price,
         };
         await subscriptionPlanApi.create(request);
       }
@@ -143,7 +143,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  }, [title, description, durationInDays, priceCredits, isActive, editingPlan, closeModal, fetchPlans]);
+  }, [title, description, durationInDays, priceEur, isActive, editingPlan, closeModal, fetchPlans]);
 
   const handleDelete = useCallback(
     (plan: SubscriptionPlanDto) => {
@@ -222,7 +222,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
           </View>
           <View style={styles.planDetailItem}>
             <Ionicons name="wallet-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.planDetailText}>{item.priceCredits} crédits</Text>
+            <Text style={styles.planDetailText}>{item.priceEur.toFixed(2)} €</Text>
           </View>
         </View>
       </View>
@@ -330,14 +330,14 @@ const MesPlansAbonnementScreen: React.FC = () => {
                 </View>
 
                 <View style={[styles.inputGroup, styles.halfInput]}>
-                  <Text style={styles.inputLabel}>Prix (crédits) *</Text>
+                  <Text style={styles.inputLabel}>Prix (EUR) *</Text>
                   <TextInput
                     style={styles.textInput}
-                    value={priceCredits}
-                    onChangeText={setPriceCredits}
-                    placeholder="100"
+                    value={priceEur}
+                    onChangeText={setPriceEur}
+                    placeholder="9.99"
                     placeholderTextColor={colors.textTertiary}
-                    keyboardType="number-pad"
+                    keyboardType="decimal-pad"
                   />
                 </View>
               </View>

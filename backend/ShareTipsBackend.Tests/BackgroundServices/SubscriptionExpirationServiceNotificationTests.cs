@@ -49,8 +49,9 @@ public class SubscriptionExpirationServiceNotificationTests
             Id = Guid.NewGuid(),
             SubscriberId = subscriberId,
             TipsterId = tipsterId,
-            PriceCredits = 100,
-            CommissionCredits = 17,
+            PriceCents = 1000,
+            CommissionCents = 170,
+            TipsterAmountCents = 830,
             StartDate = DateTime.UtcNow.AddMonths(-1),
             EndDate = endDate,
             Status = status,
@@ -388,8 +389,9 @@ public class SubscriptionExpirationServiceNotificationTests
             Id = Guid.NewGuid(),
             SubscriberId = subscriber.Id,
             TipsterId = tipster.Id,
-            PriceCredits = 100,
-            CommissionCredits = 17,
+            PriceCents = 1000,
+            CommissionCents = 170,
+            TipsterAmountCents = 830,
             StartDate = DateTime.UtcNow.AddMonths(-2),
             EndDate = DateTime.UtcNow.AddMonths(-1),
             Status = SubscriptionStatus.Expired,
@@ -402,8 +404,9 @@ public class SubscriptionExpirationServiceNotificationTests
         await context.SaveChangesAsync();
 
         // Act - Simulate reactivation (what SubscriptionService does)
-        subscription.PriceCredits = 100;
-        subscription.CommissionCredits = 17;
+        subscription.PriceCents = 1000;
+        subscription.CommissionCents = 170;
+        subscription.TipsterAmountCents = 830;
         subscription.StartDate = DateTime.UtcNow;
         subscription.EndDate = DateTime.UtcNow.AddMonths(1);
         subscription.Status = SubscriptionStatus.Active;

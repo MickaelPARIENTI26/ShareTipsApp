@@ -1,21 +1,8 @@
-export interface WalletDto {
-  credits: number;
-  lockedCredits: number;
-  availableCredits: number;
-}
-
+// WalletTransaction DTO
 export interface WalletTransactionDto {
   id: string;
   type: string;
-  amountCredits: number;
+  amountEur: number;
   status: string;
   createdAt: string;
-}
-
-export interface DepositResponse {
-  success: boolean;
-  transactionId: string;
-  creditsToReceive: number;
-  moonPayUrl: string | null;
-  message: string | null;
 }

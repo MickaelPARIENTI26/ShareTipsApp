@@ -21,26 +21,7 @@ public class SubscriptionsController : ApiControllerBase
     }
 
     /// <summary>
-    /// Subscribe to a tipster
-    /// </summary>
-    [HttpPost("{tipsterId:guid}")]
-    [ProducesResponseType(typeof(SubscriptionResultDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Subscribe(Guid tipsterId, [FromBody] SubscribeRequest request)
-    {
-        var userId = GetUserId();
-        var result = await _subscriptionService.SubscribeAsync(userId, tipsterId, request.PriceCredits);
-
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Subscribe using a subscription plan (legacy credits)
+    /// Subscribe using a subscription plan (via Stripe)
     /// </summary>
     [HttpPost("plan/{planId:guid}")]
     [ProducesResponseType(typeof(SubscriptionResultDto), StatusCodes.Status200OK)]

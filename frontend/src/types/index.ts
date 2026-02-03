@@ -96,7 +96,7 @@ export interface TicketDraft {
   totalOdds: number;
   confidenceIndex: number;
   visibility: 'PUBLIC' | 'PRIVATE';
-  priceCredits: number | null;
+  priceEur: number | null;
 }
 
 // --- Pagination ---
@@ -117,7 +117,7 @@ export interface TicketDto {
   creatorUsername: string;
   title: string;
   isPublic: boolean;
-  priceCredits: number;
+  priceEur: number;
   confidenceIndex: number;
   avgOdds: number;
   sports: string[];
@@ -167,8 +167,8 @@ export interface SubscriptionDto {
   subscriberUsername: string;
   tipsterId: string;
   tipsterUsername: string;
-  priceCredits: number;
-  commissionCredits: number;
+  priceEur: number;
+  commissionEur: number;
   startDate: string;
   endDate: string;
   status: string;
@@ -179,7 +179,6 @@ export interface SubscriptionResultDto {
   success: boolean;
   message: string | null;
   subscription: SubscriptionDto | null;
-  newBalance: number;
 }
 
 export interface SubscriptionStatusDto {
@@ -197,7 +196,7 @@ export interface SubscriptionPlanDto {
   title: string;
   description: string | null;
   durationInDays: number;
-  priceCredits: number;
+  priceEur: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
@@ -207,14 +206,14 @@ export interface CreateSubscriptionPlanRequest {
   title: string;
   description?: string;
   durationInDays: number;
-  priceCredits: number;
+  priceEur: number;
 }
 
 export interface UpdateSubscriptionPlanRequest {
   title?: string;
   description?: string;
   durationInDays?: number;
-  priceCredits?: number;
+  priceEur?: number;
   isActive?: boolean;
 }
 
@@ -227,9 +226,9 @@ export interface PurchaseDto {
   sellerUsername: string;
   buyerId: string;
   buyerUsername: string;
-  priceCredits: number;
-  commissionCredits: number;
-  sellerCredits: number;
+  priceEur: number;
+  commissionEur: number;
+  sellerEarningsEur: number;
   createdAt: string;
 }
 
@@ -237,7 +236,6 @@ export interface PurchaseResultDto {
   success: boolean;
   message: string | null;
   purchase: PurchaseDto | null;
-  newBuyerBalance: number;
 }
 
 // --- Favorites ---
@@ -248,7 +246,7 @@ export interface FavoriteTicketDto {
   creatorId: string;
   creatorUsername: string;
   isPublic: boolean;
-  priceCredits: number;
+  priceEur: number;
   confidenceIndex: number;
   avgOdds: number;
   sports: string[];
@@ -268,7 +266,6 @@ export interface CurrentUserDto {
   id: string;
   email: string;
   username: string;
-  credits: number;
   stats: UserStatsDto | null;
 }
 
@@ -277,7 +274,6 @@ export interface UserProfileDto {
   username: string;
   ranking: RankingDto | null;
   stats: UserStatsDto | null;
-  subscriptionPriceCredits: number;
 }
 
 export interface UserStatsDto {
@@ -347,6 +343,8 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  CGV: undefined;
+  CGU: undefined;
 };
 
 export type RootStackParamList = {

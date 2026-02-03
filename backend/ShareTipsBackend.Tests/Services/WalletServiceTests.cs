@@ -9,7 +9,7 @@ namespace ShareTipsBackend.Tests.Services;
 public class WalletServiceTests
 {
     [Fact]
-    public async Task GetByUserIdAsync_ExistingWallet_ReturnsWalletDto()
+    public async Task GetTipsterWalletAsync_ExistingWallet_ReturnsTipsterWalletDto()
     {
         // Arrange
         using var context = DbContextFactory.Create();
@@ -19,8 +19,9 @@ public class WalletServiceTests
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            BalanceCredits = 1000,
-            LockedCredits = 200,
+            TipsterBalanceCents = 10000,
+            PendingPayoutCents = 2000,
+            TotalEarnedCents = 15000,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -30,24 +31,24 @@ public class WalletServiceTests
         var walletService = new WalletService(context, NullLogger<WalletService>.Instance);
 
         // Act
-        var result = await walletService.GetByUserIdAsync(userId);
+        var result = await walletService.GetTipsterWalletAsync(userId);
 
         // Assert
         result.Should().NotBeNull();
-        result!.Credits.Should().Be(1000);
-        result.LockedCredits.Should().Be(200);
-        result.AvailableCredits.Should().Be(800);
+        result!.AvailableBalance.Should().Be(100.00m);
+        result.PendingPayout.Should().Be(20.00m);
+        result.TotalEarned.Should().Be(150.00m);
     }
 
     [Fact]
-    public async Task GetByUserIdAsync_NonExistingWallet_ReturnsNull()
+    public async Task GetTipsterWalletAsync_NonExistingWallet_ReturnsNull()
     {
         // Arrange
         using var context = DbContextFactory.Create();
         var walletService = new WalletService(context, NullLogger<WalletService>.Instance);
 
         // Act
-        var result = await walletService.GetByUserIdAsync(Guid.NewGuid());
+        var result = await walletService.GetTipsterWalletAsync(Guid.NewGuid());
 
         // Assert
         result.Should().BeNull();
@@ -65,8 +66,8 @@ public class WalletServiceTests
         {
             Id = walletId,
             UserId = userId,
-            BalanceCredits = 1000,
-            LockedCredits = 0,
+            TipsterBalanceCents = 10000,
+            PendingPayoutCents = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -77,7 +78,7 @@ public class WalletServiceTests
             Id = Guid.NewGuid(),
             WalletId = walletId,
             Type = TransactionType.Deposit,
-            AmountCredits = 500,
+            AmountCents = 5000,
             Status = TransactionStatus.Completed,
             CreatedAt = DateTime.UtcNow.AddHours(-2)
         };
@@ -86,7 +87,7 @@ public class WalletServiceTests
             Id = Guid.NewGuid(),
             WalletId = walletId,
             Type = TransactionType.Purchase,
-            AmountCredits = -100,
+            AmountCents = -1000,
             Status = TransactionStatus.Completed,
             CreatedAt = DateTime.UtcNow.AddHours(-1)
         };
@@ -95,7 +96,7 @@ public class WalletServiceTests
             Id = Guid.NewGuid(),
             WalletId = walletId,
             Type = TransactionType.Deposit,
-            AmountCredits = 600,
+            AmountCents = 6000,
             Status = TransactionStatus.Completed,
             CreatedAt = DateTime.UtcNow
         };
@@ -110,9 +111,9 @@ public class WalletServiceTests
 
         // Assert
         result.Should().HaveCount(3);
-        result[0].AmountCredits.Should().Be(600); // Most recent first
-        result[1].AmountCredits.Should().Be(-100);
-        result[2].AmountCredits.Should().Be(500);
+        result[0].AmountEur.Should().Be(60.00m); // Most recent first
+        result[1].AmountEur.Should().Be(-10.00m);
+        result[2].AmountEur.Should().Be(50.00m);
     }
 
     [Fact]
@@ -140,8 +141,8 @@ public class WalletServiceTests
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            BalanceCredits = 0,
-            LockedCredits = 0,
+            TipsterBalanceCents = 0,
+            PendingPayoutCents = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

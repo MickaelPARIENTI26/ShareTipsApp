@@ -59,7 +59,6 @@ public class UsersController : ApiControllerBase
             user.Id,
             user.Email,
             user.Username,
-            user.Wallet?.BalanceCredits ?? 0,
             stats
         );
 
@@ -140,8 +139,7 @@ public class UsersController : ApiControllerBase
             user.Id,
             user.Username,
             ranking,
-            stats,
-            user.SubscriptionPriceCredits
+            stats
         );
 
         return Ok(dto);
@@ -313,8 +311,8 @@ public class UsersController : ApiControllerBase
             {
                 TicketsSold = g.Count(),
                 UniqueBuyers = g.Select(p => p.BuyerId).Distinct().Count(),
-                RevenueGross = g.Sum(p => p.PriceCredits),
-                TotalCommission = g.Sum(p => p.CommissionCredits),
+                RevenueGrossCents = g.Sum(p => p.PriceCents),
+                TotalCommissionCents = g.Sum(p => p.CommissionCents),
             })
             .FirstOrDefaultAsync();
 
@@ -362,8 +360,12 @@ public class UsersController : ApiControllerBase
             ? Math.Round((decimal)winCount / totalDecided, 2)
             : 0;
 
-        var revenueGross = purchaseStats?.RevenueGross ?? 0;
-        var totalCommission = purchaseStats?.TotalCommission ?? 0;
+        var revenueGrossCents = purchaseStats?.RevenueGrossCents ?? 0;
+        var totalCommissionCents = purchaseStats?.TotalCommissionCents ?? 0;
+
+        // Convert cents to EUR for DTO
+        var revenueGrossEur = revenueGrossCents / 100m;
+        var revenueNetEur = (revenueGrossCents - totalCommissionCents) / 100m;
 
         return new TipsterStatsDto(
             totalTickets,
@@ -377,8 +379,8 @@ public class UsersController : ApiControllerBase
             ticketStats?.AvgOddsFinished.HasValue == true ? Math.Round(ticketStats.AvgOddsFinished.Value, 2) : 0,
             ticketStats?.AvgOddsWin.HasValue == true ? Math.Round(ticketStats.AvgOddsWin.Value, 2) : null,
             ticketStats?.AvgConfidence.HasValue == true ? Math.Round(ticketStats.AvgConfidence.Value, 1) : 0,
-            revenueGross,
-            revenueGross - totalCommission,
+            revenueGrossEur,
+            revenueNetEur,
             ticketStats?.HighestWinOdd.HasValue == true ? Math.Round(ticketStats.HighestWinOdd.Value, 2) : null,
             longestWinStreak,
             longestLoseStreak

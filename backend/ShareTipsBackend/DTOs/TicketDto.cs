@@ -6,7 +6,7 @@ public record TicketDto(
     string CreatorUsername,
     string Title,
     bool IsPublic,
-    int PriceCredits,
+    decimal PriceEur,
     int ConfidenceIndex,
     decimal AvgOdds,
     string[] Sports,
@@ -39,7 +39,7 @@ public record TicketSelectionDto(
 public record CreateTicketDto(
     string Title,
     bool IsPublic,
-    int PriceCredits,
+    decimal PriceEur,
     int ConfidenceIndex,
     List<CreateTicketSelectionDto> Selections
 );
@@ -57,7 +57,7 @@ public record CreateTicketSelectionDto(
 public record UpdateTicketDto(
     string? Title,
     bool? IsPublic,
-    int? PriceCredits,
+    decimal? PriceEur,
     int? ConfidenceIndex,
     List<CreateTicketSelectionDto>? Selections
 );

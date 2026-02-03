@@ -1,14 +1,13 @@
 import { create } from 'zustand';
-import { userApi } from '../api/user.api';
-import type { WalletDto } from '../types/user.types';
+import { stripeApi } from '../api/stripe.api';
+import type { TipsterWalletDto } from '../types';
 
 interface WalletState {
-  wallet: WalletDto | null;
+  wallet: TipsterWalletDto | null;
   loading: boolean;
   error: string | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
-  setBalance: (availableCredits: number) => void;
   refresh: () => Promise<void>;
   clear: () => void;
 }
@@ -23,7 +22,7 @@ export const useWalletStore = create<WalletState>()((set, get) => ({
     if (get().hydrated) return;
     set({ loading: true, error: null });
     try {
-      const { data } = await userApi.getWallet();
+      const { data } = await stripeApi.getTipsterWallet();
       set({
         wallet: data,
         hydrated: true,
@@ -38,22 +37,13 @@ export const useWalletStore = create<WalletState>()((set, get) => ({
   refresh: async () => {
     set({ loading: true, error: null });
     try {
-      const { data } = await userApi.getWallet();
+      const { data } = await stripeApi.getTipsterWallet();
       set({ wallet: data });
     } catch {
       set({ error: 'Impossible de charger le solde' });
     } finally {
       set({ loading: false });
     }
-  },
-
-  // Update balance directly (after purchase, subscription, etc.)
-  setBalance: (availableCredits: number) => {
-    set((state) => ({
-      wallet: state.wallet
-        ? { ...state.wallet, availableCredits }
-        : { credits: availableCredits, lockedCredits: 0, availableCredits },
-    }));
   },
 
   clear: () => set({ wallet: null, hydrated: false, error: null }),

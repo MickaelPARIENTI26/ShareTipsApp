@@ -137,7 +137,7 @@ const TipsterTicketCard: React.FC<{
           <View style={styles.payantBadge}>
             <Ionicons name="lock-closed" size={12} color={colors.warning} />
             <Text style={styles.payantBadgeText}>
-              {ticket.priceCredits} cr.
+              {ticket.priceEur.toFixed(2)} €
             </Text>
           </View>
         ) : !ticket.isPublic && ticket.isSubscribedToCreator ? (
@@ -145,13 +145,13 @@ const TipsterTicketCard: React.FC<{
             <Ionicons name="star" size={12} color={colors.warning} />
             <Text style={styles.abonneBadgeText}>Abonné</Text>
           </View>
-        ) : ticket.priceCredits > 0 ? (
+        ) : ticket.priceEur > 0 ? (
           <TouchableOpacity
             style={styles.buyBtn}
             onPress={() => onBuy(ticket)}
             activeOpacity={0.7}
           >
-            <Text style={styles.buyBtnText}>{ticket.priceCredits} cr.</Text>
+            <Text style={styles.buyBtnText}>{ticket.priceEur.toFixed(2)} €</Text>
           </TouchableOpacity>
         ) : (
           <Text style={styles.freeText}>Gratuit</Text>
@@ -531,13 +531,15 @@ const TipsterProfileScreen: React.FC = () => {
         }
       }
 
-      // Free plan - subscribe directly
-      if (plan.priceCredits <= 0) {
+      // Free plan - subscribe directly via Stripe (free subscription)
+      if (plan.priceEur <= 0) {
         setSubLoading(true);
         closePlansModal();
         try {
-          const { data } = await subscriptionApi.subscribeWithPlan(plan.id);
+          const { data } = await subscriptionApi.initiateSubscription(plan.id);
           if (data.success) {
+            // Confirm free subscription
+            await subscriptionApi.confirmSubscription(data.paymentId!);
             const statusRes = await subscriptionApi.getSubscriptionStatus(tipsterId);
             setSubStatus(statusRes.data);
             Alert.alert('Abonnement activé', 'Vous êtes maintenant abonné !');
@@ -963,7 +965,7 @@ const TipsterProfileScreen: React.FC = () => {
                         <View style={styles.planDetail}>
                           <Ionicons name="wallet-outline" size={14} color={colors.textSecondary} />
                           <Text style={styles.planDetailText}>
-                            {plan.priceCredits} crédits
+                            {plan.priceEur > 0 ? `${plan.priceEur.toFixed(2)} €` : 'Gratuit'}
                           </Text>
                         </View>
                       </View>

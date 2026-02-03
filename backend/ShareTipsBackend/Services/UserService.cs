@@ -39,12 +39,16 @@ public class UserService : IUserService
             user.UpdatedAt
         );
 
-        // Wallet
+        // Wallet - convert cents to EUR
         var wallet = user.Wallet != null
-            ? new WalletExportDto(user.Wallet.BalanceCredits, user.Wallet.LockedCredits, user.Wallet.CreatedAt)
-            : new WalletExportDto(0, 0, user.CreatedAt);
+            ? new WalletExportDto(
+                user.Wallet.TipsterBalanceCents / 100m,
+                user.Wallet.PendingPayoutCents / 100m,
+                user.Wallet.TotalEarnedCents / 100m,
+                user.Wallet.CreatedAt)
+            : new WalletExportDto(0m, 0m, 0m, user.CreatedAt);
 
-        // Tickets created
+        // Tickets created - convert cents to EUR
         var tickets = await _context.Tickets
             .Where(t => t.CreatorId == userId && t.DeletedAt == null)
             .Select(t => new TicketExportDto(
@@ -53,14 +57,14 @@ public class UserService : IUserService
                 t.AvgOdds,
                 t.ConfidenceIndex,
                 t.IsPublic,
-                t.PriceCredits,
+                t.PriceCents / 100m,
                 t.Status.ToString(),
                 t.Result.ToString(),
                 t.CreatedAt
             ))
             .ToListAsync();
 
-        // Purchases
+        // Purchases - convert cents to EUR
         var purchases = await _context.TicketPurchases
             .Where(p => p.BuyerId == userId)
             .Include(p => p.Ticket)
@@ -68,18 +72,18 @@ public class UserService : IUserService
                 p.TicketId,
                 p.Ticket!.Title,
                 p.Ticket.Creator!.Username,
-                p.PriceCredits,
+                p.PriceCents / 100m,
                 p.CreatedAt
             ))
             .ToListAsync();
 
-        // Subscriptions (as subscriber)
+        // Subscriptions (as subscriber) - convert cents to EUR
         var subscriptions = await _context.Subscriptions
             .Where(s => s.SubscriberId == userId)
             .Include(s => s.Tipster)
             .Select(s => new SubscriptionExportDto(
                 s.Tipster!.Username,
-                s.PriceCredits,
+                s.PriceCents / 100m,
                 s.StartDate,
                 s.EndDate,
                 s.Status.ToString()

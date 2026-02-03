@@ -117,7 +117,7 @@ export function validateUsername(username: string): ValidationResult {
 }
 
 /**
- * Validate ticket price (credits)
+ * Validate ticket price (EUR)
  */
 export function validateTicketPrice(priceStr: string, isPrivate: boolean): ValidationResult {
   // Public tickets don't need price validation
@@ -136,11 +136,11 @@ export function validateTicketPrice(priceStr: string, isPrivate: boolean): Valid
   }
 
   if (price < RULES.TICKET.minPrice) {
-    return { isValid: false, error: `Minimum ${RULES.TICKET.minPrice} crédit` };
+    return { isValid: false, error: `Minimum ${RULES.TICKET.minPrice} EUR` };
   }
 
   if (price > RULES.TICKET.maxPrice) {
-    return { isValid: false, error: `Maximum ${RULES.TICKET.maxPrice} crédits` };
+    return { isValid: false, error: `Maximum ${RULES.TICKET.maxPrice} EUR` };
   }
 
   return { isValid: true };

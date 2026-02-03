@@ -56,7 +56,7 @@ const PurchaseCard: React.FC<{
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.metaLabel}>Prix payé</Text>
-        <Text style={styles.metaValue}>{item.priceCredits} crédits</Text>
+        <Text style={styles.metaValue}>{item.priceEur.toFixed(2)} €</Text>
       </View>
     </View>
 

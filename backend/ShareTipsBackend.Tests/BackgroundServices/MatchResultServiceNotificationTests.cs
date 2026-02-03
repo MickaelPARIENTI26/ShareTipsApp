@@ -39,8 +39,8 @@ public class MatchResultServiceNotificationTests
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
-            BalanceCredits = 1000,
-            LockedCredits = 0,
+            TipsterBalanceCents = 10000,
+            PendingPayoutCents = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -91,7 +91,7 @@ public class MatchResultServiceNotificationTests
             Creator = creator,
             Title = "Test Ticket",
             IsPublic = true,
-            PriceCredits = 10,
+            PriceCents = 1000,
             ConfidenceIndex = 7,
             AvgOdds = 2.5m,
             Sports = new[] { "soccer" },
@@ -136,7 +136,9 @@ public class MatchResultServiceNotificationTests
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
-            PriceCredits = 10,
+            PriceCents = 1000,
+            CommissionCents = 170,
+            SellerAmountCents = 830,
             CreatedAt = DateTime.UtcNow
         });
         await context.SaveChangesAsync();
@@ -177,7 +179,9 @@ public class MatchResultServiceNotificationTests
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
-            PriceCredits = 10,
+            PriceCents = 1000,
+            CommissionCents = 170,
+            SellerAmountCents = 830,
             CreatedAt = DateTime.UtcNow
         });
         await context.SaveChangesAsync();
@@ -219,7 +223,9 @@ public class MatchResultServiceNotificationTests
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
-            PriceCredits = 10,
+            PriceCents = 1000,
+            CommissionCents = 170,
+            SellerAmountCents = 830,
             CreatedAt = DateTime.UtcNow
         });
 
@@ -274,7 +280,9 @@ public class MatchResultServiceNotificationTests
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyerAndSubscriber.Id,
-            PriceCredits = 10,
+            PriceCents = 1000,
+            CommissionCents = 170,
+            SellerAmountCents = 830,
             CreatedAt = DateTime.UtcNow
         });
 
@@ -392,7 +400,9 @@ public class MatchResultServiceNotificationTests
             Id = Guid.NewGuid(),
             TicketId = ticket.Id,
             BuyerId = buyer.Id,
-            PriceCredits = 10,
+            PriceCents = 1000,
+            CommissionCents = 170,
+            SellerAmountCents = 830,
             CreatedAt = DateTime.UtcNow
         });
         await context.SaveChangesAsync();

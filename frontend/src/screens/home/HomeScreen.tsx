@@ -66,14 +66,14 @@ const HomeScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Credits — tappable, navigates to WalletScreen */}
+      {/* Wallet — tappable, navigates to WalletScreen */}
       <TouchableOpacity
         style={styles.walletCard}
         onPress={() => rootNavigation.navigate('Wallet')}
         activeOpacity={0.7}
       >
         <View style={styles.walletHeader}>
-          <Text style={styles.walletLabel}>Crédits disponibles</Text>
+          <Text style={styles.walletLabel}>Solde disponible</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
         </View>
         {loading ? (
@@ -85,13 +85,13 @@ const HomeScreen: React.FC = () => {
           </View>
         ) : (
           <Text style={styles.walletAmount}>
-            {wallet?.availableCredits ?? 0}{' '}
-            <Text style={styles.walletUnit}>crédits</Text>
+            {wallet?.availableBalance?.toFixed(2) ?? '0.00'}{' '}
+            <Text style={styles.walletUnit}>EUR</Text>
           </Text>
         )}
-        {wallet && !loading && !error && wallet.lockedCredits > 0 && (
+        {wallet && !loading && !error && wallet.pendingPayout > 0 && (
           <Text style={styles.walletLocked}>
-            {wallet.lockedCredits} crédits réservés
+            {wallet.pendingPayout.toFixed(2)} EUR en virement
           </Text>
         )}
       </TouchableOpacity>

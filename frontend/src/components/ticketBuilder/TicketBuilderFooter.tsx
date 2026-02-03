@@ -9,7 +9,7 @@ interface TicketBuilderFooterProps {
   count: number;
   confidenceIndex: number | null;
   visibility: TicketVisibility;
-  priceCredits: number | null;
+  priceEur: number | null;
   onClear: () => void;
   onSubmit: () => void;
 }
@@ -18,12 +18,12 @@ function isValid(
   count: number,
   confidenceIndex: number | null,
   visibility: TicketVisibility,
-  priceCredits: number | null
+  priceEur: number | null
 ): boolean {
   if (count === 0) return false;
   if (confidenceIndex == null || confidenceIndex < 1 || confidenceIndex > 10)
     return false;
-  if (visibility === 'PRIVATE' && (priceCredits == null || priceCredits < 1))
+  if (visibility === 'PRIVATE' && (priceEur == null || priceEur < 1))
     return false;
   return true;
 }
@@ -33,13 +33,13 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
   count,
   confidenceIndex,
   visibility,
-  priceCredits,
+  priceEur,
   onClear,
   onSubmit,
 }) => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
-  const valid = isValid(count, confidenceIndex, visibility, priceCredits);
+  const valid = isValid(count, confidenceIndex, visibility, priceEur);
 
   return (
     <View style={styles.container}>
@@ -81,7 +81,7 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Prix</Text>
             <Text style={styles.summaryValue}>
-              {priceCredits != null ? `${priceCredits} cr.` : '–'}
+              {priceEur != null ? `${priceEur} EUR` : '–'}
             </Text>
           </View>
         )}

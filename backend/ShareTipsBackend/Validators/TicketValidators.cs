@@ -11,7 +11,7 @@ public class CreateTicketDtoValidator : AbstractValidator<CreateTicketDto>
             .NotEmpty().WithMessage("Title is required")
             .MaximumLength(200).WithMessage("Title must not exceed 200 characters");
 
-        RuleFor(x => x.PriceCredits)
+        RuleFor(x => x.PriceEur)
             .GreaterThanOrEqualTo(0).WithMessage("Price must be non-negative");
 
         RuleFor(x => x.ConfidenceIndex)
@@ -58,9 +58,9 @@ public class UpdateTicketDtoValidator : AbstractValidator<UpdateTicketDto>
             .MaximumLength(200).WithMessage("Title must not exceed 200 characters")
             .When(x => x.Title != null);
 
-        RuleFor(x => x.PriceCredits)
+        RuleFor(x => x.PriceEur)
             .GreaterThanOrEqualTo(0).WithMessage("Price must be non-negative")
-            .When(x => x.PriceCredits.HasValue);
+            .When(x => x.PriceEur.HasValue);
 
         RuleFor(x => x.ConfidenceIndex)
             .InclusiveBetween(1, 10).WithMessage("Confidence index must be between 1 and 10")

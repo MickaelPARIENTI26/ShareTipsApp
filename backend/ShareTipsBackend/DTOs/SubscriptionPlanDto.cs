@@ -6,7 +6,7 @@ public record SubscriptionPlanDto(
     string Title,
     string? Description,
     int DurationInDays,
-    int PriceCredits,
+    decimal PriceEur,
     bool IsActive,
     DateTime CreatedAt,
     DateTime? UpdatedAt
@@ -16,13 +16,13 @@ public record CreateSubscriptionPlanRequest(
     string Title,
     string? Description,
     int DurationInDays,
-    int PriceCredits
+    decimal PriceEur
 );
 
 public record UpdateSubscriptionPlanRequest(
     string? Title,
     string? Description,
     int? DurationInDays,
-    int? PriceCredits,
+    decimal? PriceEur,
     bool? IsActive
 );

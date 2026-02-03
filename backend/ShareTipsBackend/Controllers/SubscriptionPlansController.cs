@@ -69,7 +69,7 @@ public class SubscriptionPlansController : ApiControllerBase
         if (request.DurationInDays <= 0)
             return BadRequest(new { error = "Duration must be positive" });
 
-        if (request.PriceCredits <= 0)
+        if (request.PriceEur <= 0)
             return BadRequest(new { error = "Price must be positive" });
 
         var userId = GetUserId();

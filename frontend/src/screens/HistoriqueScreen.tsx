@@ -29,7 +29,7 @@ interface HistoryItem {
   status: string;
   targetId: string; // ticketId or tipsterId
   targetUsername: string;
-  priceCredits: number;
+  priceEur: number;
 }
 
 function formatDate(iso: string): string {
@@ -125,7 +125,7 @@ const HistoryCard: React.FC<{
             </View>
           )}
         </View>
-        <Text style={styles.priceText}>{item.priceCredits} cr.</Text>
+        <Text style={styles.priceText}>{item.priceEur.toFixed(2)} €</Text>
       </View>
     </TouchableOpacity>
   );
@@ -181,7 +181,7 @@ const HistoriqueScreen: React.FC = () => {
         status: 'Accessible',
         targetId: p.ticketId,
         targetUsername: p.sellerUsername,
-        priceCredits: p.priceCredits,
+        priceEur: p.priceEur,
       })),
     [purchases]
   );
@@ -197,7 +197,7 @@ const HistoriqueScreen: React.FC = () => {
         status: getSubscriptionStatusLabel(s.status, s.endDate),
         targetId: s.tipsterId,
         targetUsername: s.tipsterUsername,
-        priceCredits: s.priceCredits,
+        priceEur: s.priceEur,
       })),
     [subscriptions]
   );

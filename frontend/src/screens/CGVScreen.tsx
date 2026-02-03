@@ -32,15 +32,12 @@ const CGVScreen: React.FC = () => {
         </Text>
       </Section>
 
-      <Section title="3. Prix et monnaie" styles={styles}>
+      <Section title="3. Prix et paiements" styles={styles}>
         <Text style={styles.paragraph}>
-          Tous les prix sur ShareTips sont exprimés en crédits, une monnaie virtuelle interne à la plateforme.
+          Tous les prix sur ShareTips sont exprimés en euros (EUR).
         </Text>
         <Text style={styles.paragraph}>
-          {"Les crédits peuvent être acquis via les moyens de paiement proposés sur la plateforme. Le taux de conversion euros/crédits est indiqué lors de l'achat de crédits."}
-        </Text>
-        <Text style={styles.paragraph}>
-          Les prix des pronostics et abonnements sont fixés librement par les pronostiqueurs, dans les limites définies par la plateforme.
+          {"Les paiements sont effectués de manière sécurisée via Stripe. Les prix des pronostics et abonnements sont fixés librement par les pronostiqueurs, dans les limites définies par la plateforme."}
         </Text>
       </Section>
 
@@ -54,10 +51,10 @@ const CGVScreen: React.FC = () => {
         <View style={styles.example}>
           <Text style={styles.exampleTitle}>Exemple :</Text>
           <Text style={styles.exampleText}>
-            Prix affiché : 100 crédits{'\n'}
-            Acheteur paie : 100 crédits{'\n'}
-            Vendeur reçoit : 90 crédits{'\n'}
-            Commission ShareTips : 10 crédits
+            Prix affiché : 10,00 €{'\n'}
+            Acheteur paie : 10,00 €{'\n'}
+            Vendeur reçoit : 9,00 €{'\n'}
+            Commission ShareTips : 1,00 €
           </Text>
         </View>
       </Section>

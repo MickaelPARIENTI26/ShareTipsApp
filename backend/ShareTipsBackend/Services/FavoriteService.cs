@@ -108,7 +108,7 @@ public class FavoriteService : IFavoriteService
             f.Ticket?.CreatorId ?? Guid.Empty,
             f.Ticket?.Creator?.Username ?? "Unknown",
             f.Ticket?.IsPublic ?? true,
-            f.Ticket?.PriceCredits ?? 0,
+            (f.Ticket?.PriceCents ?? 0) / 100m, // Convert cents to EUR for DTO
             f.Ticket?.ConfidenceIndex ?? 0,
             f.Ticket?.AvgOdds ?? 0,
             f.Ticket?.Sports ?? Array.Empty<string>(),

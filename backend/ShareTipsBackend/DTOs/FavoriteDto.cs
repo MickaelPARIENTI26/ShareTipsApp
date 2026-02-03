@@ -7,7 +7,7 @@ public record FavoriteTicketDto(
     Guid CreatorId,
     string CreatorUsername,
     bool IsPublic,
-    int PriceCredits,
+    decimal PriceEur,
     int ConfidenceIndex,
     decimal AvgOdds,
     string[] Sports,

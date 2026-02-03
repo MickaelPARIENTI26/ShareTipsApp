@@ -20,9 +20,9 @@ public class CreateSubscriptionPlanRequestValidator : AbstractValidator<CreateSu
             .GreaterThan(0).WithMessage("Duration must be at least 1 day")
             .LessThanOrEqualTo(365).WithMessage("Duration must not exceed 365 days");
 
-        RuleFor(x => x.PriceCredits)
+        RuleFor(x => x.PriceEur)
             .GreaterThanOrEqualTo(0).WithMessage("Price must be non-negative")
-            .LessThanOrEqualTo(100000).WithMessage("Price must not exceed 100,000 credits");
+            .LessThanOrEqualTo(1000m).WithMessage("Price must not exceed 1,000 EUR");
     }
 }
 
@@ -44,9 +44,9 @@ public class UpdateSubscriptionPlanRequestValidator : AbstractValidator<UpdateSu
             .LessThanOrEqualTo(365).WithMessage("Duration must not exceed 365 days")
             .When(x => x.DurationInDays.HasValue);
 
-        RuleFor(x => x.PriceCredits)
+        RuleFor(x => x.PriceEur)
             .GreaterThanOrEqualTo(0).WithMessage("Price must be non-negative")
-            .LessThanOrEqualTo(100000).WithMessage("Price must not exceed 100,000 credits")
-            .When(x => x.PriceCredits.HasValue);
+            .LessThanOrEqualTo(1000m).WithMessage("Price must not exceed 1,000 EUR")
+            .When(x => x.PriceEur.HasValue);
     }
 }

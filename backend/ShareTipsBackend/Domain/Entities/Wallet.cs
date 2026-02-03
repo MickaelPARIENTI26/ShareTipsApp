@@ -10,10 +10,6 @@ public class Wallet
     public int PendingPayoutCents { get; set; }
     public int TotalEarnedCents { get; set; }
 
-    // Legacy credits system (kept for backward compatibility during migration)
-    public int BalanceCredits { get; set; }
-    public int LockedCredits { get; set; }
-
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

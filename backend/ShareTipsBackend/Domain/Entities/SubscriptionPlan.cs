@@ -11,9 +11,6 @@ public class SubscriptionPlan
     // EUR cents (Stripe Connect)
     public int PriceCents { get; set; }
 
-    // Legacy credits system (kept for backward compatibility)
-    public int PriceCredits { get; set; }
-
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

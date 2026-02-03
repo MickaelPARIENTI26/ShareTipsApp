@@ -67,13 +67,13 @@ public class AuthService : IAuthService
             UpdatedAt = DateTime.UtcNow
         };
 
-        // Create wallet for user with 1000 credits for testing
+        // Create wallet for user (EUR cents-based)
         var wallet = new Wallet
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
-            BalanceCredits = 1000,
-            LockedCredits = 0,
+            TipsterBalanceCents = 0,
+            PendingPayoutCents = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

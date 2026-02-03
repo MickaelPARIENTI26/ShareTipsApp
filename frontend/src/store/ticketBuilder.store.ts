@@ -9,7 +9,7 @@ interface TicketBuilderState {
   isManuallyCollapsed: boolean;
   confidenceIndex: number | null;
   visibility: TicketVisibility;
-  priceCredits: number | null;
+  priceEur: number | null;
 
   addSelection: (selection: TicketSelection) => void;
   removeSelection: (matchId: string) => void;
@@ -22,7 +22,7 @@ interface TicketBuilderState {
   toggleTicketBuilder: () => void;
   setConfidenceIndex: (value: number) => void;
   setVisibility: (value: TicketVisibility) => void;
-  setPriceCredits: (value: number | null) => void;
+  setPriceEur: (value: number | null) => void;
 }
 
 export const useTicketBuilderStore = create<TicketBuilderState>()((set, get) => ({
@@ -31,7 +31,7 @@ export const useTicketBuilderStore = create<TicketBuilderState>()((set, get) => 
   isManuallyCollapsed: false,
   confidenceIndex: null,
   visibility: 'PUBLIC',
-  priceCredits: null,
+  priceEur: null,
 
   addSelection: (selection) =>
     set((state) => {
@@ -71,7 +71,7 @@ export const useTicketBuilderStore = create<TicketBuilderState>()((set, get) => 
       isManuallyCollapsed: false,
       confidenceIndex: null,
       visibility: 'PUBLIC',
-      priceCredits: null,
+      priceEur: null,
     }),
 
   totalOdds: () => get().selections.reduce((acc, s) => acc * s.odds, 1),
@@ -92,6 +92,6 @@ export const useTicketBuilderStore = create<TicketBuilderState>()((set, get) => 
 
   setConfidenceIndex: (value) => set({ confidenceIndex: value }),
   setVisibility: (value) =>
-    set({ visibility: value, priceCredits: value === 'PUBLIC' ? null : null }),
-  setPriceCredits: (value) => set({ priceCredits: value }),
+    set({ visibility: value, priceEur: value === 'PUBLIC' ? null : null }),
+  setPriceEur: (value) => set({ priceEur: value }),
 }));

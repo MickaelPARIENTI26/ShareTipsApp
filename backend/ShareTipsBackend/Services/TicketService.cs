@@ -275,7 +275,7 @@ public class TicketService : ITicketService
             CreatorId = creatorId,
             Title = dto.Title,
             IsPublic = dto.IsPublic,
-            PriceCredits = dto.PriceCredits,
+            PriceCents = (int)(dto.PriceEur * 100),
             ConfidenceIndex = dto.ConfidenceIndex,
             AvgOdds = avgOdds,
             Sports = sports,
@@ -402,9 +402,9 @@ public class TicketService : ITicketService
             ticket.IsPublic = dto.IsPublic.Value;
         }
 
-        if (dto.PriceCredits.HasValue)
+        if (dto.PriceEur.HasValue)
         {
-            ticket.PriceCredits = dto.PriceCredits.Value;
+            ticket.PriceCents = (int)(dto.PriceEur.Value * 100);
         }
 
         if (dto.ConfidenceIndex.HasValue)
@@ -583,7 +583,7 @@ public class TicketService : ITicketService
             ticket.Creator?.Username ?? "Unknown",
             ticket.Title,
             ticket.IsPublic,
-            ticket.PriceCredits,
+            ticket.PriceCents / 100m, // Convert cents to EUR for DTO
             ticket.ConfidenceIndex,
             ticket.AvgOdds,
             ticket.Sports,

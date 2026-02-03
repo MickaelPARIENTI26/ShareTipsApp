@@ -79,7 +79,7 @@ public class AuthServiceTests
 
         var wallet = context.Wallets.First();
         wallet.UserId.Should().Be(user.Id);
-        wallet.BalanceCredits.Should().Be(1000); // Welcome bonus
+        wallet.TipsterBalanceCents.Should().Be(0); // New wallet starts with 0 balance
     }
 
     [Fact]

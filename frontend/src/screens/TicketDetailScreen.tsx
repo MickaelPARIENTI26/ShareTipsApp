@@ -486,7 +486,7 @@ const TicketDetailScreen: React.FC = () => {
                 <>
                   <Ionicons name="cart" size={18} color={colors.textOnPrimary} />
                   <Text style={styles.buyBtnText}>
-                    {(ticket.priceCredits / 10).toFixed(2)} €
+                    {ticket.priceEur.toFixed(2)} €
                   </Text>
                 </>
               )}

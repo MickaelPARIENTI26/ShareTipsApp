@@ -64,7 +64,6 @@ public static class TestDataSeeder
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test1234!"),
                 Role = UserRole.User,
                 IsVerified = true,
-                SubscriptionPriceCredits = 500,
                 CreatedAt = DateTime.UtcNow.AddDays(-90),
                 UpdatedAt = DateTime.UtcNow
             },
@@ -77,7 +76,6 @@ public static class TestDataSeeder
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test1234!"),
                 Role = UserRole.User,
                 IsVerified = true,
-                SubscriptionPriceCredits = 300,
                 CreatedAt = DateTime.UtcNow.AddDays(-60),
                 UpdatedAt = DateTime.UtcNow
             },
@@ -90,7 +88,6 @@ public static class TestDataSeeder
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test1234!"),
                 Role = UserRole.User,
                 IsVerified = true,
-                SubscriptionPriceCredits = 0,
                 CreatedAt = DateTime.UtcNow.AddDays(-45),
                 UpdatedAt = DateTime.UtcNow
             },
@@ -103,7 +100,6 @@ public static class TestDataSeeder
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test1234!"),
                 Role = UserRole.User,
                 IsVerified = true,
-                SubscriptionPriceCredits = 0,
                 CreatedAt = DateTime.UtcNow.AddDays(-7),
                 UpdatedAt = DateTime.UtcNow
             },
@@ -116,7 +112,6 @@ public static class TestDataSeeder
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test1234!"),
                 Role = UserRole.User,
                 IsVerified = true,
-                SubscriptionPriceCredits = 200,
                 CreatedAt = DateTime.UtcNow.AddDays(-30),
                 UpdatedAt = DateTime.UtcNow
             }
@@ -130,8 +125,8 @@ public static class TestDataSeeder
         {
             Id = Guid.NewGuid(),
             UserId = u.Id,
-            BalanceCredits = _random.Next(100, 5000),
-            LockedCredits = 0,
+            TipsterBalanceCents = _random.Next(1000, 50000),
+            PendingPayoutCents = 0,
             CreatedAt = u.CreatedAt,
             UpdatedAt = DateTime.UtcNow
         }).ToList();
@@ -368,17 +363,17 @@ public static class TestDataSeeder
         foreach (var user in users)
         {
             // 6 tickets per user
-            var userTickets = new List<(bool IsPublic, int Price, int Confidence, TicketStatus Status, TicketResult Result)>
+            var userTickets = new List<(bool IsPublic, int PriceCents, int Confidence, TicketStatus Status, TicketResult Result)>
             {
                 // 3 public free tickets
                 (true, 0, _random.Next(5, 10), TicketStatus.Open, TicketResult.Pending),
                 (true, 0, _random.Next(3, 8), TicketStatus.Finished, TicketResult.Win),
                 (true, 0, _random.Next(4, 9), TicketStatus.Finished, TicketResult.Lose),
                 // 2 private paid tickets
-                (false, _random.Next(50, 300), _random.Next(7, 10), TicketStatus.Open, TicketResult.Pending),
-                (false, _random.Next(100, 500), _random.Next(6, 9), TicketStatus.Locked, TicketResult.Pending),
+                (false, _random.Next(500, 3000), _random.Next(7, 10), TicketStatus.Open, TicketResult.Pending),
+                (false, _random.Next(1000, 5000), _random.Next(6, 9), TicketStatus.Locked, TicketResult.Pending),
                 // 1 mixed (public but paid)
-                (true, _random.Next(20, 100), _random.Next(5, 8), TicketStatus.Open, TicketResult.Pending)
+                (true, _random.Next(200, 1000), _random.Next(5, 8), TicketStatus.Open, TicketResult.Pending)
             };
 
             for (int i = 0; i < userTickets.Count; i++)
@@ -438,7 +433,7 @@ public static class TestDataSeeder
                     CreatorId = user.Id,
                     Title = GenerateTicketTitle(user.Username, i, config.IsPublic, sports.First()),
                     IsPublic = config.IsPublic,
-                    PriceCredits = config.Price,
+                    PriceCents = config.PriceCents,
                     ConfidenceIndex = config.Confidence,
                     AvgOdds = Math.Round(totalOdds, 2),
                     Sports = sports.ToArray(),
@@ -484,7 +479,7 @@ public static class TestDataSeeder
         foreach (var user in users.Take(3))
         {
             var availableTickets = tickets
-                .Where(t => t.CreatorId != user.Id && t.PriceCredits > 0)
+                .Where(t => t.CreatorId != user.Id && t.PriceCents > 0)
                 .OrderBy(_ => _random.Next())
                 .Take(2);
 
@@ -495,8 +490,8 @@ public static class TestDataSeeder
                     Id = Guid.NewGuid(),
                     TicketId = ticket.Id,
                     BuyerId = user.Id,
-                    PriceCredits = ticket.PriceCredits,
-                    CommissionCredits = (int)(ticket.PriceCredits * 0.17),
+                    PriceCents = ticket.PriceCents,
+                    CommissionCents = (int)(ticket.PriceCents * 0.17),
                     CreatedAt = DateTime.UtcNow.AddDays(-_random.Next(1, 7))
                 });
             }
@@ -527,12 +522,10 @@ public static class TestDataSeeder
 
         // Create some follows (users follow tipsters)
         var follows = new List<UserFollow>();
-        var tipsters = users.Where(u => u.SubscriptionPriceCredits > 0).ToList();
-        var followers = users.Where(u => u.SubscriptionPriceCredits == 0).ToList();
 
-        foreach (var follower in followers)
+        foreach (var follower in users)
         {
-            foreach (var tipster in tipsters.OrderBy(_ => _random.Next()).Take(2))
+            foreach (var tipster in users.OrderBy(_ => _random.Next()).Take(2))
             {
                 if (follower.Id != tipster.Id)
                 {
@@ -550,9 +543,9 @@ public static class TestDataSeeder
 
         // Create some subscriptions
         var subscriptions = new List<Subscription>();
-        foreach (var follower in followers.Take(2))
+        foreach (var follower in users.Take(2))
         {
-            var tipster = tipsters.FirstOrDefault(t => t.Id != follower.Id);
+            var tipster = users.FirstOrDefault(t => t.Id != follower.Id);
             if (tipster != null)
             {
                 subscriptions.Add(new Subscription
@@ -560,8 +553,8 @@ public static class TestDataSeeder
                     Id = Guid.NewGuid(),
                     SubscriberId = follower.Id,
                     TipsterId = tipster.Id,
-                    PriceCredits = tipster.SubscriptionPriceCredits,
-                    CommissionCredits = (int)(tipster.SubscriptionPriceCredits * 0.17),
+                    PriceCents = 500,
+                    CommissionCents = (int)(500 * 0.17),
                     StartDate = DateTime.UtcNow.AddDays(-10),
                     EndDate = DateTime.UtcNow.AddDays(20),
                     Status = SubscriptionStatus.Active,
@@ -594,8 +587,8 @@ public static class TestDataSeeder
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     Type = NotificationType.TicketWon,
-                    Title = "Pronostic validé !",
-                    Message = "Votre pronostic a été validé",
+                    Title = "Pronostic valide !",
+                    Message = "Votre pronostic a ete valide",
                     DataJson = null,
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow.AddHours(-_random.Next(1, 24))

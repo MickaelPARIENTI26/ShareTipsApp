@@ -12,10 +12,6 @@ public class TicketPurchase
     public int SellerAmountCents { get; set; }
     public Guid? StripePaymentId { get; set; }
 
-    // Legacy credits system (kept for backward compatibility)
-    public int PriceCredits { get; set; }
-    public int CommissionCredits { get; set; }
-
     public DateTime CreatedAt { get; set; }
 
     // Navigation

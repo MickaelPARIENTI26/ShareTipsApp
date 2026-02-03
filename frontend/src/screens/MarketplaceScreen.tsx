@@ -237,7 +237,7 @@ const MarketplaceTicketCard = React.memo<{
           <View style={styles.payantBadge}>
             <Ionicons name="lock-closed" size={12} color={colors.warning} />
             <Text style={styles.payantBadgeText}>
-              Payant · {ticket.priceCredits} cr.
+              Payant · {ticket.priceEur.toFixed(2)} €
             </Text>
           </View>
         ) : !ticket.isPublic && ticket.isSubscribedToCreator ? (
@@ -250,7 +250,7 @@ const MarketplaceTicketCard = React.memo<{
             <Ionicons name="checkmark-circle" size={14} color={colors.textOnPrimary} />
             <Text style={styles.purchasedBadgeText}>Acheté</Text>
           </View>
-        ) : ticket.priceCredits > 0 ? (
+        ) : ticket.priceEur > 0 ? (
           <TouchableOpacity
             style={styles.buyBtn}
             onPress={() => onBuy(ticket)}
@@ -258,7 +258,7 @@ const MarketplaceTicketCard = React.memo<{
           >
             <Ionicons name="cart" size={14} color={colors.textOnPrimary} />
             <Text style={styles.buyBtnText}>
-              {ticket.priceCredits} cr.
+              {ticket.priceEur.toFixed(2)} €
             </Text>
           </TouchableOpacity>
         ) : (

@@ -29,7 +29,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plans = await _context.SubscriptionPlans
             .Where(p => p.TipsterUserId == tipsterUserId && p.IsActive)
-            .OrderBy(p => p.PriceCredits)
+            .OrderBy(p => p.PriceCents)
             .ToListAsync();
 
         return plans.Select(MapToDto);
@@ -50,7 +50,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             Title = request.Title,
             Description = request.Description,
             DurationInDays = request.DurationInDays,
-            PriceCredits = request.PriceCredits,
+            PriceCents = (int)(request.PriceEur * 100),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -78,8 +78,8 @@ public class SubscriptionPlanService : ISubscriptionPlanService
         if (request.DurationInDays.HasValue)
             plan.DurationInDays = request.DurationInDays.Value;
 
-        if (request.PriceCredits.HasValue)
-            plan.PriceCredits = request.PriceCredits.Value;
+        if (request.PriceEur.HasValue)
+            plan.PriceCents = (int)(request.PriceEur.Value * 100);
 
         if (request.IsActive.HasValue)
             plan.IsActive = request.IsActive.Value;
@@ -113,7 +113,7 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             plan.Title,
             plan.Description,
             plan.DurationInDays,
-            plan.PriceCredits,
+            plan.PriceCents / 100m, // Convert cents to EUR for DTO
             plan.IsActive,
             plan.CreatedAt,
             plan.UpdatedAt

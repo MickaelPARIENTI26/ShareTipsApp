@@ -82,7 +82,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "My Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -114,7 +114,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "Multi-odds Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -141,7 +141,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "Find Me",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 8,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -184,7 +184,7 @@ public class TicketServiceTests
         var createDto = new CreateTicketDto(
             Title: "Original Title",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -196,7 +196,7 @@ public class TicketServiceTests
         var updateDto = new UpdateTicketDto(
             Title: "Updated Title",
             IsPublic: false,
-            PriceCredits: 100,
+            PriceEur: 1.00m,
             ConfidenceIndex: 9,
             Selections: null
         );
@@ -208,7 +208,7 @@ public class TicketServiceTests
         result.Should().NotBeNull();
         result!.Title.Should().Be("Updated Title");
         result.IsPublic.Should().BeFalse();
-        result.PriceCredits.Should().Be(100);
+        result.PriceEur.Should().Be(1.00m);
         result.ConfidenceIndex.Should().Be(9);
     }
 
@@ -223,7 +223,7 @@ public class TicketServiceTests
         var createDto = new CreateTicketDto(
             Title: "My Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -235,7 +235,7 @@ public class TicketServiceTests
         var updateDto = new UpdateTicketDto(
             Title: "Hacked!",
             IsPublic: null,
-            PriceCredits: null,
+            PriceEur: null,
             ConfidenceIndex: null,
             Selections: null
         );
@@ -256,7 +256,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "To Delete",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -285,7 +285,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "Protected",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -311,7 +311,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "Open Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -344,7 +344,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "Medium Odds",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -379,7 +379,7 @@ public class TicketServiceTests
         var dto = new CreateTicketDto(
             Title: "My Own Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {

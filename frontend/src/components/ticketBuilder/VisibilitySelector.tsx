@@ -18,20 +18,20 @@ const PRICE_INPUT_ACCESSORY_ID = 'priceInputAccessory';
 
 interface VisibilitySelectorProps {
   visibility: TicketVisibility;
-  priceCredits: number | null;
+  priceEur: number | null;
   onVisibilityChange: (value: TicketVisibility) => void;
   onPriceChange: (value: number | null) => void;
 }
 
 const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
   visibility,
-  priceCredits,
+  priceEur,
   onVisibilityChange,
   onPriceChange,
 }) => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
-  const [priceText, setPriceText] = useState(priceCredits != null ? String(priceCredits) : '');
+  const [priceText, setPriceText] = useState(priceEur != null ? String(priceEur) : '');
   const [touched, setTouched] = useState(false);
 
   const isPrivate = visibility === 'PRIVATE';
@@ -105,7 +105,7 @@ const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
       {visibility === 'PRIVATE' && (
         <View style={styles.priceRow}>
           <Text style={styles.priceLabel}>
-            Prix du ticket ({RULES.TICKET.minPrice}-{RULES.TICKET.maxPrice} crédits)
+            Prix du ticket ({RULES.TICKET.minPrice}-{RULES.TICKET.maxPrice} EUR)
           </Text>
           <View style={[
             styles.priceInputWrapper,
@@ -121,7 +121,7 @@ const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
               onSubmitEditing={() => Keyboard.dismiss()}
               inputAccessoryViewID={Platform.OS === 'ios' ? PRICE_INPUT_ACCESSORY_ID : undefined}
             />
-            <Text style={styles.priceSuffix}>cr.</Text>
+            <Text style={styles.priceSuffix}>EUR</Text>
           </View>
           {touched && !priceValidation.isValid && (
             <Text style={styles.priceError}>{priceValidation.error}</Text>

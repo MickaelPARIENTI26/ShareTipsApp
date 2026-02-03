@@ -232,7 +232,7 @@ public class RankingServiceTests
             Id = Guid.NewGuid(),
             CreatorId = creatorId,
             Title = "Test Ticket",
-            PriceCredits = 100,
+            PriceCents = 1000,
             IsPublic = true,
             Status = TicketStatus.Finished,
             Result = result,

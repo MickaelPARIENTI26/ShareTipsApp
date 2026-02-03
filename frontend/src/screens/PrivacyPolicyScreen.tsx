@@ -90,9 +90,9 @@ const PrivacyPolicyScreen: React.FC = () => {
         </Text>
         <Text style={styles.bullet}>• Effacement de vos données personnelles</Text>
         <Text style={styles.bullet}>• Anonymisation de vos pronostics publiés</Text>
-        <Text style={styles.bullet}>• Perte définitive de vos crédits non utilisés</Text>
+        <Text style={styles.bullet}>• Perte définitive de votre solde non retiré</Text>
         <Text style={styles.paragraph}>
-          {"Cette action est irréversible. Nous vous recommandons d'utiliser vos crédits avant de demander la suppression."}
+          {"Cette action est irréversible. Nous vous recommandons de retirer votre solde avant de demander la suppression."}
         </Text>
       </Section>
 

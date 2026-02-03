@@ -7,7 +7,7 @@ using ShareTipsBackend.Services.Interfaces;
 namespace ShareTipsBackend.Controllers;
 
 /// <summary>
-/// Gestion du portefeuille et des crédits
+/// Gestion du portefeuille tipster (Stripe Connect)
 /// </summary>
 [Route("api/[controller]")]
 [Authorize]
@@ -23,15 +23,15 @@ public class WalletController : ApiControllerBase
     }
 
     /// <summary>
-    /// Get current user's wallet
+    /// Get current user's tipster wallet (earnings from Stripe Connect)
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(WalletDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TipsterWalletDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetWallet()
     {
         var userId = GetUserId();
-        var wallet = await _walletService.GetByUserIdAsync(userId);
+        var wallet = await _walletService.GetTipsterWalletAsync(userId);
 
         if (wallet == null)
             return NotFound(new { error = "Wallet not found" });
@@ -49,45 +49,5 @@ public class WalletController : ApiControllerBase
         var userId = GetUserId();
         var transactions = await _walletService.GetTransactionsAsync(userId);
         return Ok(transactions);
-    }
-
-    /// <summary>
-    /// Credit wallet (add credits) - ADMIN ONLY
-    /// Used for manual adjustments and support operations.
-    /// </summary>
-    [HttpPost("credit")]
-    [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(WalletOperationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(WalletOperationResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Credit([FromBody] CreditWalletRequest request)
-    {
-        var userId = GetUserId();
-        var result = await _walletService.CreditAsync(userId, request.Amount, request.Description);
-
-        if (!result.Success)
-            return BadRequest(result);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Debit wallet (remove credits) - ADMIN ONLY
-    /// Used for manual adjustments and support operations.
-    /// </summary>
-    [HttpPost("debit")]
-    [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(WalletOperationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(WalletOperationResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Debit([FromBody] DebitWalletRequest request)
-    {
-        var userId = GetUserId();
-        var result = await _walletService.DebitAsync(userId, request.Amount, request.Description);
-
-        if (!result.Success)
-            return BadRequest(result);
-
-        return Ok(result);
     }
 }

@@ -32,7 +32,7 @@ public class TicketsControllerTests : IntegrationTestBase
         return new CreateTicketDto(
             Title: title,
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -95,7 +95,7 @@ public class TicketsControllerTests : IntegrationTestBase
         var ticketDto = new CreateTicketDto(
             Title: "Empty Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>()
         );
@@ -192,7 +192,7 @@ public class TicketsControllerTests : IntegrationTestBase
         var updateDto = new UpdateTicketDto(
             Title: "Updated Title",
             IsPublic: false,
-            PriceCredits: 50,
+            PriceEur: 0.50m,
             ConfidenceIndex: 9,
             Selections: null
         );
@@ -215,7 +215,7 @@ public class TicketsControllerTests : IntegrationTestBase
         updatedTicket.Should().NotBeNull();
         updatedTicket!.Title.Should().Be("Updated Title");
         updatedTicket.IsPublic.Should().BeFalse();
-        updatedTicket.PriceCredits.Should().Be(50);
+        updatedTicket.PriceEur.Should().Be(0.50m);
         updatedTicket.ConfidenceIndex.Should().Be(9);
     }
 
@@ -233,7 +233,7 @@ public class TicketsControllerTests : IntegrationTestBase
         var updateDto = new UpdateTicketDto(
             Title: "Hacked!",
             IsPublic: null,
-            PriceCredits: null,
+            PriceEur: null,
             ConfidenceIndex: null,
             Selections: null
         );
@@ -323,7 +323,7 @@ public class TicketsControllerTests : IntegrationTestBase
         var ticketDto = new CreateTicketDto(
             Title: "High Odds",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 5,
             Selections: new List<CreateTicketSelectionDto>
             {

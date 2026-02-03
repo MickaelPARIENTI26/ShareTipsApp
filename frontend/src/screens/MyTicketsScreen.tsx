@@ -119,7 +119,7 @@ const TicketCard: React.FC<{
               { color: ticket.isPublic ? colors.primary : colors.warning },
             ]}
           >
-            {ticket.isPublic ? 'Public' : `Privé · ${ticket.priceCredits} cr.`}
+            {ticket.isPublic ? 'Public' : `Privé · ${ticket.priceEur.toFixed(2)} €`}
           </Text>
         </View>
         <View

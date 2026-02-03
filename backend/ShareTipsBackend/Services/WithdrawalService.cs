@@ -18,9 +18,9 @@ public class WithdrawalService : IWithdrawalService
         _logger = logger;
     }
 
-    public async Task<WithdrawalResultDto> CreateWithdrawalAsync(Guid userId, int amountCredits, string method)
+    public async Task<WithdrawalResultDto> CreateWithdrawalAsync(Guid userId, int amountCents, string method)
     {
-        if (amountCredits <= 0)
+        if (amountCents <= 0)
         {
             return new WithdrawalResultDto(false, "Amount must be positive", null, 0, 0);
         }
@@ -45,21 +45,21 @@ public class WithdrawalService : IWithdrawalService
                 return new WithdrawalResultDto(false, "Wallet not found", null, 0, 0);
             }
 
-            // Check available credits
-            if (wallet.BalanceCredits < amountCredits)
+            // Check available cents
+            if (wallet.TipsterBalanceCents < amountCents)
             {
                 return new WithdrawalResultDto(
                     false,
-                    "Insufficient credits",
+                    "Insufficient balance",
                     null,
-                    wallet.BalanceCredits,
-                    wallet.LockedCredits
+                    wallet.TipsterBalanceCents,
+                    wallet.PendingPayoutCents
                 );
             }
 
-            // Move credits from balance to locked
-            wallet.BalanceCredits -= amountCredits;
-            wallet.LockedCredits += amountCredits;
+            // Move cents from balance to pending payout
+            wallet.TipsterBalanceCents -= amountCents;
+            wallet.PendingPayoutCents += amountCents;
             wallet.UpdatedAt = DateTime.UtcNow;
 
             // Create withdrawal request
@@ -67,7 +67,7 @@ public class WithdrawalService : IWithdrawalService
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                AmountCredits = amountCredits,
+                AmountCents = amountCents,
                 Method = withdrawalMethod,
                 Status = WithdrawalStatus.Pending,
                 CreatedAt = DateTime.UtcNow
@@ -80,7 +80,7 @@ public class WithdrawalService : IWithdrawalService
                 Id = Guid.NewGuid(),
                 WalletId = wallet.Id,
                 Type = TransactionType.WithdrawRequest,
-                AmountCredits = -amountCredits,
+                AmountCents = -amountCents,
                 ReferenceId = withdrawal.Id,
                 Status = TransactionStatus.Pending,
                 CreatedAt = DateTime.UtcNow
@@ -94,7 +94,7 @@ public class WithdrawalService : IWithdrawalService
                 withdrawal.Id,
                 userId,
                 wallet.User?.Username ?? "Unknown",
-                amountCredits,
+                amountCents,
                 withdrawal.Method.ToString(),
                 withdrawal.Status.ToString(),
                 withdrawal.AdminNotes,
@@ -106,13 +106,13 @@ public class WithdrawalService : IWithdrawalService
                 true,
                 "Withdrawal request created",
                 dto,
-                wallet.BalanceCredits,
-                wallet.LockedCredits
+                wallet.TipsterBalanceCents,
+                wallet.PendingPayoutCents
             );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Withdrawal creation failed: UserId={UserId}, Amount={Amount}", userId, amountCredits);
+            _logger.LogError(ex, "Withdrawal creation failed: UserId={UserId}, Amount={Amount}", userId, amountCents);
             await transaction.RollbackAsync();
             throw;
         }
@@ -128,7 +128,7 @@ public class WithdrawalService : IWithdrawalService
                 w.Id,
                 w.UserId,
                 w.User!.Username,
-                w.AmountCredits,
+                w.AmountCents,
                 w.Method.ToString(),
                 w.Status.ToString(),
                 w.AdminNotes,
@@ -148,7 +148,7 @@ public class WithdrawalService : IWithdrawalService
                 w.Id,
                 w.UserId,
                 w.User!.Username,
-                w.AmountCredits,
+                w.AmountCents,
                 w.Method.ToString(),
                 w.Status.ToString(),
                 w.AdminNotes,
@@ -204,14 +204,14 @@ public class WithdrawalService : IWithdrawalService
 
             if (approve)
             {
-                // Approved: Remove from locked credits (money will be sent externally)
-                wallet.LockedCredits -= withdrawal.AmountCredits;
+                // Approved: Remove from pending payout (money will be sent externally)
+                wallet.PendingPayoutCents -= withdrawal.AmountCents;
             }
             else
             {
-                // Rejected: Return from locked to balance
-                wallet.LockedCredits -= withdrawal.AmountCredits;
-                wallet.BalanceCredits += withdrawal.AmountCredits;
+                // Rejected: Return from pending payout to balance
+                wallet.PendingPayoutCents -= withdrawal.AmountCents;
+                wallet.TipsterBalanceCents += withdrawal.AmountCents;
             }
             wallet.UpdatedAt = DateTime.UtcNow;
 
@@ -222,7 +222,7 @@ public class WithdrawalService : IWithdrawalService
                 withdrawal.Id,
                 withdrawal.UserId,
                 withdrawal.User?.Username ?? "Unknown",
-                withdrawal.AmountCredits,
+                withdrawal.AmountCents,
                 withdrawal.Method.ToString(),
                 withdrawal.Status.ToString(),
                 withdrawal.AdminNotes,
@@ -234,8 +234,8 @@ public class WithdrawalService : IWithdrawalService
                 true,
                 approve ? "Withdrawal approved" : "Withdrawal rejected",
                 dto,
-                wallet.BalanceCredits,
-                wallet.LockedCredits
+                wallet.TipsterBalanceCents,
+                wallet.PendingPayoutCents
             );
         }
         catch (Exception ex)

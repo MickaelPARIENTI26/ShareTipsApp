@@ -235,7 +235,7 @@ const ProfileScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Paramètres</Text>
         <View style={styles.settingsCard}>
           <ActionRow icon="notifications-outline" label="Notifications" onPress={goToNotifications} badge={unreadCount} />
-          <ActionRow icon="wallet-outline" label="Mes crédits" onPress={goToWallet} />
+          <ActionRow icon="wallet-outline" label="Mon portefeuille" onPress={goToWallet} />
         </View>
       </View>
 

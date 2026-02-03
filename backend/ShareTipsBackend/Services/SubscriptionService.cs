@@ -29,7 +29,7 @@ public class SubscriptionService : ISubscriptionService
         _logger = logger;
     }
 
-    public async Task<SubscriptionResultDto> SubscribeAsync(Guid subscriberId, Guid tipsterId, int priceCredits)
+    public async Task<SubscriptionResultDto> SubscribeAsync(Guid subscriberId, Guid tipsterId, int priceCents)
     {
         // Check consent first
         var hasConsent = await _consentService.HasConsentAsync(subscriberId, ConsentTypes.NoGuarantee);
@@ -70,7 +70,7 @@ public class SubscriptionService : ISubscriptionService
                 && (s.Status == SubscriptionStatus.Expired || s.Status == SubscriptionStatus.Cancelled));
 
         // Free follow: skip wallet operations entirely
-        if (priceCredits <= 0)
+        if (priceCents <= 0)
         {
             var now = DateTime.UtcNow;
 
@@ -78,8 +78,9 @@ public class SubscriptionService : ISubscriptionService
             if (previousSubscription != null)
             {
                 // Reactivate existing record
-                previousSubscription.PriceCredits = 0;
-                previousSubscription.CommissionCredits = 0;
+                previousSubscription.PriceCents = 0;
+                previousSubscription.CommissionCents = 0;
+                previousSubscription.TipsterAmountCents = 0;
                 previousSubscription.StartDate = now;
                 previousSubscription.EndDate = now.AddMonths(1);
                 previousSubscription.Status = SubscriptionStatus.Active;
@@ -97,8 +98,9 @@ public class SubscriptionService : ISubscriptionService
                     Id = Guid.NewGuid(),
                     SubscriberId = subscriberId,
                     TipsterId = tipsterId,
-                    PriceCredits = 0,
-                    CommissionCredits = 0,
+                    PriceCents = 0,
+                    CommissionCents = 0,
+                    TipsterAmountCents = 0,
                     StartDate = now,
                     EndDate = now.AddMonths(1),
                     Status = SubscriptionStatus.Active,
@@ -124,8 +126,8 @@ public class SubscriptionService : ISubscriptionService
                 subscriber?.Username ?? "Unknown",
                 tipsterId,
                 tipster.Username,
-                0,
-                0,
+                0m,
+                0m,
                 subscription.StartDate,
                 subscription.EndDate,
                 subscription.Status.ToString(),
@@ -151,19 +153,20 @@ public class SubscriptionService : ISubscriptionService
 
             if (tipsterWallet == null)
             {
-                return new SubscriptionResultDto(false, "Tipster wallet not found", null, subscriberWallet.BalanceCredits);
+                return new SubscriptionResultDto(false, "Tipster wallet not found", null, subscriberWallet.TipsterBalanceCents);
             }
 
-            var availableBalance = subscriberWallet.BalanceCredits - subscriberWallet.LockedCredits;
+            var availableBalance = subscriberWallet.TipsterBalanceCents - subscriberWallet.PendingPayoutCents;
 
-            // Business rule: Sufficient credits
-            if (availableBalance < priceCredits)
+            // Business rule: Sufficient balance
+            if (availableBalance < priceCents)
             {
-                return new SubscriptionResultDto(false, "Insufficient credits", null, subscriberWallet.BalanceCredits);
+                return new SubscriptionResultDto(false, "Insufficient balance", null, subscriberWallet.TipsterBalanceCents);
             }
 
-            // Calculate amounts using shared utility
-            var (commissionCredits, tipsterCredits) = WalletOperations.CalculateCommission(priceCredits);
+            // Calculate amounts
+            var commissionCents = (int)Math.Ceiling(priceCents * PlatformFeePercent);
+            var tipsterAmountCents = priceCents - commissionCents;
 
             // 3. Create or reactivate subscription record (need Id for ReferenceId)
             var paidNow = DateTime.UtcNow;
@@ -171,8 +174,9 @@ public class SubscriptionService : ISubscriptionService
             if (previousSubscription != null)
             {
                 // Reactivate existing record
-                previousSubscription.PriceCredits = priceCredits;
-                previousSubscription.CommissionCredits = commissionCredits;
+                previousSubscription.PriceCents = priceCents;
+                previousSubscription.CommissionCents = commissionCents;
+                previousSubscription.TipsterAmountCents = tipsterAmountCents;
                 previousSubscription.StartDate = paidNow;
                 previousSubscription.EndDate = paidNow.AddMonths(1);
                 previousSubscription.Status = SubscriptionStatus.Active;
@@ -190,8 +194,9 @@ public class SubscriptionService : ISubscriptionService
                     Id = Guid.NewGuid(),
                     SubscriberId = subscriberId,
                     TipsterId = tipsterId,
-                    PriceCredits = priceCredits,
-                    CommissionCredits = commissionCredits,
+                    PriceCents = priceCents,
+                    CommissionCents = commissionCents,
+                    TipsterAmountCents = tipsterAmountCents,
                     StartDate = paidNow,
                     EndDate = paidNow.AddMonths(1),
                     Status = SubscriptionStatus.Active,
@@ -206,7 +211,7 @@ public class SubscriptionService : ISubscriptionService
                 Id = Guid.NewGuid(),
                 WalletId = subscriberWallet.Id,
                 Type = TransactionType.SubscriptionPurchase,
-                AmountCredits = -priceCredits,
+                AmountCents = -priceCents,
                 ReferenceId = paidSubscription.Id,
                 Status = TransactionStatus.Completed,
                 CreatedAt = paidNow
@@ -219,7 +224,7 @@ public class SubscriptionService : ISubscriptionService
                 Id = Guid.NewGuid(),
                 WalletId = tipsterWallet.Id,
                 Type = TransactionType.SubscriptionSale,
-                AmountCredits = tipsterCredits,
+                AmountCents = tipsterAmountCents,
                 ReferenceId = paidSubscription.Id,
                 Status = TransactionStatus.Completed,
                 CreatedAt = paidNow
@@ -232,7 +237,7 @@ public class SubscriptionService : ISubscriptionService
                 Id = Guid.NewGuid(),
                 WalletId = tipsterWallet.Id,
                 Type = TransactionType.Commission,
-                AmountCredits = -commissionCredits,
+                AmountCents = -commissionCents,
                 ReferenceId = paidSubscription.Id,
                 Status = TransactionStatus.Completed,
                 CreatedAt = paidNow
@@ -252,15 +257,15 @@ public class SubscriptionService : ISubscriptionService
                 paidSubscriber?.Username ?? "Unknown",
                 tipsterId,
                 tipster.Username,
-                priceCredits,
-                commissionCredits,
+                priceCents / 100m,
+                commissionCents / 100m,
                 paidSubscription.StartDate,
                 paidSubscription.EndDate,
                 paidSubscription.Status.ToString(),
                 paidSubscription.CreatedAt
             );
 
-            return new SubscriptionResultDto(true, "Subscription successful", paidSubscriptionDto, subscriberWallet.BalanceCredits);
+            return new SubscriptionResultDto(true, "Subscription successful", paidSubscriptionDto, subscriberWallet.TipsterBalanceCents);
         }
         catch (Exception ex)
         {
@@ -315,7 +320,7 @@ public class SubscriptionService : ISubscriptionService
                 && s.TipsterId == tipsterId
                 && (s.Status == SubscriptionStatus.Expired || s.Status == SubscriptionStatus.Cancelled));
 
-        var priceCredits = plan.PriceCredits;
+        var priceCents = plan.PriceCents;
         var durationDays = plan.DurationInDays;
 
         // Use transaction for atomicity
@@ -334,19 +339,20 @@ public class SubscriptionService : ISubscriptionService
 
             if (tipsterWallet == null)
             {
-                return new SubscriptionResultDto(false, "Tipster wallet not found", null, subscriberWallet.BalanceCredits);
+                return new SubscriptionResultDto(false, "Tipster wallet not found", null, subscriberWallet.TipsterBalanceCents);
             }
 
-            var availableBalance = subscriberWallet.BalanceCredits - subscriberWallet.LockedCredits;
+            var availableBalance = subscriberWallet.TipsterBalanceCents - subscriberWallet.PendingPayoutCents;
 
-            // Business rule: Sufficient credits
-            if (availableBalance < priceCredits)
+            // Business rule: Sufficient balance
+            if (availableBalance < priceCents)
             {
-                return new SubscriptionResultDto(false, "Insufficient credits", null, subscriberWallet.BalanceCredits);
+                return new SubscriptionResultDto(false, "Insufficient balance", null, subscriberWallet.TipsterBalanceCents);
             }
 
-            // Calculate amounts using shared utility
-            var (commissionCredits, tipsterCredits) = WalletOperations.CalculateCommission(priceCredits);
+            // Calculate amounts
+            var commissionCents = (int)Math.Ceiling(priceCents * PlatformFeePercent);
+            var tipsterAmountCents = priceCents - commissionCents;
 
             // 3. Create or reactivate subscription record
             var now = DateTime.UtcNow;
@@ -355,8 +361,9 @@ public class SubscriptionService : ISubscriptionService
             {
                 // Reactivate existing record
                 previousSubscription.SubscriptionPlanId = planId;
-                previousSubscription.PriceCredits = priceCredits;
-                previousSubscription.CommissionCredits = commissionCredits;
+                previousSubscription.PriceCents = priceCents;
+                previousSubscription.CommissionCents = commissionCents;
+                previousSubscription.TipsterAmountCents = tipsterAmountCents;
                 previousSubscription.StartDate = now;
                 previousSubscription.EndDate = now.AddDays(durationDays);
                 previousSubscription.Status = SubscriptionStatus.Active;
@@ -374,8 +381,9 @@ public class SubscriptionService : ISubscriptionService
                     SubscriberId = subscriberId,
                     TipsterId = tipsterId,
                     SubscriptionPlanId = planId,
-                    PriceCredits = priceCredits,
-                    CommissionCredits = commissionCredits,
+                    PriceCents = priceCents,
+                    CommissionCents = commissionCents,
+                    TipsterAmountCents = tipsterAmountCents,
                     StartDate = now,
                     EndDate = now.AddDays(durationDays),
                     Status = SubscriptionStatus.Active,
@@ -390,7 +398,7 @@ public class SubscriptionService : ISubscriptionService
                 Id = Guid.NewGuid(),
                 WalletId = subscriberWallet.Id,
                 Type = TransactionType.SubscriptionPurchase,
-                AmountCredits = -priceCredits,
+                AmountCents = -priceCents,
                 ReferenceId = subscription.Id,
                 Status = TransactionStatus.Completed,
                 CreatedAt = now
@@ -403,7 +411,7 @@ public class SubscriptionService : ISubscriptionService
                 Id = Guid.NewGuid(),
                 WalletId = tipsterWallet.Id,
                 Type = TransactionType.SubscriptionSale,
-                AmountCredits = tipsterCredits,
+                AmountCents = tipsterAmountCents,
                 ReferenceId = subscription.Id,
                 Status = TransactionStatus.Completed,
                 CreatedAt = now
@@ -416,7 +424,7 @@ public class SubscriptionService : ISubscriptionService
                 Id = Guid.NewGuid(),
                 WalletId = tipsterWallet.Id,
                 Type = TransactionType.Commission,
-                AmountCredits = -commissionCredits,
+                AmountCents = -commissionCents,
                 ReferenceId = subscription.Id,
                 Status = TransactionStatus.Completed,
                 CreatedAt = now
@@ -436,15 +444,15 @@ public class SubscriptionService : ISubscriptionService
                 subscriber?.Username ?? "Unknown",
                 tipsterId,
                 plan.Tipster?.Username ?? "Unknown",
-                priceCredits,
-                commissionCredits,
+                priceCents / 100m,
+                commissionCents / 100m,
                 subscription.StartDate,
                 subscription.EndDate,
                 subscription.Status.ToString(),
                 subscription.CreatedAt
             );
 
-            return new SubscriptionResultDto(true, "Subscription successful", subscriptionDto, subscriberWallet.BalanceCredits);
+            return new SubscriptionResultDto(true, "Subscription successful", subscriptionDto, subscriberWallet.TipsterBalanceCents);
         }
         catch (Exception ex)
         {
@@ -582,7 +590,7 @@ public class SubscriptionService : ISubscriptionService
         // Business rule: Cannot subscribe to yourself
         if (subscriberId == tipsterId)
         {
-            return new PaymentIntentResultDto(false, null, null, "Impossible de s'abonner à soi-même");
+            return new PaymentIntentResultDto(false, null, null, "Impossible de s'abonner a soi-meme");
         }
 
         // Check if already subscribed (active subscription)
@@ -594,16 +602,11 @@ public class SubscriptionService : ISubscriptionService
 
         if (existingSubscription != null)
         {
-            return new PaymentIntentResultDto(false, null, null, "Déjà abonné à ce tipster");
+            return new PaymentIntentResultDto(false, null, null, "Deja abonne a ce tipster");
         }
 
         // Use EUR cents price
         var priceCents = plan.PriceCents;
-        if (priceCents <= 0)
-        {
-            // Fallback to credits conversion if PriceCents not set (1 credit = 10 cents)
-            priceCents = plan.PriceCredits * 10;
-        }
 
         // Free plan - just subscribe directly without payment
         if (priceCents <= 0)
@@ -631,9 +634,6 @@ public class SubscriptionService : ISubscriptionService
             previousSubscription.PriceCents = priceCents;
             previousSubscription.CommissionCents = commissionCents;
             previousSubscription.TipsterAmountCents = tipsterAmountCents;
-            // Legacy fields for backward compatibility
-            previousSubscription.PriceCredits = priceCents / 10;
-            previousSubscription.CommissionCredits = commissionCents / 10;
             previousSubscription.StartDate = now;
             previousSubscription.EndDate = now.AddDays(plan.DurationInDays);
             previousSubscription.Status = SubscriptionStatus.Pending;
@@ -654,9 +654,6 @@ public class SubscriptionService : ISubscriptionService
                 PriceCents = priceCents,
                 CommissionCents = commissionCents,
                 TipsterAmountCents = tipsterAmountCents,
-                // Legacy fields for backward compatibility
-                PriceCredits = priceCents / 10,
-                CommissionCredits = commissionCents / 10,
                 StartDate = now,
                 EndDate = now.AddDays(plan.DurationInDays),
                 Status = SubscriptionStatus.Pending,
@@ -717,7 +714,7 @@ public class SubscriptionService : ISubscriptionService
 
         if (subscription.StripePayment?.Status != StripePaymentStatus.Succeeded)
         {
-            return new SubscriptionResultDto(false, "Paiement non confirmé", null, 0);
+            return new SubscriptionResultDto(false, "Paiement non confirme", null, 0);
         }
 
         // Activate subscription
@@ -725,7 +722,7 @@ public class SubscriptionService : ISubscriptionService
         await _context.SaveChangesAsync();
 
         var subscriptionDto = MapToDto(subscription);
-        return new SubscriptionResultDto(true, "Abonnement activé", subscriptionDto, 0);
+        return new SubscriptionResultDto(true, "Abonnement active", subscriptionDto, 0);
     }
 
     private static SubscriptionDto MapToDto(Subscription subscription)
@@ -736,8 +733,8 @@ public class SubscriptionService : ISubscriptionService
             subscription.Subscriber?.Username ?? "Unknown",
             subscription.TipsterId,
             subscription.Tipster?.Username ?? "Unknown",
-            subscription.PriceCredits,
-            subscription.CommissionCredits,
+            subscription.PriceCents / 100m,
+            subscription.CommissionCents / 100m,
             subscription.StartDate,
             subscription.EndDate,
             subscription.Status.ToString(),

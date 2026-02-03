@@ -16,18 +16,14 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { userApi } from '../api/user.api';
 import { stripeApi } from '../api/stripe.api';
-import type {
-  WalletDto,
-  WalletTransactionDto,
-} from '../types/user.types';
+import type { WalletTransactionDto } from '../types/user.types';
 import type {
   TipsterWalletDto,
   ConnectedAccountStatusDto,
 } from '../types';
 import { useTheme, type ThemeColors } from '../theme';
 
-const DEPOSIT_AMOUNTS = [5, 10, 20, 50] as const;
-const CREDITS_PER_EURO = 10;
+// Deposit functionality removed - now using direct EUR payments via Stripe
 
 // --- Transaction row ---
 const TRANSACTION_TYPE_LABELS: Record<string, string> = {
@@ -71,7 +67,7 @@ const TransactionRow: React.FC<{
   const label = TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type;
   const icon = TRANSACTION_TYPE_ICONS[tx.type] ?? 'ellipse';
   const color = TRANSACTION_TYPE_COLORS[tx.type] ?? colors.textSecondary;
-  const isPositive = tx.amountCredits > 0;
+  const isPositive = tx.amountEur > 0;
   const date = new Date(tx.createdAt).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -105,7 +101,7 @@ const TransactionRow: React.FC<{
         ]}
       >
         {isPositive ? '+' : ''}
-        {tx.amountCredits}
+        {tx.amountEur.toFixed(2)} EUR
       </Text>
     </View>
   );
@@ -228,32 +224,22 @@ const WalletScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
 
-  const [wallet, setWallet] = useState<WalletDto | null>(null);
   const [transactions, setTransactions] = useState<WalletTransactionDto[]>([]);
-  const [tipsterWallet, setTipsterWallet] = useState<TipsterWalletDto | null>(
-    null
-  );
-  const [stripeStatus, setStripeStatus] =
-    useState<ConnectedAccountStatusDto | null>(null);
+  const [tipsterWallet, setTipsterWallet] = useState<TipsterWalletDto | null>(null);
+  const [stripeStatus, setStripeStatus] = useState<ConnectedAccountStatusDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stripeLoading, setStripeLoading] = useState(false);
 
-  // Deposit modal
-  const [showDeposit, setShowDeposit] = useState(false);
-  const [depositing, setDepositing] = useState(false);
-
   const fetchData = useCallback(async () => {
     try {
-      const [walletRes, txRes, tipsterRes, statusRes] = await Promise.all([
-        userApi.getWallet(),
-        userApi.getTransactions(),
+      const [walletRes, txRes, statusRes] = await Promise.all([
         stripeApi.getTipsterWallet().catch(() => ({ data: null })),
+        userApi.getTransactions().catch(() => ({ data: [] })),
         stripeApi.getStatus().catch(() => ({ data: null })),
       ]);
-      setWallet(walletRes.data);
+      setTipsterWallet(walletRes.data);
       setTransactions(txRes.data);
-      setTipsterWallet(tipsterRes.data);
       setStripeStatus(statusRes.data);
     } catch {
       Alert.alert('Erreur', 'Impossible de charger les donnees');
@@ -321,33 +307,6 @@ const WalletScreen: React.FC = () => {
     );
   }, [tipsterWallet, fetchData]);
 
-  // --- Deposit ---
-  const handleDeposit = useCallback(
-    async (amountEur: number) => {
-      setDepositing(true);
-      try {
-        const { data } = await userApi.deposit(amountEur);
-        if (!data.success) {
-          Alert.alert('Erreur', data.message ?? 'Impossible de creer le depot');
-          return;
-        }
-        setShowDeposit(false);
-        if (data.moonPayUrl) {
-          await Linking.openURL(data.moonPayUrl);
-        }
-        Alert.alert(
-          'Depot initie',
-          `${data.creditsToReceive} credits seront ajoutes apres confirmation du paiement.`
-        );
-        fetchData();
-      } catch {
-        Alert.alert('Erreur', 'Impossible de creer le depot');
-      } finally {
-        setDepositing(false);
-      }
-    },
-    [fetchData]
-  );
 
   // --- Header ---
   const renderHeader = () => (
@@ -363,40 +322,20 @@ const WalletScreen: React.FC = () => {
         colors={colors}
       />
 
-      {/* Legacy Credits Balance card */}
+      {/* User Balance card */}
       <View style={styles.balanceCard}>
-        <Text style={styles.creditsLabel}>Credits disponibles</Text>
+        <Text style={styles.creditsLabel}>Solde disponible</Text>
         <Text style={styles.creditsAmount}>
-          {wallet?.availableCredits ?? 0}{' '}
-          <Text style={styles.creditsUnit}>credits</Text>
+          {(tipsterWallet?.availableBalance ?? 0).toFixed(2)}{' '}
+          <Text style={styles.creditsUnit}>EUR</Text>
         </Text>
-        {wallet && wallet.lockedCredits > 0 && (
-          <Text style={styles.lockedText}>
-            {wallet.lockedCredits} credits reserves
-          </Text>
-        )}
 
-        {/* Credits info banner */}
+        {/* Balance info banner */}
         <View style={styles.creditsInfo}>
           <Ionicons name="information-circle" size={16} color={colors.primary} />
           <Text style={styles.creditsInfoText}>
-            Les credits servent uniquement a acceder aux contenus premium.
+            Votre solde disponible pour retrait.
           </Text>
-        </View>
-
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.depositBtn}
-            onPress={() => setShowDeposit(true)}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="arrow-down-circle-outline"
-              size={18}
-              color={colors.textOnPrimary}
-            />
-            <Text style={styles.depositBtnText}>Acheter des credits</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -434,56 +373,6 @@ const WalletScreen: React.FC = () => {
         }
       />
 
-      {/* Deposit Modal */}
-      <Modal
-        visible={showDeposit}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeposit(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowDeposit(false)}
-        >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>Acheter des credits</Text>
-            <Text style={styles.modalSubtitle}>
-              1 EUR = {CREDITS_PER_EURO} credits
-            </Text>
-            <Text style={styles.modalInfo}>Non convertibles en argent reel</Text>
-            <View style={styles.amountGrid}>
-              {DEPOSIT_AMOUNTS.map((amount) => (
-                <TouchableOpacity
-                  key={amount}
-                  style={styles.amountBtn}
-                  onPress={() => handleDeposit(amount)}
-                  disabled={depositing}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.amountValue}>{amount} EUR</Text>
-                  <Text style={styles.amountCredits}>
-                    {amount * CREDITS_PER_EURO} credits
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {depositing && (
-              <ActivityIndicator
-                size="small"
-                color={colors.primary}
-                style={{ marginTop: 12 }}
-              />
-            )}
-            <TouchableOpacity
-              style={styles.modalClose}
-              onPress={() => setShowDeposit(false)}
-            >
-              <Text style={styles.modalCloseText}>Annuler</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 };
@@ -672,25 +561,6 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.primary,
           lineHeight: 16,
         },
-        actionButtons: {
-          flexDirection: 'row',
-          gap: 12,
-          marginTop: 18,
-        },
-        depositBtn: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.success,
-          borderRadius: 20,
-          paddingHorizontal: 20,
-          paddingVertical: 10,
-          gap: 6,
-        },
-        depositBtnText: {
-          fontSize: 15,
-          fontWeight: '700',
-          color: colors.textOnPrimary,
-        },
 
         // Section
         sectionTitle: {
@@ -752,70 +622,6 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.textSecondary,
         },
 
-        // Modals
-        modalOverlay: {
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        modalContent: {
-          backgroundColor: colors.surface,
-          borderRadius: 16,
-          padding: 24,
-          width: '85%',
-          alignItems: 'center',
-        },
-        modalTitle: {
-          fontSize: 18,
-          fontWeight: '700',
-          color: colors.text,
-          marginBottom: 4,
-        },
-        modalSubtitle: {
-          fontSize: 14,
-          color: colors.textSecondary,
-          marginBottom: 4,
-        },
-        modalInfo: {
-          fontSize: 11,
-          color: colors.textTertiary,
-          marginBottom: 16,
-          fontStyle: 'italic',
-        },
-        amountGrid: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 10,
-          justifyContent: 'center',
-        },
-        amountBtn: {
-          backgroundColor: colors.background,
-          borderRadius: 12,
-          paddingVertical: 14,
-          paddingHorizontal: 20,
-          alignItems: 'center',
-          minWidth: 120,
-        },
-        amountValue: {
-          fontSize: 18,
-          fontWeight: '700',
-          color: colors.primary,
-        },
-        amountCredits: {
-          fontSize: 12,
-          color: colors.textSecondary,
-          marginTop: 2,
-        },
-        modalClose: {
-          marginTop: 16,
-          paddingVertical: 8,
-        },
-        modalCloseText: {
-          fontSize: 15,
-          fontWeight: '600',
-          color: colors.danger,
-        },
       }),
     [colors]
   );

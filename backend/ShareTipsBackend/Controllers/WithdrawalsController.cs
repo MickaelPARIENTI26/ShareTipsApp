@@ -19,7 +19,7 @@ public class WithdrawalsController : ApiControllerBase
     }
 
     /// <summary>
-    /// Create a withdrawal request (locks credits)
+    /// Create a withdrawal request
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(WithdrawalResultDto), StatusCodes.Status200OK)]
@@ -27,7 +27,7 @@ public class WithdrawalsController : ApiControllerBase
     public async Task<IActionResult> CreateWithdrawal([FromBody] CreateWithdrawalRequest request)
     {
         var userId = GetUserId();
-        var result = await _withdrawalService.CreateWithdrawalAsync(userId, request.AmountCredits, request.Method);
+        var result = await _withdrawalService.CreateWithdrawalAsync(userId, (int)(request.AmountEur * 100), request.Method);
 
         if (!result.Success)
         {

@@ -8,9 +8,9 @@ public record PurchaseDto(
     string SellerUsername,
     Guid BuyerId,
     string BuyerUsername,
-    int PriceCredits,
-    int CommissionCredits,
-    int SellerCredits,
+    decimal PriceEur,
+    decimal CommissionEur,
+    decimal SellerEarningsEur,
     DateTime CreatedAt
 );
 
@@ -18,5 +18,5 @@ public record PurchaseResultDto(
     bool Success,
     string? Message,
     PurchaseDto? Purchase,
-    int NewBuyerBalance
+    decimal NewBuyerBalanceEur
 );

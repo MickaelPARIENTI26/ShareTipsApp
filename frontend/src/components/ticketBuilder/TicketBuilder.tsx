@@ -44,10 +44,10 @@ const TicketBuilder: React.FC = () => {
 
   const confidenceIndex = useTicketBuilderStore((s) => s.confidenceIndex);
   const visibility = useTicketBuilderStore((s) => s.visibility);
-  const priceCredits = useTicketBuilderStore((s) => s.priceCredits);
+  const priceEur = useTicketBuilderStore((s) => s.priceEur);
   const setConfidenceIndex = useTicketBuilderStore((s) => s.setConfidenceIndex);
   const setVisibility = useTicketBuilderStore((s) => s.setVisibility);
-  const setPriceCredits = useTicketBuilderStore((s) => s.setPriceCredits);
+  const setPriceEur = useTicketBuilderStore((s) => s.setPriceEur);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -103,7 +103,7 @@ const TicketBuilder: React.FC = () => {
       totalOdds: totalOdds(),
       confidenceIndex,
       visibility,
-      priceCredits: visibility === 'PRIVATE' ? priceCredits : null,
+      priceEur: visibility === 'PRIVATE' ? priceEur : null,
     };
     closeTicketBuilder();
     if (navigationRef.isReady()) {
@@ -147,9 +147,9 @@ const TicketBuilder: React.FC = () => {
             <View style={styles.section}>
               <VisibilitySelector
                 visibility={visibility}
-                priceCredits={priceCredits}
+                priceEur={priceEur}
                 onVisibilityChange={setVisibility}
-                onPriceChange={setPriceCredits}
+                onPriceChange={setPriceEur}
               />
             </View>
           </ScrollView>
@@ -159,7 +159,7 @@ const TicketBuilder: React.FC = () => {
             count={selections.length}
             confidenceIndex={confidenceIndex}
             visibility={visibility}
-            priceCredits={priceCredits}
+            priceEur={priceEur}
             onClear={clear}
             onSubmit={handleSubmit}
           />

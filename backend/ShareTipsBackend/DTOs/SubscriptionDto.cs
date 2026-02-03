@@ -6,8 +6,8 @@ public record SubscriptionDto(
     string SubscriberUsername,
     Guid TipsterId,
     string TipsterUsername,
-    int PriceCredits,
-    int CommissionCredits,
+    decimal PriceEur,
+    decimal CommissionEur,
     DateTime StartDate,
     DateTime EndDate,
     string Status,
@@ -15,15 +15,14 @@ public record SubscriptionDto(
 );
 
 public record SubscribeRequest(
-    Guid TipsterId,
-    int PriceCredits
+    Guid TipsterId
 );
 
 public record SubscriptionResultDto(
     bool Success,
     string? Message,
     SubscriptionDto? Subscription,
-    int NewBalance
+    decimal NewBalanceEur
 );
 
 public record SubscriptionStatusDto(

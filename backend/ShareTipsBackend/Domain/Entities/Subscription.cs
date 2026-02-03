@@ -13,10 +13,6 @@ public class Subscription
     public int TipsterAmountCents { get; set; }
     public Guid? StripePaymentId { get; set; }
 
-    // Legacy credits system (kept for backward compatibility)
-    public int PriceCredits { get; set; }
-    public int CommissionCredits { get; set; }
-
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public SubscriptionStatus Status { get; set; }

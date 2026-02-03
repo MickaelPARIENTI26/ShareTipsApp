@@ -109,7 +109,7 @@ public class TicketServiceNotificationTests
         var dto = new CreateTicketDto(
             Title: "Test Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -172,7 +172,7 @@ public class TicketServiceNotificationTests
         var dto = new CreateTicketDto(
             Title: "Test Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -235,7 +235,7 @@ public class TicketServiceNotificationTests
         var dto = new CreateTicketDto(
             Title: "Test Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -300,7 +300,7 @@ public class TicketServiceNotificationTests
         var dto = new CreateTicketDto(
             Title: "Test Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -339,7 +339,7 @@ public class TicketServiceNotificationTests
         var dto = new CreateTicketDto(
             Title: "Test Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {
@@ -395,7 +395,7 @@ public class TicketServiceNotificationTests
         var dto = new CreateTicketDto(
             Title: "Test Ticket",
             IsPublic: true,
-            PriceCredits: 0,
+            PriceEur: 0m,
             ConfidenceIndex: 7,
             Selections: new List<CreateTicketSelectionDto>
             {

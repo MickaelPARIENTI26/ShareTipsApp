@@ -4,7 +4,6 @@ public record UserDto(
     Guid Id,
     string Email,
     string Username,
-    int Credits,
     UserStatsDto? Stats
 );
 
@@ -20,8 +19,7 @@ public record UserProfileDto(
     Guid Id,
     string Username,
     RankingDto? Ranking,
-    UserStatsDto? Stats,
-    int SubscriptionPriceCredits
+    UserStatsDto? Stats
 );
 
 public record RankingDto(
@@ -42,8 +40,8 @@ public record TipsterStatsDto(
     decimal AverageOdds,
     decimal? AverageWinningOdds,
     decimal AverageConfidence,
-    int RevenueGross,
-    decimal RevenueNet,
+    decimal RevenueGrossEur,
+    decimal RevenueNetEur,
     decimal? HighestWinningOdd,
     int LongestWinningStreak,
     int LongestLosingStreak
@@ -74,8 +72,9 @@ public record UserPersonalDataDto(
 );
 
 public record WalletExportDto(
-    int BalanceCredits,
-    int LockedCredits,
+    decimal AvailableBalanceEur,
+    decimal PendingPayoutEur,
+    decimal TotalEarnedEur,
     DateTime CreatedAt
 );
 
@@ -85,7 +84,7 @@ public record TicketExportDto(
     decimal AvgOdds,
     int ConfidenceIndex,
     bool IsPublic,
-    int PriceCredits,
+    decimal PriceEur,
     string Status,
     string Result,
     DateTime CreatedAt
@@ -95,13 +94,13 @@ public record PurchaseExportDto(
     Guid TicketId,
     string TicketTitle,
     string SellerUsername,
-    int PriceCredits,
+    decimal PriceEur,
     DateTime PurchasedAt
 );
 
 public record SubscriptionExportDto(
     string TipsterUsername,
-    int PriceCredits,
+    decimal PriceEur,
     DateTime StartDate,
     DateTime EndDate,
     string Status

@@ -71,13 +71,13 @@ const CGUScreen: React.FC = () => {
         <Text style={styles.bullet}>{"• Suspicion de minorité de l'utilisateur"}</Text>
         <Text style={styles.bullet}>{"• Utilisation contraire à l'esprit de la plateforme"}</Text>
         <Text style={styles.paragraph}>
-          {"En cas de suspension, les crédits non utilisés pourront faire l'objet d'un remboursement selon les modalités en vigueur."}
+          {"En cas de suspension, les soldes disponibles pourront faire l'objet d'un remboursement selon les modalités en vigueur."}
         </Text>
       </Section>
 
-      <Section title="7. Crédits et transactions" styles={styles}>
+      <Section title="7. Paiements et transactions" styles={styles}>
         <Text style={styles.paragraph}>
-          {"Les crédits ShareTips sont une monnaie virtuelle permettant d'acheter des pronostics ou de s'abonner à des pronostiqueurs. Ils n'ont aucune valeur monétaire en dehors de la plateforme et ne peuvent être échangés contre de l'argent réel."}
+          {"Les paiements sur ShareTips sont effectués en euros (EUR) via Stripe. Les pronostiqueurs peuvent retirer leurs gains vers leur compte bancaire à tout moment (minimum 10 EUR)."}
         </Text>
       </Section>
 

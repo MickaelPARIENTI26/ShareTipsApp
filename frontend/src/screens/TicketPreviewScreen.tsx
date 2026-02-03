@@ -137,9 +137,9 @@ const TicketPreviewScreen: React.FC = () => {
       const payload = {
         title,
         isPublic: draft.visibility === 'PUBLIC',
-        priceCredits:
-          draft.visibility === 'PRIVATE' && draft.priceCredits != null
-            ? draft.priceCredits
+        priceEur:
+          draft.visibility === 'PRIVATE' && draft.priceEur != null
+            ? draft.priceEur
             : 0,
         confidenceIndex: draft.confidenceIndex,
         selections: draft.selections.map((s) => ({
@@ -237,8 +237,8 @@ const TicketPreviewScreen: React.FC = () => {
             styles={styles}
             colors={colors}
           />
-          {draft.visibility === 'PRIVATE' && draft.priceCredits != null && (
-            <Row label="Prix" value={`${draft.priceCredits} crédits`} styles={styles} colors={colors} />
+          {draft.visibility === 'PRIVATE' && draft.priceEur != null && (
+            <Row label="Prix" value={`${draft.priceEur.toFixed(2)} €`} styles={styles} colors={colors} />
           )}
         </View>
 

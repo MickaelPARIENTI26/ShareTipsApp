@@ -117,6 +117,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         <TextInput
+          testID="username-input"
           style={[
             styles.input,
             username.length > 0 && !usernameValidation.isValid && styles.inputError,
@@ -138,6 +139,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         <TextInput
+          testID="register-email-input"
           ref={emailRef}
           style={[
             styles.input,
@@ -161,6 +163,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         <TextInput
+          testID="register-password-input"
           ref={passwordRef}
           style={[
             styles.input,
@@ -183,6 +186,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         <TextInput
+          testID="confirm-password-input"
           ref={confirmPasswordRef}
           style={[
             styles.input,
@@ -204,6 +208,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         <TextInput
+          testID="dob-input"
           ref={dateOfBirthRef}
           style={[
             styles.input,
@@ -236,6 +241,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* CGV Checkbox */}
         <TouchableOpacity
+          testID="cgv-checkbox"
           style={styles.checkboxRow}
           onPress={() => setAcceptedCGV(!acceptedCGV)}
           activeOpacity={0.7}
@@ -264,6 +270,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="register-submit-button"
           style={[styles.button, (!formValid || loading) && styles.buttonDisabled]}
           onPress={handleRegister}
           disabled={!formValid || loading}
@@ -277,6 +284,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="login-link"
           onPress={() => navigation.navigate('Login')}
           disabled={loading}
         >

@@ -21,6 +21,7 @@ const TicketBuilderHeader: React.FC<TicketBuilderHeaderProps> = ({
 
   return (
     <TouchableOpacity
+      testID="ticket-builder-header"
       style={styles.container}
       onPress={onToggle}
       activeOpacity={0.8}

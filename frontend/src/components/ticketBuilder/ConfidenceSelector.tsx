@@ -37,6 +37,7 @@ const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
         </View>
       </View>
       <Slider
+        testID="confidence-slider"
         style={styles.slider}
         minimumValue={0}
         maximumValue={10}

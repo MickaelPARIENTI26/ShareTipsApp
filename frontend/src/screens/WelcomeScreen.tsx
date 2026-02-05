@@ -29,6 +29,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.bottomSection}>
         <TouchableOpacity
+          testID="login-button"
           style={styles.primaryButton}
           onPress={() => navigation.navigate('Login')}
           activeOpacity={0.8}
@@ -37,6 +38,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="register-button"
           style={styles.secondaryButton}
           onPress={() => navigation.navigate('Register')}
           activeOpacity={0.8}

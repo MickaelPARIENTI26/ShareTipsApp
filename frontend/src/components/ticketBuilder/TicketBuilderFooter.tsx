@@ -94,6 +94,7 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
 
       {/* Actions */}
       <TouchableOpacity
+        testID="create-ticket-button"
         style={[styles.submitBtn, !valid && styles.submitBtnDisabled]}
         onPress={onSubmit}
         disabled={!valid}
@@ -102,7 +103,7 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
         <Ionicons name="checkmark-circle" size={20} color={colors.textOnPrimary} />
         <Text style={styles.submitText}>Créer le ticket</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.clearBtn} onPress={onClear}>
+      <TouchableOpacity testID="clear-ticket-button" style={styles.clearBtn} onPress={onClear}>
         <Text style={styles.clearText}>Vider le coupon</Text>
       </TouchableOpacity>
     </View>

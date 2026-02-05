@@ -110,6 +110,7 @@ const ProfileScreen: React.FC = () => {
 
   return (
     <ScrollView
+      testID="profile-screen"
       ref={scrollViewRef}
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
@@ -120,10 +121,10 @@ const ProfileScreen: React.FC = () => {
         <View style={styles.avatarContainer}>
           <Ionicons name="person-circle" size={80} color={colors.primary} />
         </View>
-        <Text style={styles.username}>{user?.username ?? '—'}</Text>
+        <Text testID="profile-username" style={styles.username}>{user?.username ?? '—'}</Text>
 
         {/* Stats Row */}
-        <View style={styles.statsRow}>
+        <View testID="profile-stats" style={styles.statsRow}>
           <StatItem
             value={stats?.ticketsCreated}
             label="Tickets créés"

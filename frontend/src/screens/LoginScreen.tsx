@@ -78,6 +78,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         <TextInput
+          testID="email-input"
           style={[
             styles.input,
             email.length > 0 && !emailValidation.isValid && styles.inputError,
@@ -101,6 +102,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.passwordContainer}>
           <TextInput
+            testID="password-input"
             ref={passwordRef}
             style={[
               styles.input,

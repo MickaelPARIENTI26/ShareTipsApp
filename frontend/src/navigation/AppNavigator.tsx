@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { Suspense, lazy, ComponentType } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 import { useTheme } from '../theme';
 import { usePushNotifications } from '../hooks/usePushNotifications';
+import type {
+  RootStackParamList,
+  AppTabParamList,
+  HomeStackParamList,
+} from '../types';
+
+// === EAGERLY LOADED SCREENS ===
+// Main tabs and frequently accessed screens (loaded at startup)
 import HomeScreen from '../screens/home/HomeScreen';
 import SportsListScreen from '../screens/home/SportsListScreen';
 import LeagueListScreen from '../screens/home/LeagueListScreen';
@@ -12,30 +21,79 @@ import MatchListScreen from '../screens/matches/MatchListScreen';
 import MatchesScreen from '../screens/MatchesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import MarketplaceScreen from '../screens/MarketplaceScreen';
-import TicketPreviewScreen from '../screens/TicketPreviewScreen';
-import MatchDetailsScreen from '../screens/MatchDetailsScreen';
-import MyTicketsScreen from '../screens/MyTicketsScreen';
-import TipsterProfileScreen from '../screens/TipsterProfileScreen';
-import MesFavorisScreen from '../screens/MesFavorisScreen';
-import MesAchatsScreen from '../screens/MesAchatsScreen';
-import TicketDetailScreen from '../screens/TicketDetailScreen';
-import MesAbonnementsScreen from '../screens/MesAbonnementsScreen';
-import WalletScreen from '../screens/WalletScreen';
-import NotificationsScreen from '../screens/NotificationsScreen';
-import NotificationPreferencesScreen from '../screens/NotificationPreferencesScreen';
-import StatistiquesScreen from '../screens/StatistiquesScreen';
-import MesAbonnesScreen from '../screens/MesAbonnesScreen';
-import MesPlansAbonnementScreen from '../screens/MesPlansAbonnementScreen';
-import HistoriqueScreen from '../screens/HistoriqueScreen';
-import CGUScreen from '../screens/CGUScreen';
-import CGVScreen from '../screens/CGVScreen';
-import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import RankingScreen from '../screens/RankingScreen';
-import type {
-  RootStackParamList,
-  AppTabParamList,
-  HomeStackParamList,
-} from '../types';
+
+// === LAZY LOADED SCREENS ===
+// Secondary screens (loaded on demand when navigated to)
+const TicketPreviewScreen = lazy(() => import('../screens/TicketPreviewScreen'));
+const MatchDetailsScreen = lazy(() => import('../screens/MatchDetailsScreen'));
+const MyTicketsScreen = lazy(() => import('../screens/MyTicketsScreen'));
+const TipsterProfileScreen = lazy(() => import('../screens/TipsterProfileScreen'));
+const MesFavorisScreen = lazy(() => import('../screens/MesFavorisScreen'));
+const MesAchatsScreen = lazy(() => import('../screens/MesAchatsScreen'));
+const TicketDetailScreen = lazy(() => import('../screens/TicketDetailScreen'));
+const MesAbonnementsScreen = lazy(() => import('../screens/MesAbonnementsScreen'));
+const WalletScreen = lazy(() => import('../screens/WalletScreen'));
+const NotificationsScreen = lazy(() => import('../screens/NotificationsScreen'));
+const NotificationPreferencesScreen = lazy(() => import('../screens/NotificationPreferencesScreen'));
+const StatistiquesScreen = lazy(() => import('../screens/StatistiquesScreen'));
+const MesAbonnesScreen = lazy(() => import('../screens/MesAbonnesScreen'));
+const MesPlansAbonnementScreen = lazy(() => import('../screens/MesPlansAbonnementScreen'));
+const HistoriqueScreen = lazy(() => import('../screens/HistoriqueScreen'));
+const CGUScreen = lazy(() => import('../screens/CGUScreen'));
+const CGVScreen = lazy(() => import('../screens/CGVScreen'));
+const PrivacyPolicyScreen = lazy(() => import('../screens/PrivacyPolicyScreen'));
+
+// Loading fallback component
+const LoadingFallback: React.FC = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  );
+};
+
+// HOC to wrap lazy components with Suspense
+function withSuspense<P extends object>(
+  LazyComponent: React.LazyExoticComponent<ComponentType<P>>
+): React.FC<P> {
+  return function SuspenseWrapper(props: P) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    );
+  };
+}
+
+// Wrapped lazy components for use in navigation
+const LazyTicketPreviewScreen = withSuspense(TicketPreviewScreen);
+const LazyMatchDetailsScreen = withSuspense(MatchDetailsScreen);
+const LazyMyTicketsScreen = withSuspense(MyTicketsScreen);
+const LazyTipsterProfileScreen = withSuspense(TipsterProfileScreen);
+const LazyMesFavorisScreen = withSuspense(MesFavorisScreen);
+const LazyMesAchatsScreen = withSuspense(MesAchatsScreen);
+const LazyTicketDetailScreen = withSuspense(TicketDetailScreen);
+const LazyMesAbonnementsScreen = withSuspense(MesAbonnementsScreen);
+const LazyWalletScreen = withSuspense(WalletScreen);
+const LazyNotificationsScreen = withSuspense(NotificationsScreen);
+const LazyNotificationPreferencesScreen = withSuspense(NotificationPreferencesScreen);
+const LazyStatistiquesScreen = withSuspense(StatistiquesScreen);
+const LazyMesAbonnesScreen = withSuspense(MesAbonnesScreen);
+const LazyMesPlansAbonnementScreen = withSuspense(MesPlansAbonnementScreen);
+const LazyHistoriqueScreen = withSuspense(HistoriqueScreen);
+const LazyCGUScreen = withSuspense(CGUScreen);
+const LazyCGVScreen = withSuspense(CGVScreen);
+const LazyPrivacyPolicyScreen = withSuspense(PrivacyPolicyScreen);
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<AppTabParamList>();
@@ -179,14 +237,14 @@ const AppNavigator: React.FC = () => {
       />
       <RootStack.Screen
         name="MatchDetails"
-        component={MatchDetailsScreen}
+        component={LazyMatchDetailsScreen}
         options={({ route }) => ({
           title: route.params.title ?? 'Détails du match',
         })}
       />
       <RootStack.Screen
         name="TicketPreview"
-        component={TicketPreviewScreen}
+        component={LazyTicketPreviewScreen}
         options={{
           title: 'Confirmer le ticket',
           presentation: 'modal',
@@ -194,84 +252,84 @@ const AppNavigator: React.FC = () => {
       />
       <RootStack.Screen
         name="MyTickets"
-        component={MyTicketsScreen}
+        component={LazyMyTicketsScreen}
         options={{ title: 'Mes tickets' }}
       />
       <RootStack.Screen
         name="TipsterProfile"
-        component={TipsterProfileScreen}
+        component={LazyTipsterProfileScreen}
         options={({ route }) => ({
           title: `@${route.params.tipsterUsername}`,
         })}
       />
       <RootStack.Screen
         name="MesFavoris"
-        component={MesFavorisScreen}
+        component={LazyMesFavorisScreen}
         options={{ title: 'Mes favoris' }}
       />
       <RootStack.Screen
         name="MesAchats"
-        component={MesAchatsScreen}
+        component={LazyMesAchatsScreen}
         options={{ title: 'Mes achats' }}
       />
       <RootStack.Screen
         name="TicketDetail"
-        component={TicketDetailScreen}
+        component={LazyTicketDetailScreen}
         options={{ title: 'Détail du ticket' }}
       />
       <RootStack.Screen
         name="MesAbonnements"
-        component={MesAbonnementsScreen}
+        component={LazyMesAbonnementsScreen}
         options={{ title: 'Mes abonnements' }}
       />
       <RootStack.Screen
         name="Wallet"
-        component={WalletScreen}
+        component={LazyWalletScreen}
         options={{ title: 'Portefeuille' }}
       />
       <RootStack.Screen
         name="Notifications"
-        component={NotificationsScreen}
+        component={LazyNotificationsScreen}
         options={{ title: 'Notifications' }}
       />
       <RootStack.Screen
         name="NotificationPreferences"
-        component={NotificationPreferencesScreen}
+        component={LazyNotificationPreferencesScreen}
         options={{ title: 'Préférences' }}
       />
       <RootStack.Screen
         name="Statistiques"
-        component={StatistiquesScreen}
+        component={LazyStatistiquesScreen}
         options={{ title: 'Statistiques' }}
       />
       <RootStack.Screen
         name="MesAbonnes"
-        component={MesAbonnesScreen}
+        component={LazyMesAbonnesScreen}
         options={{ title: 'Mes abonnés' }}
       />
       <RootStack.Screen
         name="MesPlansAbonnement"
-        component={MesPlansAbonnementScreen}
+        component={LazyMesPlansAbonnementScreen}
         options={{ title: "Mes plans d'abonnement" }}
       />
       <RootStack.Screen
         name="Historique"
-        component={HistoriqueScreen}
+        component={LazyHistoriqueScreen}
         options={{ title: 'Mes accès' }}
       />
       <RootStack.Screen
         name="CGU"
-        component={CGUScreen}
+        component={LazyCGUScreen}
         options={{ title: "Conditions d'utilisation" }}
       />
       <RootStack.Screen
         name="CGV"
-        component={CGVScreen}
+        component={LazyCGVScreen}
         options={{ title: 'Conditions de vente' }}
       />
       <RootStack.Screen
         name="PrivacyPolicy"
-        component={PrivacyPolicyScreen}
+        component={LazyPrivacyPolicyScreen}
         options={{ title: 'Confidentialité' }}
       />
     </RootStack.Navigator>

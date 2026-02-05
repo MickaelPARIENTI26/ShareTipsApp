@@ -91,6 +91,7 @@ const RankingScreen: React.FC = () => {
   const renderItem = useCallback(
     ({ item }: { item: RankingEntryDto }) => (
       <TouchableOpacity
+        testID="ranking-row"
         style={styles.rankingItem}
         onPress={() => handleTipsterPress(item.userId, item.username)}
         activeOpacity={0.7}
@@ -159,6 +160,7 @@ const RankingScreen: React.FC = () => {
         {PERIODS.map((p) => (
           <TouchableOpacity
             key={p.key}
+            testID={`period-${p.key}${period === p.key ? '-active' : ''}`}
             style={[
               styles.periodButton,
               period === p.key && styles.periodButtonActive,
@@ -221,8 +223,9 @@ const RankingScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View testID="ranking-screen" style={styles.container}>
       <FlatList
+        testID="ranking-list"
         data={rankings}
         keyExtractor={(item) => item.userId}
         renderItem={renderItem}

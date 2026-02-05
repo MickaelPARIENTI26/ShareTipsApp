@@ -100,6 +100,7 @@ const FilterBar: React.FC<{
     >
       {/* Followed only */}
       <TouchableOpacity
+        testID="followed-filter-chip"
         style={[
           styles.chip,
           filters.followedOnly && styles.chipActiveOrange,
@@ -129,6 +130,7 @@ const FilterBar: React.FC<{
 
       {/* Filter modal trigger */}
       <TouchableOpacity
+        testID="filters-button"
         style={[styles.chip, activeFilterCount > 0 && styles.chipActive]}
         onPress={onOpenFilterModal}
       >
@@ -177,6 +179,7 @@ const MarketplaceTicketCard = React.memo<{
 
   return (
     <TouchableOpacity
+      testID={`ticket-card-${ticket.id}`}
       style={styles.card}
       activeOpacity={0.7}
       onPress={() => onCardPress(ticket.id)}
@@ -490,6 +493,7 @@ const MarketplaceScreen: React.FC = () => {
         />
       )}
       <FlatList
+        testID="marketplace-list"
         data={tickets}
         keyExtractor={(item) => item.id}
         extraData={[favoritedIds, followedIds]}
@@ -520,7 +524,7 @@ const MarketplaceScreen: React.FC = () => {
           />
         )}
         ListEmptyComponent={
-          <View style={styles.empty}>
+          <View testID="empty-state" style={styles.empty}>
             <Ionicons name="storefront-outline" size={48} color={colors.textTertiary} />
             <Text style={styles.emptyText}>Aucun ticket disponible</Text>
             <Text style={styles.emptyHint}>

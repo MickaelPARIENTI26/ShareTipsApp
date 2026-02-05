@@ -57,6 +57,7 @@ const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
       <Text style={styles.label}>Visibilité du ticket</Text>
       <View style={styles.toggleRow}>
         <TouchableOpacity
+          testID="visibility-public-button"
           style={[
             styles.toggleBtn,
             visibility === 'PUBLIC' && styles.toggleBtnActive,
@@ -79,6 +80,7 @@ const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
+          testID="visibility-private-button"
           style={[
             styles.toggleBtn,
             visibility === 'PRIVATE' && styles.toggleBtnActivePrivate,
@@ -112,6 +114,7 @@ const VisibilitySelector: React.FC<VisibilitySelectorProps> = ({
             touched && !priceValidation.isValid && styles.priceInputError,
           ]}>
             <TextInput
+              testID="price-input"
               style={styles.priceInput}
               keyboardType="number-pad"
               placeholder="Ex: 50"

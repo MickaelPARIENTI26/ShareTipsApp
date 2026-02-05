@@ -131,7 +131,7 @@ const TicketBuilder: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.wrapper, { bottom: bottomOffset }]}>
+      <View testID="ticket-builder" style={[styles.wrapper, { bottom: bottomOffset }]}>
         <View style={styles.container}>
           <TicketBuilderHeader
             count={selections.length}

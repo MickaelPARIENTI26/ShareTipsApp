@@ -117,7 +117,7 @@ const MatchesScreen: React.FC = () => {
 
   if (matches.length === 0) {
     return (
-      <View style={styles.center}>
+      <View testID="matches-empty-state" style={styles.center}>
         <Ionicons name="football-outline" size={48} color={colors.textSecondary} />
         <Text style={styles.emptyText}>Aucun match à venir</Text>
       </View>
@@ -126,6 +126,7 @@ const MatchesScreen: React.FC = () => {
 
   return (
     <FlatList
+      testID="matches-list"
       data={groupedMatches}
       keyExtractor={(item) => item.date}
       contentContainerStyle={styles.list}
@@ -133,12 +134,12 @@ const MatchesScreen: React.FC = () => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
       renderItem={({ item: group }) => (
-        <View>
+        <View testID="matches-screen">
           <View style={styles.dateHeaderContainer}>
             <Text style={styles.dateHeader}>{group.dateLabel}</Text>
           </View>
           {group.matches.map((match) => (
-            <View key={match.id} style={styles.matchWrapper}>
+            <View key={match.id} testID="match-card" style={styles.matchWrapper}>
               <Text style={styles.leagueBadge}>{match.leagueName}</Text>
               <MatchCard match={match} />
             </View>

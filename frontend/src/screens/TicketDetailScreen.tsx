@@ -519,7 +519,7 @@ const TicketDetailScreen: React.FC = () => {
             <Text style={styles.lockedTitle}>Contenu verrouillé</Text>
             {isTicketLocked ? (
               <Text style={styles.lockedText}>
-                Ce ticket est {ticket.status === 'Finished' ? 'terminé' : 'verrouillé'} et n'est plus disponible à l'achat.
+                Ce ticket est {ticket.status === 'Finished' ? 'terminé' : 'verrouillé'} et n{"'"}est plus disponible à l{"'"}achat.
               </Text>
             ) : (
               <>

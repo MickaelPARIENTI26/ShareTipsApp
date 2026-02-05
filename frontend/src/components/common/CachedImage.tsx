@@ -1,7 +1,6 @@
 import React from 'react';
 import { Image, type ImageProps, type ImageSource } from 'expo-image';
 import { StyleSheet, View, type ViewStyle, type StyleProp } from 'react-native';
-import { useTheme } from '../../theme';
 
 interface CachedImageProps extends Omit<ImageProps, 'source'> {
   uri?: string;
@@ -37,8 +36,6 @@ const CachedImage: React.FC<CachedImageProps> = ({
   transition = 200,
   ...rest
 }) => {
-  const { colors } = useTheme();
-
   // If no URI and no source, show fallback
   if (!uri && !source) {
     if (fallbackIcon) {

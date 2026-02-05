@@ -26,6 +26,7 @@ let stripeAvailable = false;
 try {
   // Try to import the native Stripe provider
   // This will throw if native modules aren't available (Expo Go)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const stripe = require('@stripe/stripe-react-native');
   StripeNativeProvider = stripe.StripeProvider;
   stripeAvailable = true;

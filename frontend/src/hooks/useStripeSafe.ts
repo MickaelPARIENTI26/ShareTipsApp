@@ -38,19 +38,30 @@ const mockStripe: UseStripeReturn = {
   },
 };
 
+// Get the real useStripe hook if available, otherwise null
+let realUseStripe: (() => UseStripeReturn) | null = null;
+if (isStripeAvailable) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    realUseStripe = require('@stripe/stripe-react-native').useStripe;
+  } catch {
+    // Stripe not available
+  }
+}
+
 /**
  * Safe wrapper around useStripe that works in Expo Go
  * Returns mock functions when native Stripe module isn't available
  */
 export function useStripeSafe(): UseStripeReturn {
-  if (!isStripeAvailable) {
+  // Always call the hook (or mock) unconditionally to satisfy React rules
+  const stripeHook = realUseStripe ? realUseStripe() : null;
+
+  if (!stripeHook) {
     return mockStripe;
   }
 
-  // Only import useStripe when native module is available
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { useStripe } = require('@stripe/stripe-react-native');
-  return useStripe();
+  return stripeHook;
 }
 
 export default useStripeSafe;

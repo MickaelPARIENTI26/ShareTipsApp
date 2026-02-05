@@ -1,8 +1,10 @@
+/* eslint-disable import/first */
 // Unmock axios for this test file - we need real AxiosError class
 jest.unmock('axios');
 
 import { AxiosError } from 'axios';
 import { parseError, getErrorMessage, isRetryableError, ErrorType } from '../../utils/errors';
+/* eslint-enable import/first */
 
 // Helper to create real Axios errors
 function createAxiosError(

@@ -8,7 +8,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -23,7 +22,7 @@ import { useFavoriteStore } from '../store/favorite.store';
 import { useFollowStore } from '../store/follow.store';
 import FilterModal from '../components/marketplace/FilterPanel';
 import { ErrorBanner } from '../components/common';
-import { parseError, getErrorMessage, type AppError } from '../utils/errors';
+import { parseError, type AppError } from '../utils/errors';
 import type {
   RootStackParamList,
   TicketDto,

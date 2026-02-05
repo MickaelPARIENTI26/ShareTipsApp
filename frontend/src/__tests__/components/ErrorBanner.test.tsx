@@ -48,14 +48,14 @@ describe('ErrorBanner', () => {
     it('should call onDismiss when dismiss button is pressed', () => {
       const onDismiss = jest.fn();
 
-      const { getByTestId, UNSAFE_getAllByType } = render(
+      const { UNSAFE_getAllByType } = render(
         <ErrorBanner error="Test error" onDismiss={onDismiss} />
       );
 
       // Find the dismiss button (TouchableOpacity with close icon)
-      const touchables = UNSAFE_getAllByType(
-        require('react-native').TouchableOpacity
-      );
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { TouchableOpacity } = require('react-native');
+      const touchables = UNSAFE_getAllByType(TouchableOpacity);
       const dismissButton = touchables[touchables.length - 1];
 
       fireEvent.press(dismissButton);
@@ -68,9 +68,9 @@ describe('ErrorBanner', () => {
         <ErrorBanner error="Test error" />
       );
 
-      const touchables = UNSAFE_getAllByType(
-        require('react-native').TouchableOpacity
-      );
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { TouchableOpacity } = require('react-native');
+      const touchables = UNSAFE_getAllByType(TouchableOpacity);
 
       // Should have no buttons
       expect(touchables.length).toBe(0);
@@ -154,7 +154,9 @@ describe('ErrorBanner', () => {
       const { UNSAFE_getByType } = render(<ErrorBanner error={appError} />);
 
       // The component should render without crashing
-      expect(UNSAFE_getByType(require('react-native').View)).toBeTruthy();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { View } = require('react-native');
+      expect(UNSAFE_getByType(View)).toBeTruthy();
     });
   });
 });

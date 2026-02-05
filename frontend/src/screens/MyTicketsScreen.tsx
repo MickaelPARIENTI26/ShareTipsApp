@@ -35,17 +35,6 @@ function formatDate(iso: string): string {
   });
 }
 
-function formatMatchDate(iso: string | null): string {
-  if (!iso) return '—';
-  const date = new Date(iso);
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 function formatDateRange(firstMatchTime: string, lastMatchTime: string, selectionCount: number): string {
   const first = new Date(firstMatchTime);
   const last = new Date(lastMatchTime);

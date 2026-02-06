@@ -140,7 +140,7 @@ export function usePushNotifications() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, [isAuthenticated, handleNotificationResponse]);
+  }, [isAuthenticated, handleNotificationResponse, setPushToken]);
 
   return {
     expoPushToken,

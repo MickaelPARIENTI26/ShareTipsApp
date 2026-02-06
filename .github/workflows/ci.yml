@@ -42,7 +42,8 @@ jobs:
         if: always()
         with:
           name: backend-test-results
-          path: backend/**/test-results.trx
+          path: backend/**/TestResults/*.trx
+          if-no-files-found: ignore
 
   # Frontend Build, Lint & Test
   frontend:

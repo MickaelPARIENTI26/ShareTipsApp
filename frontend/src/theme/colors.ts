@@ -101,8 +101,8 @@ export const lightColors: ThemeColors = {
   surfaceSecondary: palette.gray50,
 
   text: palette.gray850,
-  textSecondary: palette.gray400,
-  textTertiary: palette.gray300,
+  textSecondary: palette.gray500, // Improved contrast: 5.5:1 on white (WCAG AA)
+  textTertiary: palette.gray400,  // Improved contrast: 3:1 on white (WCAG AA large text)
   textOnPrimary: palette.white,
 
   border: palette.gray200,
@@ -144,7 +144,7 @@ export const darkColors: ThemeColors = {
 
   text: palette.white,
   textSecondary: palette.gray400,
-  textTertiary: palette.gray600,
+  textTertiary: palette.gray500, // Improved contrast: 4.5:1 on dark (WCAG AA)
   textOnPrimary: palette.white,
 
   border: palette.gray700,

@@ -61,8 +61,9 @@
 ## Audits (voir AUDIT_REPORT.md)
 
 - [x] Sécurité : tokens, données sensibles (Score: 9/10)
-- [ ] Accessibilité : ajouter accessibilityLabel aux boutons (Score: 4/10)
-- [ ] Supprimer console.log en production (4 fichiers)
+- [x] Accessibilité : ajouter accessibilityLabel aux boutons (Login, Register, TicketDetail, Wallet)
+- [x] Supprimer console.log en production (4 fichiers wrappés avec __DEV__)
+- [x] Vérification CORS production (appsettings.Production.json OK)
 - [ ] Améliorer contraste textSecondary
 - [ ] Performance : temps de chargement
 - [ ] Tests E2E sur device réel avec VoiceOver/TalkBack

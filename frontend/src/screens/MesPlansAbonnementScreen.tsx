@@ -55,7 +55,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
       const { data } = await subscriptionPlanApi.getMyPlans();
       setPlans(data);
     } catch (error) {
-      console.error('Error fetching plans:', error);
+      if (__DEV__) console.error('Error fetching plans:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -144,7 +144,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
       closeModal();
       fetchPlans();
     } catch (error) {
-      console.error('Error saving plan:', error);
+      if (__DEV__) console.error('Error saving plan:', error);
       Alert.alert('Erreur', 'Impossible de sauvegarder le plan');
     } finally {
       setSaving(false);
@@ -166,7 +166,7 @@ const MesPlansAbonnementScreen: React.FC = () => {
                 await subscriptionPlanApi.delete(plan.id);
                 fetchPlans();
               } catch (error) {
-                console.error('Error deleting plan:', error);
+                if (__DEV__) console.error('Error deleting plan:', error);
                 Alert.alert('Erreur', 'Impossible de supprimer le plan');
               }
             },

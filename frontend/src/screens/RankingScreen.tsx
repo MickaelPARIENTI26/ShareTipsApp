@@ -51,7 +51,7 @@ const RankingScreen: React.FC = () => {
       setRankings(response.data.rankings);
     } catch (err) {
       setError('Impossible de charger le classement');
-      console.error('Error fetching rankings:', err);
+      if (__DEV__) console.error('Error fetching rankings:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);

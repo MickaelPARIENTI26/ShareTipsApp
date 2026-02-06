@@ -284,7 +284,11 @@ const TicketDetailScreen: React.FC = () => {
                 </View>
               )}
           </View>
-          <TouchableOpacity onPress={handleTipsterPress}>
+          <TouchableOpacity
+            onPress={handleTipsterPress}
+            accessibilityLabel={`Voir le profil de ${ticket.creatorUsername}`}
+            accessibilityRole="button"
+          >
             <Text style={styles.creatorLink}>@{ticket.creatorUsername}</Text>
           </TouchableOpacity>
         </View>
@@ -547,6 +551,9 @@ const TicketDetailScreen: React.FC = () => {
             style={styles.consentRow}
             onPress={() => setConsentChecked(!consentChecked)}
             activeOpacity={0.7}
+            accessibilityLabel={consentChecked ? 'Retirer le consentement' : 'Accepter les conditions'}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: consentChecked }}
           >
             <View style={[styles.checkbox, consentChecked && styles.checkboxChecked]}>
               {consentChecked && (
@@ -564,6 +571,8 @@ const TicketDetailScreen: React.FC = () => {
             style={styles.favoriteBtn}
             onPress={handleToggleFavorite}
             activeOpacity={0.7}
+            accessibilityLabel={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            accessibilityRole="button"
           >
             <Ionicons
               name={isFavorited ? 'heart' : 'heart-outline'}
@@ -584,6 +593,9 @@ const TicketDetailScreen: React.FC = () => {
               onPress={handleBuy}
               activeOpacity={0.7}
               disabled={buying}
+              accessibilityLabel={buying ? 'Achat en cours' : `Acheter ce ticket pour ${ticket.priceEur.toFixed(2)} euros`}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: buying }}
             >
               {buying ? (
                 <ActivityIndicator size="small" color={colors.textOnPrimary} />

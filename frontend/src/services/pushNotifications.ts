@@ -26,7 +26,7 @@ export interface PushNotificationState {
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
   // Push notifications only work on physical devices
   if (!Device.isDevice) {
-    console.log('Push notifications require a physical device');
+    if (__DEV__) console.log('Push notifications require a physical device');
     return null;
   }
 
@@ -41,7 +41,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 
   if (finalStatus !== 'granted') {
-    console.log('Push notification permission not granted');
+    if (__DEV__) console.log('Push notification permission not granted');
     return null;
   }
 
@@ -51,7 +51,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
 
     // projectId is required for push tokens - skip silently if not configured
     if (!projectId) {
-      console.log('Push notifications: No projectId configured (expected in Expo Go)');
+      if (__DEV__) console.log('Push notifications: No projectId configured (expected in Expo Go)');
       return null;
     }
 
@@ -72,7 +72,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     return tokenData.data;
   } catch (error) {
     // Silently handle - push notifications are optional
-    console.log('Push notifications unavailable:', (error as Error).message);
+    if (__DEV__) console.log('Push notifications unavailable:', (error as Error).message);
     return null;
   }
 }
@@ -92,10 +92,10 @@ export async function registerDeviceTokenWithBackend(token: string): Promise<boo
       deviceName,
     });
 
-    console.log('Device token registered with backend');
+    if (__DEV__) console.log('Device token registered with backend');
     return true;
   } catch (error) {
-    console.error('Failed to register device token with backend:', error);
+    if (__DEV__) console.error('Failed to register device token with backend:', error);
     return false;
   }
 }
@@ -106,9 +106,9 @@ export async function registerDeviceTokenWithBackend(token: string): Promise<boo
 export async function unregisterDeviceToken(token: string): Promise<void> {
   try {
     await apiClient.post('/api/devicetokens/unregister', { token });
-    console.log('Device token unregistered');
+    if (__DEV__) console.log('Device token unregistered');
   } catch (error) {
-    console.error('Failed to unregister device token:', error);
+    if (__DEV__) console.error('Failed to unregister device token:', error);
   }
 }
 

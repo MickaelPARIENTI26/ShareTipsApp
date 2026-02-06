@@ -133,6 +133,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           returnKeyType="next"
           blurOnSubmit={false}
           onSubmitEditing={() => emailRef.current?.focus()}
+          accessibilityLabel="Nom d'utilisateur"
+          accessibilityHint="Entrez votre nom d'utilisateur"
         />
         {username.length > 0 && !usernameValidation.isValid && (
           <Text style={styles.fieldError}>{usernameValidation.error}</Text>
@@ -157,6 +159,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           returnKeyType="next"
           blurOnSubmit={false}
           onSubmitEditing={() => passwordRef.current?.focus()}
+          accessibilityLabel="Adresse email"
+          accessibilityHint="Entrez votre adresse email"
         />
         {email.length > 0 && !emailValidation.isValid && (
           <Text style={styles.fieldError}>{emailValidation.error}</Text>
@@ -180,6 +184,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           returnKeyType="next"
           blurOnSubmit={false}
           onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+          accessibilityLabel="Mot de passe"
+          accessibilityHint="Entrez votre mot de passe"
         />
         {password.length > 0 && !passwordValidation.isValid && (
           <Text style={styles.fieldError}>{passwordValidation.error}</Text>
@@ -202,6 +208,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           returnKeyType="next"
           blurOnSubmit={false}
           onSubmitEditing={() => dateOfBirthRef.current?.focus()}
+          accessibilityLabel="Confirmer le mot de passe"
+          accessibilityHint="Entrez à nouveau votre mot de passe pour confirmer"
         />
         {confirmPassword.length > 0 && !confirmValidation.isValid && (
           <Text style={styles.fieldError}>{confirmValidation.error}</Text>
@@ -223,6 +231,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           editable={!loading}
           returnKeyType="done"
           onSubmitEditing={handleRegister}
+          accessibilityLabel="Date de naissance"
+          accessibilityHint="Entrez votre date de naissance au format jour, mois, année"
         />
         {dateOfBirth.length > 0 && !dobValidation.isValid && (
           <Text style={styles.fieldError}>{dobValidation.error}</Text>
@@ -245,6 +255,10 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.checkboxRow}
           onPress={() => setAcceptedCGV(!acceptedCGV)}
           activeOpacity={0.7}
+          accessibilityLabel="Accepter les conditions générales"
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: acceptedCGV }}
+          accessibilityHint="Appuyez pour accepter ou refuser les conditions générales de vente et d'utilisation"
         >
           <View style={[styles.checkbox, acceptedCGV && styles.checkboxChecked]}>
             {acceptedCGV && (
@@ -275,6 +289,10 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           onPress={handleRegister}
           disabled={!formValid || loading}
           activeOpacity={0.7}
+          accessibilityLabel="S'inscrire"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !formValid || loading }}
+          accessibilityHint="Appuyez pour créer votre compte"
         >
           {loading ? (
             <ActivityIndicator color={colors.textOnPrimary} />
@@ -287,6 +305,9 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           testID="login-link"
           onPress={() => navigation.navigate('Login')}
           disabled={loading}
+          accessibilityLabel="Se connecter"
+          accessibilityRole="link"
+          accessibilityHint="Appuyez pour aller à la page de connexion"
         >
           <Text style={styles.link}>Déjà un compte ? Se connecter</Text>
         </TouchableOpacity>

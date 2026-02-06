@@ -148,6 +148,8 @@ const TipsterEarningsCard: React.FC<{
           style={styles.setupBtn}
           onPress={onSetupStripe}
           disabled={loading}
+          accessibilityLabel="Configurer mes paiements"
+          accessibilityRole="button"
         >
           <Ionicons name="card-outline" size={18} color={colors.textOnPrimary} />
           <Text style={styles.setupBtnText}>Configurer mes paiements</Text>
@@ -198,6 +200,8 @@ const TipsterEarningsCard: React.FC<{
         ]}
         onPress={onRequestPayout}
         disabled={!canRequestPayout || loading}
+        accessibilityLabel="Demander un virement"
+        accessibilityRole="button"
       >
         <Ionicons
           name="arrow-up-circle-outline"
@@ -345,7 +349,11 @@ const WalletScreen: React.FC = () => {
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            accessibilityLabel="Rafraichir les transactions"
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>

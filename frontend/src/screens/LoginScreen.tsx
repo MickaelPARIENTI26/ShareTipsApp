@@ -79,6 +79,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <TextInput
           testID="email-input"
+          accessibilityLabel="Adresse email"
+          accessibilityHint="Entrez votre adresse email"
           style={[
             styles.input,
             email.length > 0 && !emailValidation.isValid && styles.inputError,
@@ -104,6 +106,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           <TextInput
             testID="password-input"
             ref={passwordRef}
+            accessibilityLabel="Mot de passe"
+            accessibilityHint="Entrez votre mot de passe"
             style={[
               styles.input,
               styles.passwordInput,
@@ -124,6 +128,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.eyeButton}
             onPress={() => setShowPassword(!showPassword)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            accessibilityRole="button"
           >
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -141,9 +147,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           onPress={handleLogin}
           disabled={!formValid || loading}
           activeOpacity={0.7}
+          accessibilityLabel="Se connecter"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !formValid || loading }}
         >
           {loading ? (
-            <ActivityIndicator color={colors.textOnPrimary} />
+            <ActivityIndicator color={colors.textOnPrimary} accessibilityLabel="Connexion en cours" />
           ) : (
             <Text style={styles.buttonText}>Se connecter</Text>
           )}
@@ -152,6 +161,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           onPress={() => navigation.navigate('ForgotPassword')}
           disabled={loading}
+          accessibilityLabel="Mot de passe oublié"
+          accessibilityRole="link"
         >
           <Text style={styles.link}>Mot de passe oublié ?</Text>
         </TouchableOpacity>
@@ -160,6 +171,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.navigate('Register')}
           disabled={loading}
           style={styles.registerLink}
+          accessibilityLabel="Créer un compte"
+          accessibilityRole="link"
         >
           <Text style={styles.link}>{"Pas de compte ? S'inscrire"}</Text>
         </TouchableOpacity>

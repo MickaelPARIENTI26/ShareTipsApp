@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,16 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ticketApi } from '../api/ticket.api';
+import { stripeApi } from '../api/stripe.api';
 import { useTicketBuilderStore } from '../store/ticketBuilder.store';
-import type { RootStackParamList, TicketSelection } from '../types';
+import type { RootStackParamList, TicketSelection, ConnectedAccountStatusDto } from '../types';
 import { useTheme, type ThemeColors } from '../theme';
 
 const SPORT_LABELS: Record<string, string> = {
@@ -121,12 +123,52 @@ const TicketPreviewScreen: React.FC = () => {
   const clear = useTicketBuilderStore((s) => s.clear);
 
   const [submitting, setSubmitting] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState<ConnectedAccountStatusDto | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+
+  // Check if this is a paid ticket
+  const isPaidTicket = draft.visibility === 'PRIVATE' && (draft.priceEur ?? 0) > 0;
+  const isStripeConfigured = stripeStatus?.status === 'Completed';
+
+  // Load Stripe status on mount if ticket is paid
+  useEffect(() => {
+    if (isPaidTicket) {
+      stripeApi.getStatus()
+        .then(({ data }) => setStripeStatus(data))
+        .catch(() => setStripeStatus(null));
+    }
+  }, [isPaidTicket]);
 
   const handleModify = () => {
     navigation.goBack();
   };
 
+  const handleSetupStripe = async () => {
+    setStripeLoading(true);
+    try {
+      const { data } = await stripeApi.startOnboarding();
+      await Linking.openURL(data.url);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de lancer la configuration Stripe');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
   const handleConfirm = async () => {
+    // Block paid ticket creation if Stripe is not configured
+    if (isPaidTicket && !isStripeConfigured) {
+      Alert.alert(
+        'Configuration requise',
+        'Vous devez configurer Stripe pour recevoir des paiements avant de créer un ticket payant.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Configurer Stripe', onPress: handleSetupStripe },
+        ]
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Build title from match labels
@@ -261,6 +303,38 @@ const TicketPreviewScreen: React.FC = () => {
             <Text style={styles.warningText}>• Les cotes sont figées</Text>
           </View>
         </View>
+
+        {/* Stripe configuration required for paid tickets */}
+        {isPaidTicket && !isStripeConfigured && (
+          <View style={styles.stripeCard}>
+            <Ionicons
+              name="card-outline"
+              size={24}
+              color={colors.danger}
+              style={styles.warningIcon}
+            />
+            <View style={styles.warningContent}>
+              <Text style={styles.stripeTitle}>Configuration Stripe requise</Text>
+              <Text style={styles.stripeText}>
+                Pour vendre des tickets payants, vous devez configurer votre compte Stripe pour recevoir les paiements.
+              </Text>
+              <TouchableOpacity
+                style={styles.stripeBtn}
+                onPress={handleSetupStripe}
+                disabled={stripeLoading}
+              >
+                {stripeLoading ? (
+                  <ActivityIndicator size="small" color={colors.textOnPrimary} />
+                ) : (
+                  <>
+                    <Ionicons name="card" size={16} color={colors.textOnPrimary} />
+                    <Text style={styles.stripeBtnText}>Configurer Stripe</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* Actions */}
@@ -440,6 +514,44 @@ const useStyles = (colors: ThemeColors) =>
           fontSize: 13,
           color: '#6B6B6B',
           lineHeight: 20,
+        },
+
+        // Stripe configuration card
+        stripeCard: {
+          flexDirection: 'row',
+          backgroundColor: colors.danger + '10',
+          borderRadius: 12,
+          padding: 14,
+          marginTop: 12,
+          borderWidth: 1,
+          borderColor: colors.danger + '40',
+        },
+        stripeTitle: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: colors.danger,
+          marginBottom: 6,
+        },
+        stripeText: {
+          fontSize: 13,
+          color: colors.textSecondary,
+          lineHeight: 20,
+          marginBottom: 12,
+        },
+        stripeBtn: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.primary,
+          borderRadius: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+          gap: 6,
+        },
+        stripeBtnText: {
+          fontSize: 14,
+          fontWeight: '600',
+          color: colors.textOnPrimary,
         },
 
         // Actions

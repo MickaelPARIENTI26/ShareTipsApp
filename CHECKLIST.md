@@ -23,6 +23,7 @@
 
 - [x] Créer un compte Stripe
 - [x] Configurer les clés API (test) dans `.env`
+- [x] Intégration Stripe Connect complète (backend + frontend)
 - [ ] Configurer le webhook Stripe pour production
   - URL : `https://api.sharetips.app/api/stripe/webhook`
   - Events : `payment_intent.succeeded`, `payment_intent.payment_failed`, `account.updated`, `payout.paid`, `payout.failed`
@@ -64,7 +65,7 @@
 - [x] Accessibilité : ajouter accessibilityLabel aux boutons (Login, Register, TicketDetail, Wallet)
 - [x] Supprimer console.log en production (4 fichiers wrappés avec __DEV__)
 - [x] Vérification CORS production (appsettings.Production.json OK)
-- [ ] Améliorer contraste textSecondary
+- [x] Améliorer contraste textSecondary (gray400→gray500, WCAG AA compliant)
 - [ ] Performance : temps de chargement
 - [ ] Tests E2E sur device réel avec VoiceOver/TalkBack
 

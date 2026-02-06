@@ -58,12 +58,14 @@
 
 ---
 
-## Audits
+## Audits (voir AUDIT_REPORT.md)
 
-- [ ] Accessibilité (a11y) : labels, contrastes
-- [ ] Sécurité : tokens, données sensibles
+- [x] Sécurité : tokens, données sensibles (Score: 9/10)
+- [ ] Accessibilité : ajouter accessibilityLabel aux boutons (Score: 4/10)
+- [ ] Supprimer console.log en production (4 fichiers)
+- [ ] Améliorer contraste textSecondary
 - [ ] Performance : temps de chargement
-- [ ] Tests E2E sur device réel
+- [ ] Tests E2E sur device réel avec VoiceOver/TalkBack
 
 ---
 

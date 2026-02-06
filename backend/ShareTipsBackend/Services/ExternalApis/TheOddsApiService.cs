@@ -56,21 +56,32 @@ public class TheOddsApiService : ISportsApiService
 
     /// <summary>
     /// Get odds for upcoming matches (COSTS QUOTA: markets × regions)
+    /// Uses sport-specific markets: football gets btts/draw_no_bet, basketball doesn't
+    /// When Bookmakers is set (e.g., "winamax_fr"), it overrides the Region parameter.
     /// </summary>
-    public async Task<List<OddsApiEventWithOdds>> GetOddsAsync(string sportKey, string[]? markets = null)
+    public async Task<List<OddsApiEventWithOdds>> GetOddsAsync(string sportKey, string[]? markets = null, string? bookmakerOverride = null)
     {
-        markets ??= _config.EnabledMarkets.ToArray();
+        // Use sport-specific markets if not explicitly provided
+        markets ??= _config.GetMarketsForSport(sportKey).ToArray();
         var marketsParam = string.Join(",", markets);
+
+        // Determine bookmaker: override > config > region
+        var bookmaker = bookmakerOverride ?? _config.Bookmakers;
+        var bookmakerParam = !string.IsNullOrEmpty(bookmaker)
+            ? $"&bookmakers={bookmaker}"
+            : $"&regions={_config.Region}";
 
         var url = $"/v4/sports/{sportKey}/odds?" +
                   $"apiKey={_config.ApiKey}" +
-                  $"&regions={_config.Region}" +
+                  bookmakerParam +
                   $"&markets={marketsParam}" +
                   $"&oddsFormat={_config.OddsFormat}" +
                   $"&dateFormat={_config.DateFormat}";
 
-        _logger.LogInformation("Fetching odds for {SportKey} with markets [{Markets}] - Expected cost: {Cost} credits",
-            sportKey, marketsParam, markets.Length);
+        _logger.LogInformation("Fetching odds for {SportKey} with markets [{Markets}] from {Source} - Expected cost: {Cost} credits",
+            sportKey, marketsParam,
+            !string.IsNullOrEmpty(bookmaker) ? bookmaker : _config.Region,
+            markets.Length);
 
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
@@ -85,6 +96,75 @@ public class TheOddsApiService : ISportsApiService
             events?.Count ?? 0, RequestsRemaining);
 
         return events ?? new List<OddsApiEventWithOdds>();
+    }
+
+    /// <summary>
+    /// Get odds with automatic fallback to secondary bookmaker if primary returns no odds.
+    /// </summary>
+    public async Task<List<OddsApiEventWithOdds>> GetOddsWithFallbackAsync(string sportKey, string[]? markets = null)
+    {
+        // First try primary bookmaker
+        var events = await GetOddsAsync(sportKey, markets);
+
+        // Check if we got odds (not just events, but events with actual bookmaker data)
+        var hasOdds = events.Any(e => e.Bookmakers.Count > 0);
+
+        // If no odds and fallback is configured, try fallback
+        if (!hasOdds && !string.IsNullOrEmpty(_config.FallbackBookmaker))
+        {
+            _logger.LogInformation("No odds from primary bookmaker, trying fallback: {Fallback}", _config.FallbackBookmaker);
+            events = await GetOddsAsync(sportKey, markets, _config.FallbackBookmaker);
+        }
+
+        return events;
+    }
+
+    /// <summary>
+    /// Get player props odds for a specific event (COSTS QUOTA)
+    /// Player props are fetched per event, not in bulk
+    /// Uses sport-specific player props: football gets goalscorers, basketball gets points/rebounds
+    /// </summary>
+    public async Task<OddsApiEventWithOdds?> GetEventOddsAsync(string sportKey, string eventId, string[]? markets = null)
+    {
+        // Use sport-specific player props if not explicitly provided
+        markets ??= _config.GetPlayerPropsForSport(sportKey).ToArray();
+        if (markets.Length == 0) return null;
+
+        var marketsParam = string.Join(",", markets);
+
+        // Use bookmakers if specified, otherwise use region
+        var bookmakerParam = !string.IsNullOrEmpty(_config.Bookmakers)
+            ? $"&bookmakers={_config.Bookmakers}"
+            : $"&regions={_config.Region}";
+
+        var url = $"/v4/sports/{sportKey}/events/{eventId}/odds?" +
+                  $"apiKey={_config.ApiKey}" +
+                  bookmakerParam +
+                  $"&markets={marketsParam}" +
+                  $"&oddsFormat={_config.OddsFormat}" +
+                  $"&dateFormat={_config.DateFormat}";
+
+        _logger.LogInformation("Fetching player props for event {EventId} with markets [{Markets}]",
+            eventId, marketsParam);
+
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            UpdateQuotaFromHeaders(response);
+
+            var eventOdds = await response.Content.ReadFromJsonAsync<OddsApiEventWithOdds>(new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return eventOdds;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogDebug("No player props available for event {EventId}", eventId);
+            return null;
+        }
     }
 
     /// <summary>
@@ -138,11 +218,11 @@ public class TheOddsApiService : ISportsApiService
         ));
     }
 
-    public async Task<IEnumerable<ExternalMarketData>> GetMatchOddsAsync(string externalMatchId)
+    public Task<IEnumerable<ExternalMarketData>> GetMatchOddsAsync(string externalMatchId)
     {
         // For single event odds, we'd need to know the sport_key
         // This is a simplified implementation
-        return Enumerable.Empty<ExternalMarketData>();
+        return Task.FromResult(Enumerable.Empty<ExternalMarketData>());
     }
 
     public async Task<IEnumerable<ExternalScoreData>> GetLiveScoresAsync(string sportCode)
@@ -217,7 +297,8 @@ public record OddsApiMarket(
 public record OddsApiOutcome(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("price")] decimal Price,
-    [property: JsonPropertyName("point")] decimal? Point // For spreads/totals
+    [property: JsonPropertyName("point")] decimal? Point, // For spreads/totals
+    [property: JsonPropertyName("description")] string? Description // For player props (player name)
 );
 
 public record OddsApiScore(

@@ -14,4 +14,5 @@ public class TicketSelection
 
     // Navigation
     public Ticket? Ticket { get; set; }
+    public Match? Match { get; set; }
 }

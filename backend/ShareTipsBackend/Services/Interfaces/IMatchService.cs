@@ -6,6 +6,7 @@ public interface IMatchService
 {
     // Matches
     Task<IEnumerable<MatchListDto>> GetUpcomingMatchesAsync(string? sportCode = null, Guid? leagueId = null, int days = 7);
+    Task<IEnumerable<MatchDto>> GetUpcomingMatchesWithMarketsAsync(string? sportCode = null, Guid? leagueId = null, int days = 7);
     Task<MatchDto?> GetMatchByIdAsync(Guid id);
     Task<MatchDto> CreateMatchAsync(CreateMatchRequest request);
     Task<MatchDto?> UpdateMatchAsync(Guid id, UpdateMatchRequest request);

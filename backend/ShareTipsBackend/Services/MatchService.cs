@@ -13,6 +13,8 @@ public class MatchService : IMatchService
 
     // Short TTL for matches (they change more frequently)
     private static readonly TimeSpan MatchesCacheTtl = TimeSpan.FromMinutes(2);
+    // Longer TTL for individual match details
+    private static readonly TimeSpan MatchDetailCacheTtl = TimeSpan.FromMinutes(5);
 
     public MatchService(ApplicationDbContext context, ICacheService cache)
     {
@@ -63,43 +65,111 @@ public class MatchService : IMatchService
             MatchesCacheTtl);
     }
 
+    public async Task<IEnumerable<MatchDto>> GetUpcomingMatchesWithMarketsAsync(string? sportCode = null, Guid? leagueId = null, int days = 7)
+    {
+        var cacheKey = $"matches:upcoming-full:{sportCode ?? "all"}:{leagueId?.ToString() ?? "all"}:{days}";
+
+        return await _cache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                var now = DateTime.UtcNow;
+                var endDate = now.AddDays(days);
+
+                var query = _context.Matches
+                    .Include(m => m.League)
+                    .Include(m => m.HomeTeam)
+                    .Include(m => m.AwayTeam)
+                    .Include(m => m.Markets.Where(mk => mk.IsActive))
+                        .ThenInclude(mk => mk.Selections.Where(s => s.IsActive))
+                            .ThenInclude(s => s.Player)
+                    .Where(m => m.StartTime >= now && m.StartTime <= endDate)
+                    .Where(m => m.Status == MatchStatus.Scheduled)
+                    .AsQueryable();
+
+                if (!string.IsNullOrEmpty(sportCode))
+                    query = query.Where(m => m.SportCode == sportCode.ToUpperInvariant());
+
+                if (leagueId.HasValue)
+                    query = query.Where(m => m.LeagueId == leagueId.Value);
+
+                var matches = await query.OrderBy(m => m.StartTime).ToListAsync();
+
+                return matches.Select(m => new MatchDto(
+                    m.Id,
+                    m.SportCode,
+                    m.League!.Name,
+                    new TeamInfoDto(m.HomeTeam!.Id, m.HomeTeam.Name, m.HomeTeam.ShortName, m.HomeTeam.LogoUrl),
+                    new TeamInfoDto(m.AwayTeam!.Id, m.AwayTeam.Name, m.AwayTeam.ShortName, m.AwayTeam.LogoUrl),
+                    m.StartTime,
+                    m.Status.ToString(),
+                    m.HomeScore,
+                    m.AwayScore,
+                    m.Markets.Select(mk => new MarketDto(
+                        mk.Id,
+                        mk.Type.ToString(),
+                        mk.Label,
+                        mk.Line,
+                        mk.Selections.Select(s => new SelectionDto(
+                            s.Id,
+                            s.Code,
+                            s.Label,
+                            s.Odds,
+                            s.Point,
+                            s.Player?.Name
+                        )).ToList()
+                    )).ToList()
+                )).ToList();
+            },
+            MatchesCacheTtl);
+    }
+
     public async Task<MatchDto?> GetMatchByIdAsync(Guid id)
     {
-        var match = await _context.Matches
-            .Include(m => m.League)
-            .Include(m => m.HomeTeam)
-            .Include(m => m.AwayTeam)
-            .Include(m => m.Markets)
-                .ThenInclude(mk => mk.Selections)
-                    .ThenInclude(s => s.Player)
-            .FirstOrDefaultAsync(m => m.Id == id);
+        var cacheKey = $"match:detail:{id}";
 
-        if (match == null) return null;
+        return await _cache.GetOrCreateAsync(
+            cacheKey,
+            async () =>
+            {
+                var match = await _context.Matches
+                    .Include(m => m.League)
+                    .Include(m => m.HomeTeam)
+                    .Include(m => m.AwayTeam)
+                    .Include(m => m.Markets)
+                        .ThenInclude(mk => mk.Selections)
+                            .ThenInclude(s => s.Player)
+                    .FirstOrDefaultAsync(m => m.Id == id);
 
-        return new MatchDto(
-            match.Id,
-            match.SportCode,
-            match.League!.Name,
-            new TeamInfoDto(match.HomeTeam!.Id, match.HomeTeam.Name, match.HomeTeam.ShortName, match.HomeTeam.LogoUrl),
-            new TeamInfoDto(match.AwayTeam!.Id, match.AwayTeam.Name, match.AwayTeam.ShortName, match.AwayTeam.LogoUrl),
-            match.StartTime,
-            match.Status.ToString(),
-            match.HomeScore,
-            match.AwayScore,
-            match.Markets.Where(mk => mk.IsActive).Select(mk => new MarketDto(
-                mk.Id,
-                mk.Type.ToString(),
-                mk.Label,
-                mk.Line,
-                mk.Selections.Where(s => s.IsActive).Select(s => new SelectionDto(
-                    s.Id,
-                    s.Code,
-                    s.Label,
-                    s.Odds,
-                    s.Player?.Name
-                )).ToList()
-            )).ToList()
-        );
+                if (match == null) return null;
+
+                return new MatchDto(
+                    match.Id,
+                    match.SportCode,
+                    match.League!.Name,
+                    new TeamInfoDto(match.HomeTeam!.Id, match.HomeTeam.Name, match.HomeTeam.ShortName, match.HomeTeam.LogoUrl),
+                    new TeamInfoDto(match.AwayTeam!.Id, match.AwayTeam.Name, match.AwayTeam.ShortName, match.AwayTeam.LogoUrl),
+                    match.StartTime,
+                    match.Status.ToString(),
+                    match.HomeScore,
+                    match.AwayScore,
+                    match.Markets.Where(mk => mk.IsActive).Select(mk => new MarketDto(
+                        mk.Id,
+                        mk.Type.ToString(),
+                        mk.Label,
+                        mk.Line,
+                        mk.Selections.Where(s => s.IsActive).Select(s => new SelectionDto(
+                            s.Id,
+                            s.Code,
+                            s.Label,
+                            s.Odds,
+                            s.Point,
+                            s.Player?.Name
+                        )).ToList()
+                    )).ToList()
+                );
+            },
+            MatchDetailCacheTtl);
     }
 
     public async Task<MatchDto> CreateMatchAsync(CreateMatchRequest request)
@@ -140,8 +210,9 @@ public class MatchService : IMatchService
         match.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        // Invalidate matches cache
+        // Invalidate caches
         _cache.RemoveByPrefix("matches:");
+        _cache.Remove($"match:detail:{id}");
 
         return await GetMatchByIdAsync(id);
     }
@@ -154,8 +225,9 @@ public class MatchService : IMatchService
         _context.Matches.Remove(match);
         await _context.SaveChangesAsync();
 
-        // Invalidate matches cache
+        // Invalidate caches
         _cache.RemoveByPrefix("matches:");
+        _cache.Remove($"match:detail:{id}");
 
         return true;
     }
@@ -193,22 +265,36 @@ public class MatchService : IMatchService
         _context.Markets.Add(market);
         await _context.SaveChangesAsync();
 
+        // Invalidate match detail cache
+        _cache.Remove($"match:detail:{request.MatchId}");
+        _cache.RemoveByPrefix("matches:");
+
         return new MarketDto(
             market.Id,
             market.Type.ToString(),
             market.Label,
             market.Line,
-            market.Selections.Select(s => new SelectionDto(s.Id, s.Code, s.Label, s.Odds, null)).ToList()
+            market.Selections.Select(s => new SelectionDto(s.Id, s.Code, s.Label, s.Odds, s.Point, s.Player?.Name)).ToList()
         );
     }
 
     public async Task<bool> UpdateOddsAsync(UpdateOddsRequest request)
     {
-        var selection = await _context.Set<MarketSelection>().FindAsync(request.SelectionId);
+        var selection = await _context.Set<MarketSelection>()
+            .Include(s => s.Market)
+            .FirstOrDefaultAsync(s => s.Id == request.SelectionId);
         if (selection == null) return false;
 
         selection.Odds = request.NewOdds;
         await _context.SaveChangesAsync();
+
+        // Invalidate match detail cache
+        if (selection.Market != null)
+        {
+            _cache.Remove($"match:detail:{selection.Market.MatchId}");
+            _cache.RemoveByPrefix("matches:");
+        }
+
         return true;
     }
 
@@ -217,8 +303,14 @@ public class MatchService : IMatchService
         var market = await _context.Markets.FindAsync(id);
         if (market == null) return false;
 
+        var matchId = market.MatchId;
         market.IsActive = false;
         await _context.SaveChangesAsync();
+
+        // Invalidate match detail cache
+        _cache.Remove($"match:detail:{matchId}");
+        _cache.RemoveByPrefix("matches:");
+
         return true;
     }
 }

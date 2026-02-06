@@ -8,13 +8,18 @@ export const matchApi = {
   getById: (id: string) =>
     apiClient.get<MatchDetail>(`/api/matches/${id}`),
 
-  /** Fetch match list (optionally by sport), then load full details with markets in parallel. */
-  async getMatchesWithMarkets(sportCode?: string): Promise<MatchDetail[]> {
-    const params = sportCode ? { sport: sportCode } : undefined;
-    const { data: list } = await matchApi.getAll(params);
-    const details = await Promise.all(
-      list.map((m) => matchApi.getById(m.id).then((r) => r.data))
-    );
-    return details;
+  /** Fetch matches with full market details in a single optimized call */
+  async getMatchesWithMarkets(
+    sportCode?: string,
+    leagueId?: string,
+    days?: number
+  ): Promise<MatchDetail[]> {
+    const params: Record<string, string | number> = {};
+    if (sportCode) params.sport = sportCode;
+    if (leagueId) params.leagueId = leagueId;
+    if (days) params.days = days;
+
+    const { data } = await apiClient.get<MatchDetail[]>('/api/matches/with-markets', { params });
+    return data;
   },
 };

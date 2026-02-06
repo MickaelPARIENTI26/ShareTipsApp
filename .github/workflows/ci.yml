@@ -44,9 +44,9 @@ jobs:
           name: backend-test-results
           path: backend/**/test-results.trx
 
-  # Frontend Build & Lint
+  # Frontend Build, Lint & Test
   frontend:
-    name: Frontend Build & Lint
+    name: Frontend Build, Lint & Test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -71,6 +71,16 @@ jobs:
 
       - name: Lint
         run: npm run lint --if-present
+
+      - name: Run unit tests
+        run: npm test -- --coverage --ci --passWithNoTests
+
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
 
   # Docker Build (only on main/develop)
   docker:

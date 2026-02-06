@@ -31,6 +31,21 @@ public class MatchesController : ControllerBase
     }
 
     /// <summary>
+    /// Get upcoming matches with full market details (optimized for frontend)
+    /// Single query instead of N+1 calls
+    /// </summary>
+    [HttpGet("with-markets")]
+    [ProducesResponseType(typeof(IEnumerable<MatchDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUpcomingWithMarkets(
+        [FromQuery] string? sport = null,
+        [FromQuery] Guid? leagueId = null,
+        [FromQuery] int days = 7)
+    {
+        var matches = await _matchService.GetUpcomingMatchesWithMarketsAsync(sport, leagueId, days);
+        return Ok(matches);
+    }
+
+    /// <summary>
     /// Get match details with markets and odds
     /// </summary>
     [HttpGet("{id:guid}")]

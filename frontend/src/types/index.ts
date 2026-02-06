@@ -74,6 +74,7 @@ export interface MarketSelection {
   code: string;
   label: string;
   odds: number;
+  point: number | null;
   playerName: string | null;
 }
 

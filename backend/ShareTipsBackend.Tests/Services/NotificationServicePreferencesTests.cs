@@ -22,9 +22,9 @@ public class NotificationServicePreferencesTests
 
     private NotificationService CreateNotificationService(ApplicationDbContext context, NotificationPreferencesService preferencesService)
     {
-        var pushService = new Mock<IPushNotificationService>().Object;
+        var serviceProvider = new Mock<IServiceProvider>().Object;
         var logger = NullLogger<NotificationService>.Instance;
-        return new NotificationService(context, preferencesService, pushService, logger);
+        return new NotificationService(context, preferencesService, serviceProvider, logger);
     }
 
     // --- Tests for NotifyUserAsync respecting preferences ---

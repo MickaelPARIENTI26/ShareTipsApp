@@ -101,11 +101,16 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<TicketSelection>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.MatchId);
             entity.Property(e => e.Odds).HasPrecision(5, 2);
             entity.HasOne(e => e.Ticket)
                 .WithMany(t => t.Selections)
                 .HasForeignKey(e => e.TicketId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Match)
+                .WithMany()
+                .HasForeignKey(e => e.MatchId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // TicketPurchase

@@ -63,6 +63,7 @@ public record SelectionDto(
     string Code,
     string Label,
     decimal Odds,
+    decimal? Point,
     string? PlayerName
 );
 
@@ -71,17 +72,17 @@ public record CreateMarketRequest(
     [Required] string Type,
     [Required] string Label,
     decimal? Line,
-    [Required] List<CreateSelectionRequest> Selections
+    [Required, MinLength(1)] List<CreateSelectionRequest> Selections
 );
 
 public record CreateSelectionRequest(
     [Required] string Code,
     [Required] string Label,
-    [Required] decimal Odds,
+    [Required, Range(1.01, 1000.0, ErrorMessage = "Odds must be between 1.01 and 1000")] decimal Odds,
     Guid? PlayerId
 );
 
 public record UpdateOddsRequest(
     [Required] Guid SelectionId,
-    [Required] decimal NewOdds
+    [Required, Range(1.01, 1000.0, ErrorMessage = "Odds must be between 1.01 and 1000")] decimal NewOdds
 );

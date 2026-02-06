@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ShareTipsBackend.DTOs;
 
 public record TicketDto(
@@ -38,19 +40,19 @@ public record TicketSelectionDto(
 );
 
 public record CreateTicketDto(
-    string Title,
+    [Required, StringLength(200, MinimumLength = 3)] string Title,
     bool IsPublic,
-    decimal PriceEur,
-    int ConfidenceIndex,
-    List<CreateTicketSelectionDto> Selections
+    [Range(0, 10000)] decimal PriceEur,
+    [Range(1, 10)] int ConfidenceIndex,
+    [Required, MinLength(1)] List<CreateTicketSelectionDto> Selections
 );
 
 public record CreateTicketSelectionDto(
-    Guid MatchId,
-    string Sport,
-    string MarketType,
-    string SelectionCode,
-    decimal Odds,
+    [Required] Guid MatchId,
+    [Required] string Sport,
+    [Required] string MarketType,
+    [Required] string SelectionCode,
+    [Range(1.01, 1000.0, ErrorMessage = "Odds must be between 1.01 and 1000")] decimal Odds,
     string? MatchLabel = null,
     string? LeagueName = null
 );

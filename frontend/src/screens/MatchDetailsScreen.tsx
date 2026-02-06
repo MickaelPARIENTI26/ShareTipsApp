@@ -35,15 +35,92 @@ function formatDate(iso: string): string {
   return `${day} · ${time}`;
 }
 
+/**
+ * Format market label with line value when applicable
+ */
+function formatMarketLabel(market: Market): string {
+  const { type, label, line } = market;
+
+  // If no line, return label as-is
+  if (line == null) return label;
+
+  // Format based on market type
+  const marketType = type.toLowerCase();
+
+  // Handicap markets: show the spread
+  if (marketType.includes('handicap') || marketType === 'spreads') {
+    const sign = line >= 0 ? '+' : '';
+    return `${label} (${sign}${line})`;
+  }
+
+  // Over/Under (totals) markets: show the line
+  if (marketType.includes('overunder') || marketType.includes('total')) {
+    return `${label} (${line})`;
+  }
+
+  // Corners, Cards totals
+  if (marketType.includes('corner') || marketType.includes('card')) {
+    return `${label} (${line})`;
+  }
+
+  // Default: show line in parentheses
+  return `${label} (${line})`;
+}
+
+/**
+ * Format selection label with additional context
+ * Uses the selection's own point value for accurate display
+ */
+function formatSelectionLabel(sel: MarketSelection, market: Market): string {
+  const { label, code, point } = sel;
+  const { type } = market;
+  const marketType = type.toLowerCase();
+
+  // For Over/Under, show "Over 2.5" or "Under 2.5"
+  if (marketType.includes('overunder') || marketType.includes('total')) {
+    if (point != null) {
+      if (code === 'OVER') {
+        return `Over ${point}`;
+      }
+      if (code === 'UNDER') {
+        return `Under ${point}`;
+      }
+    }
+  }
+
+  // For Handicap/Spreads, show team name with the point
+  if (marketType.includes('handicap') || marketType === 'spreads') {
+    if (point != null) {
+      const sign = point >= 0 ? '+' : '';
+      return `${label} (${sign}${point})`;
+    }
+  }
+
+  // For Corners/Cards totals
+  if (marketType.includes('corner') || marketType.includes('card')) {
+    if (point != null) {
+      if (code === 'OVER') {
+        return `Over ${point}`;
+      }
+      if (code === 'UNDER') {
+        return `Under ${point}`;
+      }
+    }
+  }
+
+  return label;
+}
+
 // --- Selection button ---
 const SelectionButton: React.FC<{
   sel: MarketSelection;
+  market: Market;
   selected: boolean;
   disabled: boolean;
   onPress: () => void;
   colors: ThemeColors;
   styles: ReturnType<typeof useStyles>;
-}> = ({ sel, selected, disabled, onPress, colors, styles }) => (
+}> = ({ sel, market, selected, disabled, onPress, colors, styles }) => (
   <TouchableOpacity
     style={[
       styles.selBtn,
@@ -58,7 +135,7 @@ const SelectionButton: React.FC<{
       style={[styles.selBtnLabel, selected && styles.selBtnLabelSelected]}
       numberOfLines={1}
     >
-      {sel.label}
+      {formatSelectionLabel(sel, market)}
     </Text>
     <Text
       style={[styles.selBtnOdds, selected && styles.selBtnOddsSelected]}
@@ -79,12 +156,13 @@ const MarketBlock: React.FC<{
   styles: ReturnType<typeof useStyles>;
 }> = ({ market, match, isSelected, onSelect, started, colors, styles }) => (
   <View style={styles.marketCard}>
-    <Text style={styles.marketLabel}>{market.label}</Text>
+    <Text style={styles.marketLabel}>{formatMarketLabel(market)}</Text>
     <View style={styles.selectionsGrid}>
       {market.selections.map((sel) => (
         <SelectionButton
           key={sel.id}
           sel={sel}
+          market={market}
           selected={isSelected(sel.id)}
           disabled={started}
           onPress={() => onSelect(market, sel)}

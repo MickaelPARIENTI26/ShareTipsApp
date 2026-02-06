@@ -7,6 +7,7 @@ public class MarketSelection
     public string Code { get; set; } = string.Empty; // HOME_WIN, DRAW, AWAY_WIN, OVER, UNDER
     public string Label { get; set; } = string.Empty; // "Victoire domicile", "Match nul", etc.
     public decimal Odds { get; set; }
+    public decimal? Point { get; set; } // Line/spread value for this selection (e.g., +1.5, -0.5, 2.5)
     public Guid? PlayerId { get; set; } // For player-specific markets (goalscorer, etc.)
     public bool IsActive { get; set; } = true;
 

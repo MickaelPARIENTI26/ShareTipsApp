@@ -9,6 +9,7 @@ import { useWalletStore } from './wallet.store';
 import { useNotificationStore } from './notification.store';
 import { useConsentStore } from './consent.store';
 import { useProfileStore } from './profile.store';
+import { unregisterDeviceToken } from '../services/pushNotifications';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -146,6 +147,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 
   logout: async () => {
+    // Unregister push token from backend before clearing stores
+    const pushToken = useNotificationStore.getState().pushToken;
+    if (pushToken) {
+      await unregisterDeviceToken(pushToken);
+    }
+
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
     await SecureStore.deleteItemAsync(USER_KEY);

@@ -12,6 +12,7 @@ import {
   clearBadgeCount,
 } from '../services/pushNotifications';
 import { useAuthStore } from '../store/auth.store';
+import { useNotificationStore } from '../store/notification.store';
 import type { RootStackParamList } from '../types';
 
 /**
@@ -27,6 +28,7 @@ export function usePushNotifications() {
   const responseListener = useRef<Notifications.EventSubscription | undefined>(undefined);
 
   const isAuthenticated = useAuthStore((s) => !!s.token);
+  const setPushToken = useNotificationStore((s) => s.setPushToken);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Handle notification tap navigation
@@ -68,6 +70,20 @@ export function usePushNotifications() {
               }
             }
             break;
+          case 'MatchStart':
+            if (data.data) {
+              try {
+                const parsed = JSON.parse(data.data as string);
+                if (parsed.matchId) {
+                  navigation.navigate('MatchDetails', { matchId: parsed.matchId });
+                } else if (parsed.ticketId) {
+                  navigation.navigate('TicketDetail', { ticketId: parsed.ticketId });
+                }
+              } catch {
+                navigation.navigate('Notifications');
+              }
+            }
+            break;
           case 'SubscriptionExpire':
             navigation.navigate('MesAbonnements');
             break;
@@ -94,6 +110,7 @@ export function usePushNotifications() {
       if (!isMounted || !token) return;
 
       setExpoPushToken(token);
+      setPushToken(token); // Store in notification store for logout
 
       // Register with backend
       await registerDeviceTokenWithBackend(token);

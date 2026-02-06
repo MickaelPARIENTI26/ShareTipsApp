@@ -5,9 +5,11 @@ interface NotificationState {
   unreadCount: number;
   loading: boolean;
   lastFetchedAt: number | null;
+  pushToken: string | null;
   fetchUnreadCount: () => Promise<void>;
   decrementUnreadCount: () => void;
   resetUnreadCount: () => void;
+  setPushToken: (token: string | null) => void;
   clear: () => void;
 }
 
@@ -15,6 +17,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   unreadCount: 0,
   loading: false,
   lastFetchedAt: null,
+  pushToken: null,
 
   fetchUnreadCount: async () => {
     // Debounce: don't fetch if we fetched less than 5 seconds ago
@@ -46,7 +49,11 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
     set({ unreadCount: 0 });
   },
 
+  setPushToken: (token: string | null) => {
+    set({ pushToken: token });
+  },
+
   clear: () => {
-    set({ unreadCount: 0, loading: false, lastFetchedAt: null });
+    set({ unreadCount: 0, loading: false, lastFetchedAt: null, pushToken: null });
   },
 }));

@@ -26,6 +26,51 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
 
+// Mock expo-notifications
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  getExpoPushTokenAsync: jest.fn(() => Promise.resolve({ data: 'mock-push-token' })),
+  setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponseAsync: jest.fn(() => Promise.resolve(null)),
+  setBadgeCountAsync: jest.fn(() => Promise.resolve()),
+  AndroidImportance: { MAX: 5 },
+}));
+
+// Mock expo-device
+jest.mock('expo-device', () => ({
+  isDevice: true,
+  modelId: 'mock-model-id',
+  deviceName: 'Mock Device',
+  modelName: 'Mock Model',
+}));
+
+// Mock expo-constants
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    extra: {
+      eas: {
+        projectId: 'mock-project-id',
+      },
+    },
+  },
+}));
+
+// Mock push notifications service
+jest.mock('./src/services/pushNotifications', () => ({
+  registerForPushNotificationsAsync: jest.fn(() => Promise.resolve('mock-push-token')),
+  registerDeviceTokenWithBackend: jest.fn(() => Promise.resolve(true)),
+  unregisterDeviceToken: jest.fn(() => Promise.resolve()),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponse: jest.fn(() => Promise.resolve(null)),
+  clearBadgeCount: jest.fn(() => Promise.resolve()),
+  setBadgeCount: jest.fn(() => Promise.resolve()),
+}));
+
 // Provide axios mock with AxiosError class
 jest.mock('axios', () => {
   // Create a proper AxiosError mock class

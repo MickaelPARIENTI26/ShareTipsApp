@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -6,7 +6,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/auth.store';
 import { useNotificationStore } from '../store/notification.store';
 import { useProfileStore } from '../store/profile.store';
+import { gamificationApi } from '../api/gamification.api';
+import { GamificationCard } from '../components/gamification';
 import type { RootStackParamList } from '../types';
+import type { UserGamificationDto } from '../types/gamification.types';
 import { useTheme, type ThemeColors } from '../theme';
 
 const ProfileScreen: React.FC = () => {
@@ -25,10 +28,27 @@ const ProfileScreen: React.FC = () => {
 
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Gamification state
+  const [gamification, setGamification] = useState<UserGamificationDto | null>(null);
+
   // Hydrate profile data on mount (uses cache if available)
   useEffect(() => {
     hydrateProfile();
     fetchUnreadCount();
+
+    // Fetch gamification data and record daily login
+    const loadGamification = async () => {
+      try {
+        // Record daily login (will only award XP once per day)
+        await gamificationApi.recordDailyLogin();
+        // Get full gamification profile
+        const { data } = await gamificationApi.getMyGamification();
+        setGamification(data);
+      } catch {
+        // Silently fail - gamification is not critical
+      }
+    };
+    loadGamification();
   }, [hydrateProfile, fetchUnreadCount]);
 
   const goToMyTickets = useCallback(
@@ -65,6 +85,14 @@ const ProfileScreen: React.FC = () => {
   );
   const goToHistorique = useCallback(
     () => navigation.navigate('Historique'),
+    [navigation]
+  );
+  const goToMyBadges = useCallback(
+    () => navigation.navigate('MyBadges'),
+    [navigation]
+  );
+  const goToXpGuide = useCallback(
+    () => navigation.navigate('XpGuide'),
     [navigation]
   );
 
@@ -148,6 +176,18 @@ const ProfileScreen: React.FC = () => {
           <Text style={styles.statsButtonText}>Voir les stats</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Gamification Card */}
+      {gamification && (
+        <View style={styles.gamificationSection}>
+          <GamificationCard
+            gamification={gamification}
+            colors={colors}
+            onBadgesPress={goToMyBadges}
+            onXpPress={goToXpGuide}
+          />
+        </View>
+      )}
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
@@ -312,6 +352,10 @@ const useStyles = (colors: ThemeColors) =>
           fontSize: 14,
           fontWeight: '600',
           color: colors.textOnPrimary,
+        },
+        gamificationSection: {
+          marginHorizontal: 16,
+          marginBottom: 16,
         },
         quickActions: {
           flexDirection: 'row',

@@ -156,19 +156,6 @@ const TicketPreviewScreen: React.FC = () => {
   };
 
   const handleConfirm = async () => {
-    // Block paid ticket creation if Stripe is not configured
-    if (isPaidTicket && !isStripeConfigured) {
-      Alert.alert(
-        'Configuration requise',
-        'Vous devez configurer Stripe pour recevoir des paiements avant de créer un ticket payant.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Configurer Stripe', onPress: handleSetupStripe },
-        ]
-      );
-      return;
-    }
-
     setSubmitting(true);
     try {
       // Build title from match labels
@@ -304,31 +291,31 @@ const TicketPreviewScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Stripe configuration required for paid tickets */}
+        {/* Stripe info for paid tickets - shown only if not configured */}
         {isPaidTicket && !isStripeConfigured && (
-          <View style={styles.stripeCard}>
+          <View style={styles.stripeInfoCard}>
             <Ionicons
-              name="card-outline"
+              name="information-circle-outline"
               size={24}
-              color={colors.danger}
+              color={colors.primary}
               style={styles.warningIcon}
             />
             <View style={styles.warningContent}>
-              <Text style={styles.stripeTitle}>Configuration Stripe requise</Text>
-              <Text style={styles.stripeText}>
-                Pour vendre des tickets payants, vous devez configurer votre compte Stripe pour recevoir les paiements.
+              <Text style={styles.stripeInfoTitle}>Configuration Stripe recommandée</Text>
+              <Text style={styles.stripeInfoText}>
+                {"Vous pouvez créer ce ticket payant maintenant. Vos gains seront conservés jusqu'à ce que vous configuriez Stripe pour les retirer."}
               </Text>
               <TouchableOpacity
-                style={styles.stripeBtn}
+                style={styles.stripeInfoBtn}
                 onPress={handleSetupStripe}
                 disabled={stripeLoading}
               >
                 {stripeLoading ? (
-                  <ActivityIndicator size="small" color={colors.textOnPrimary} />
+                  <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
                   <>
-                    <Ionicons name="card" size={16} color={colors.textOnPrimary} />
-                    <Text style={styles.stripeBtnText}>Configurer Stripe</Text>
+                    <Ionicons name="card" size={16} color={colors.primary} />
+                    <Text style={styles.stripeInfoBtnText}>Configurer maintenant</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -516,42 +503,44 @@ const useStyles = (colors: ThemeColors) =>
           lineHeight: 20,
         },
 
-        // Stripe configuration card
-        stripeCard: {
+        // Stripe info card (non-blocking)
+        stripeInfoCard: {
           flexDirection: 'row',
-          backgroundColor: colors.danger + '10',
+          backgroundColor: colors.primary + '10',
           borderRadius: 12,
           padding: 14,
           marginTop: 12,
           borderWidth: 1,
-          borderColor: colors.danger + '40',
+          borderColor: colors.primary + '30',
         },
-        stripeTitle: {
+        stripeInfoTitle: {
           fontSize: 14,
           fontWeight: '700',
-          color: colors.danger,
+          color: colors.primary,
           marginBottom: 6,
         },
-        stripeText: {
+        stripeInfoText: {
           fontSize: 13,
           color: colors.textSecondary,
           lineHeight: 20,
           marginBottom: 12,
         },
-        stripeBtn: {
+        stripeInfoBtn: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.primary,
+          backgroundColor: 'transparent',
           borderRadius: 8,
-          paddingVertical: 10,
-          paddingHorizontal: 16,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          borderWidth: 1,
+          borderColor: colors.primary,
           gap: 6,
         },
-        stripeBtnText: {
+        stripeInfoBtnText: {
           fontSize: 14,
           fontWeight: '600',
-          color: colors.textOnPrimary,
+          color: colors.primary,
         },
 
         // Actions

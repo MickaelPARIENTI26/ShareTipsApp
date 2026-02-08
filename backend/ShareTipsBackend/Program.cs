@@ -233,6 +233,7 @@ builder.Services.AddScoped<IConsentService, ConsentService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 builder.Services.AddScoped<IStripeConnectService, StripeConnectService>();
+builder.Services.AddScoped<IGamificationService, GamificationService>();
 
 // The Odds API integration
 builder.Services.Configure<TheOddsApiConfig>(
@@ -501,8 +502,9 @@ app.UseSerilogRequestLogging(options =>
     };
 });
 
-// Use CORS - AllowAll for dev, Production for prod
-app.UseCors(app.Environment.IsDevelopment() ? "AllowAll" : "Production");
+// Use CORS - AllowAll for now (needed for ngrok/mobile testing)
+// TODO: Switch to "Production" policy before deploying to production
+app.UseCors("AllowAll");
 
 // Rate limiting
 app.UseRateLimiter();

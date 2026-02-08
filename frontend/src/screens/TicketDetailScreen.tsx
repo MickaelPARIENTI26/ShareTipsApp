@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,12 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Sharing from 'expo-sharing';
+import ViewShot from 'react-native-view-shot';
+import * as MediaLibrary from 'expo-media-library';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useStripeSafe } from '../hooks/useStripeSafe';
@@ -78,6 +82,7 @@ const TicketDetailScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
   const { initPaymentSheet, presentPaymentSheet } = useStripeSafe();
+  const viewShotRef = useRef<ViewShot>(null);
 
   const route = useRoute();
   const navigation =
@@ -116,6 +121,7 @@ const TicketDetailScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const isFavorited = useFavoriteStore((s) => s.favoritedIds.has(ticketId));
   const toggleFavorite = useFavoriteStore((s) => s.toggle);
@@ -228,6 +234,46 @@ const TicketDetailScreen: React.FC = () => {
     });
   }, [ticket, navigation]);
 
+  const handleShare = useCallback(async () => {
+    if (!viewShotRef.current || sharing) return;
+
+    setSharing(true);
+    try {
+      // Capture the ticket as an image
+      const uri = await viewShotRef.current.capture?.();
+      if (!uri) {
+        Alert.alert('Erreur', 'Impossible de capturer le ticket');
+        return;
+      }
+
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        // Fallback: save to gallery
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          await MediaLibrary.saveToLibraryAsync(uri);
+          Alert.alert('Succès', 'Image sauvegardée dans votre galerie. Vous pouvez maintenant la partager.');
+        } else {
+          Alert.alert('Erreur', 'Permission refusée pour accéder à la galerie');
+        }
+        return;
+      }
+
+      // Share the image
+      await Sharing.shareAsync(uri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Partager ce ticket',
+        UTI: 'public.png',
+      });
+    } catch (err) {
+      console.error('Share error:', err);
+      Alert.alert('Erreur', 'Impossible de partager le ticket');
+    } finally {
+      setSharing(false);
+    }
+  }, [sharing]);
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -255,8 +301,14 @@ const TicketDetailScreen: React.FC = () => {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.headerCard}>
+        {/* Shareable content */}
+        <ViewShot
+          ref={viewShotRef}
+          options={{ format: 'png', quality: 1, result: 'tmpfile' }}
+          style={styles.shareableContent}
+        >
+          {/* Header */}
+          <View style={styles.headerCard}>
           <View style={styles.headerTop}>
             <Text style={styles.title}>{displayTitle}</Text>
             {isPrivateLocked && (
@@ -390,15 +442,22 @@ const TicketDetailScreen: React.FC = () => {
         </View>
 
         {/* Sports */}
-        <View style={styles.sportRow}>
-          {ticket.sports.map((s) => (
-            <View key={s} style={styles.sportBadge}>
-              <Text style={styles.sportBadgeText}>
-                {SPORT_LABELS[s] ?? s}
-              </Text>
-            </View>
-          ))}
-        </View>
+          <View style={styles.sportRow}>
+            {ticket.sports.map((s) => (
+              <View key={s} style={styles.sportBadge}>
+                <Text style={styles.sportBadgeText}>
+                  {SPORT_LABELS[s] ?? s}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* ShareTips branding for shared image */}
+          <View style={styles.brandingRow}>
+            <Ionicons name="share-social" size={14} color={colors.textTertiary} />
+            <Text style={styles.brandingText}>Partagé via ShareTips</Text>
+          </View>
+        </ViewShot>
 
         {/* Selections — visible only if public or purchased */}
         {showSelections && (
@@ -581,6 +640,21 @@ const TicketDetailScreen: React.FC = () => {
             />
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.shareBtn}
+            onPress={handleShare}
+            activeOpacity={0.7}
+            disabled={sharing}
+            accessibilityLabel="Partager ce ticket"
+            accessibilityRole="button"
+          >
+            {sharing ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Ionicons name="share-social-outline" size={22} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+
           {isPrivateLocked && isTicketLocked ? (
             // Ticket is locked/finished - cannot be purchased anymore
             <View style={styles.lockedBadgeFooter}>
@@ -642,6 +716,11 @@ const useStyles = (colors: ThemeColors) =>
         scroll: {
           padding: 16,
           paddingBottom: 24,
+        },
+        shareableContent: {
+          backgroundColor: colors.background,
+          borderRadius: 12,
+          padding: 4,
         },
 
         // Header
@@ -816,6 +895,19 @@ const useStyles = (colors: ThemeColors) =>
           fontWeight: '600',
           color: colors.textSecondary,
         },
+        brandingRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          paddingVertical: 12,
+          marginTop: 8,
+        },
+        brandingText: {
+          fontSize: 12,
+          color: colors.textTertiary,
+          fontWeight: '500',
+        },
 
         // Selections
         sectionTitle: {
@@ -988,6 +1080,14 @@ const useStyles = (colors: ThemeColors) =>
           height: 44,
           borderRadius: 10,
           backgroundColor: colors.background,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        shareBtn: {
+          width: 44,
+          height: 44,
+          borderRadius: 10,
+          backgroundColor: colors.primary + '15',
           alignItems: 'center',
           justifyContent: 'center',
         },

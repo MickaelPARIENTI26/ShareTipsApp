@@ -104,6 +104,7 @@ const SportsListScreen: React.FC = () => {
     <FlatList
       data={sports}
       keyExtractor={(item) => item.code}
+      style={styles.container}
       contentContainerStyle={styles.list}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -134,6 +135,10 @@ const useStyles = (colors: ThemeColors) =>
   useMemo(
     () =>
       StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
         center: {
           flex: 1,
           justifyContent: 'center',
@@ -142,6 +147,7 @@ const useStyles = (colors: ThemeColors) =>
           padding: 24,
         },
         list: {
+          flexGrow: 1,
           backgroundColor: colors.background,
         },
         row: {

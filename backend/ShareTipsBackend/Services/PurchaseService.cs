@@ -140,19 +140,6 @@ public class PurchaseService : IPurchaseService
         return new PurchaseResultDto(true, "Achat réussi", purchaseDto, 0);
     }
 
-    public async Task<IEnumerable<PurchaseDto>> GetPurchasesByBuyerAsync(Guid buyerId)
-    {
-        var purchases = await _context.TicketPurchases
-            .Include(p => p.Ticket)
-                .ThenInclude(t => t!.Creator)
-            .Include(p => p.Buyer)
-            .Where(p => p.BuyerId == buyerId)
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
-
-        return purchases.Select(MapToDto);
-    }
-
     public async Task<PaginatedResult<PurchaseDto>> GetPurchasesByBuyerPaginatedAsync(Guid buyerId, int page, int pageSize)
     {
         var query = _context.TicketPurchases

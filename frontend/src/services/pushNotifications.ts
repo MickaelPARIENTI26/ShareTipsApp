@@ -143,10 +143,3 @@ export async function getLastNotificationResponse(): Promise<Notifications.Notif
 export async function clearBadgeCount(): Promise<void> {
   await Notifications.setBadgeCountAsync(0);
 }
-
-/**
- * Set the badge count
- */
-export async function setBadgeCount(count: number): Promise<void> {
-  await Notifications.setBadgeCountAsync(count);
-}

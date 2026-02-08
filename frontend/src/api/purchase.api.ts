@@ -19,7 +19,4 @@ export const purchaseApi = {
 
   getMyPurchasesPaginated: (page: number = 1, pageSize: number = 15) =>
     apiClient.get<PaginatedResult<PurchaseDto>>(`/api/purchases/my?page=${page}&pageSize=${pageSize}`),
-
-  getMySales: () =>
-    apiClient.get<PurchaseDto[]>('/api/purchases/sales'),
 };

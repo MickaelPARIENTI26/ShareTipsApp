@@ -38,6 +38,8 @@ export const palette = {
   orangeDark: '#E65100',
   orangeLight: '#FFF3E0',
   blue: '#007AFF',
+  purple: '#AF52DE',
+  purpleDark: '#8E44AD',
 } as const;
 
 // ── Theme color type ─────────────────────────────────────────
@@ -88,6 +90,9 @@ export interface ThemeColors {
   // Cards & Badges
   cardBackground: string;
   badgeBackground: string;
+
+  // Subscriptions
+  subscription: string;
 }
 
 // ── Light theme ──────────────────────────────────────────────
@@ -130,6 +135,8 @@ export const lightColors: ThemeColors = {
 
   cardBackground: palette.white,
   badgeBackground: palette.gray100,
+
+  subscription: palette.purple,
 };
 
 // ── Dark theme ───────────────────────────────────────────────
@@ -172,4 +179,6 @@ export const darkColors: ThemeColors = {
 
   cardBackground: palette.gray850,
   badgeBackground: palette.gray800,
+
+  subscription: palette.purple,
 };

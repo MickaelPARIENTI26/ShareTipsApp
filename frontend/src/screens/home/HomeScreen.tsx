@@ -14,12 +14,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useAuthStore } from '../../store/auth.store';
 import { useWalletStore } from '../../store/wallet.store';
-import type { HomeStackParamList, RootStackParamList } from '../../types';
+import type { RootStackParamList } from '../../types';
 import { useTheme, type ThemeColors } from '../../theme';
 
 const HomeScreen: React.FC = () => {
   const user = useAuthStore((s) => s.user);
-  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const rootNavigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -96,19 +95,25 @@ const HomeScreen: React.FC = () => {
         )}
       </TouchableOpacity>
 
+      {/* How it works banner */}
+      <TouchableOpacity
+        style={styles.howItWorksBanner}
+        onPress={() => rootNavigation.navigate('HowItWorks')}
+        activeOpacity={0.7}
+      >
+        <View style={styles.howItWorksIcon}>
+          <Ionicons name="bulb-outline" size={22} color={colors.primary} />
+        </View>
+        <Text style={styles.howItWorksText}>Comment ça marche ?</Text>
+        <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+      </TouchableOpacity>
+
       {/* Actions */}
       <View style={styles.actions}>
         <ActionButton
           icon="receipt-outline"
           label="Mes tickets"
           onPress={() => rootNavigation.navigate('MyTickets')}
-          colors={colors}
-          styles={styles}
-        />
-        <ActionButton
-          icon="football-outline"
-          label="Voir les sports"
-          onPress={() => navigation.navigate('SportsList')}
           colors={colors}
           styles={styles}
         />
@@ -243,6 +248,29 @@ const useStyles = (colors: ThemeColors) =>
           fontSize: 14,
           textAlign: 'center',
           marginTop: 4,
+        },
+        howItWorksBanner: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.primary + '15',
+          borderRadius: 12,
+          padding: 14,
+          marginBottom: 16,
+        },
+        howItWorksIcon: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.primary + '20',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 12,
+        },
+        howItWorksText: {
+          flex: 1,
+          fontSize: 15,
+          fontWeight: '600',
+          color: colors.text,
         },
         actions: {
           gap: 10,

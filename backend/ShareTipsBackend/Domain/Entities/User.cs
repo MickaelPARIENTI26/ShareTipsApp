@@ -39,4 +39,5 @@ public class User
     public ICollection<SubscriptionPlan> SubscriptionPlans { get; set; } = new List<SubscriptionPlan>();
     public ICollection<UserConsent> Consents { get; set; } = new List<UserConsent>();
     public ICollection<DeviceToken> DeviceTokens { get; set; } = new List<DeviceToken>();
+    public UserGamification? Gamification { get; set; }
 }

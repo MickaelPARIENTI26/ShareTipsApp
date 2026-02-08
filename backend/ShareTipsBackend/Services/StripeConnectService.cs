@@ -166,52 +166,43 @@ public class StripeConnectService : IStripeConnectService
     {
         var seller = await _context.Users.FindAsync(sellerId);
 
-        if (seller?.StripeOnboardingStatus != StripeOnboardingStatus.Completed)
-        {
-            return new PaymentIntentResultDto(
-                Success: false,
-                ClientSecret: null,
-                PaymentId: null,
-                Message: "Le vendeur n'a pas configuré ses paiements Stripe"
-            );
-        }
-
-        if (string.IsNullOrEmpty(seller.StripeAccountId))
-        {
-            return new PaymentIntentResultDto(
-                Success: false,
-                ClientSecret: null,
-                PaymentId: null,
-                Message: "Le vendeur n'a pas de compte Stripe"
-            );
-        }
-
         // Calculate commission (10%)
         var platformFeeCents = (int)Math.Ceiling(amountCents * PlatformFeePercent);
         var sellerAmountCents = amountCents - platformFeeCents;
 
+        // Check if seller has completed Stripe onboarding
+        var sellerHasStripe = seller?.StripeOnboardingStatus == StripeOnboardingStatus.Completed
+            && !string.IsNullOrEmpty(seller.StripeAccountId);
+
         try
         {
-            // Create PaymentIntent with automatic transfer
+            // Create PaymentIntent - with or without destination transfer
             var options = new PaymentIntentCreateOptions
             {
                 Amount = amountCents,
                 Currency = "eur",
                 PaymentMethodTypes = new List<string> { "card" },
-                TransferData = new PaymentIntentTransferDataOptions
-                {
-                    Destination = seller.StripeAccountId,
-                    Amount = sellerAmountCents
-                },
                 Metadata = new Dictionary<string, string>
                 {
                     { "buyer_id", buyerId.ToString() },
                     { "seller_id", sellerId.ToString() },
                     { "type", type.ToString() },
-                    { "reference_id", referenceId.ToString() }
+                    { "reference_id", referenceId.ToString() },
+                    { "platform_held", sellerHasStripe ? "false" : "true" }
                 },
                 Description = description
             };
+
+            // If seller has Stripe configured, use destination charges for automatic transfer
+            if (sellerHasStripe)
+            {
+                options.TransferData = new PaymentIntentTransferDataOptions
+                {
+                    Destination = seller!.StripeAccountId,
+                    Amount = sellerAmountCents
+                };
+            }
+            // Otherwise, funds are collected by platform and held until seller configures Stripe
 
             var service = new PaymentIntentService();
             var paymentIntent = await service.CreateAsync(options);
@@ -235,8 +226,8 @@ public class StripeConnectService : IStripeConnectService
             await _context.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Created PaymentIntent {PaymentIntentId} for {Type} {ReferenceId}, amount: {Amount} cents",
-                paymentIntent.Id, type, referenceId, amountCents);
+                "Created PaymentIntent {PaymentIntentId} for {Type} {ReferenceId}, amount: {Amount} cents, platform_held: {PlatformHeld}",
+                paymentIntent.Id, type, referenceId, amountCents, !sellerHasStripe);
 
             return new PaymentIntentResultDto(
                 Success: true,
@@ -344,7 +335,17 @@ public class StripeConnectService : IStripeConnectService
         {
             return new PayoutResultDto(
                 Success: false,
-                Message: "Configurez d'abord vos paiements Stripe",
+                Message: "Configurez d'abord vos paiements Stripe pour retirer vos gains",
+                Amount: null,
+                PayoutId: null
+            );
+        }
+
+        if (string.IsNullOrEmpty(user.StripeAccountId))
+        {
+            return new PayoutResultDto(
+                Success: false,
+                Message: "Compte Stripe non trouvé",
                 Amount: null,
                 PayoutId: null
             );
@@ -384,16 +385,51 @@ public class StripeConnectService : IStripeConnectService
 
         try
         {
-            // Create Stripe payout
-            var options = new PayoutCreateOptions
+            // First, transfer any platform-held funds to the connected account
+            var platformHeldPayments = await _context.StripePayments
+                .Where(p => p.SellerId == tipsterId
+                    && p.Status == StripePaymentStatus.Succeeded
+                    && p.StripeTransferId == null)
+                .ToListAsync();
+
+            var transferService = new TransferService();
+            foreach (var payment in platformHeldPayments)
+            {
+                var transferOptions = new TransferCreateOptions
+                {
+                    Amount = payment.SellerAmountCents,
+                    Currency = "eur",
+                    Destination = user.StripeAccountId,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "payment_id", payment.Id.ToString() },
+                        { "original_payment_intent", payment.StripePaymentIntentId }
+                    }
+                };
+
+                var transfer = await transferService.CreateAsync(transferOptions);
+                payment.StripeTransferId = transfer.Id;
+
+                _logger.LogInformation(
+                    "Transferred {Amount} cents for payment {PaymentId} to connected account {AccountId}",
+                    payment.SellerAmountCents, payment.Id, user.StripeAccountId);
+            }
+
+            if (platformHeldPayments.Count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            // Now create the payout from connected account to bank
+            var payoutOptions = new PayoutCreateOptions
             {
                 Amount = amount,
                 Currency = "eur",
                 Metadata = new Dictionary<string, string> { { "tipster_id", tipsterId.ToString() } }
             };
 
-            var service = new PayoutService();
-            var payout = await service.CreateAsync(options, new RequestOptions
+            var payoutService = new PayoutService();
+            var payout = await payoutService.CreateAsync(payoutOptions, new RequestOptions
             {
                 StripeAccount = user.StripeAccountId
             });

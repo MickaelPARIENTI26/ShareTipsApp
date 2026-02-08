@@ -11,8 +11,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { matchApi } from '../api/match.api';
+import { sportsApi } from '../api/sports.api';
 import MatchCard from '../components/match/MatchCard';
+import { SportChips, LeagueChips } from '../components/filters';
 import type { MatchDetail } from '../types';
+import type { SportDto } from '../types/sport.types';
 import { useTheme, type ThemeColors } from '../theme';
 
 interface DateGroup {
@@ -41,12 +44,10 @@ function formatDateHeader(dateStr: string): string {
 }
 
 function groupByDate(matches: MatchDetail[]): DateGroup[] {
-  // Sort all matches by start time (ascending - closest first)
   const sorted = [...matches].sort(
     (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   );
 
-  // Group by date
   const groups = new Map<string, MatchDetail[]>();
   for (const match of sorted) {
     const dateKey = new Date(match.startTime).toDateString();
@@ -66,16 +67,27 @@ const MatchesScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
 
-  const [matches, setMatches] = useState<MatchDetail[]>([]);
+  // Data states
+  const [allMatches, setAllMatches] = useState<MatchDetail[]>([]);
+  const [sports, setSports] = useState<SportDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchMatches = useCallback(async () => {
+  // Filter states
+  const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
+
+  // Fetch all data
+  const fetchData = useCallback(async () => {
     try {
       setError(null);
-      const data = await matchApi.getMatchesWithMarkets();
-      setMatches(data);
+      const [matchesData, sportsRes] = await Promise.all([
+        matchApi.getMatchesWithMarkets(),
+        sportsApi.getAll(),
+      ]);
+      setAllMatches(matchesData);
+      setSports(sportsRes.data.filter((s) => s.isActive));
     } catch {
       setError('Impossible de charger les matchs');
     } finally {
@@ -85,15 +97,51 @@ const MatchesScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchMatches();
-  }, [fetchMatches]);
+    fetchData();
+  }, [fetchData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchMatches();
-  }, [fetchMatches]);
+    fetchData();
+  }, [fetchData]);
 
-  const groupedMatches = useMemo(() => groupByDate(matches), [matches]);
+  // Extract unique leagues from filtered matches (by sport)
+  const availableLeagues = useMemo(() => {
+    if (!selectedSport) return [];
+    const sportMatches = allMatches.filter(
+      (m) => m.sportCode === selectedSport
+    );
+    const leagues = [...new Set(sportMatches.map((m) => m.leagueName))];
+    return leagues.sort();
+  }, [allMatches, selectedSport]);
+
+  // Reset league when sport changes
+  useEffect(() => {
+    setSelectedLeague(null);
+  }, [selectedSport]);
+
+  // Apply filters
+  const filteredMatches = useMemo(() => {
+    let result = allMatches;
+
+    if (selectedSport) {
+      result = result.filter((m) => m.sportCode === selectedSport);
+    }
+
+    if (selectedLeague) {
+      result = result.filter((m) => m.leagueName === selectedLeague);
+    }
+
+    return result;
+  }, [allMatches, selectedSport, selectedLeague]);
+
+  const groupedMatches = useMemo(
+    () => groupByDate(filteredMatches),
+    [filteredMatches]
+  );
+
+  // Match count for current filters
+  const matchCount = filteredMatches.length;
 
   if (loading) {
     return (
@@ -108,45 +156,98 @@ const MatchesScreen: React.FC = () => {
       <View style={styles.center}>
         <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={fetchMatches}>
+        <TouchableOpacity style={styles.retryBtn} onPress={fetchData}>
           <Text style={styles.retryBtnText}>Réessayer</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  if (matches.length === 0) {
-    return (
-      <View testID="matches-empty-state" style={styles.center}>
-        <Ionicons name="football-outline" size={48} color={colors.textSecondary} />
-        <Text style={styles.emptyText}>Aucun match à venir</Text>
-      </View>
-    );
-  }
-
   return (
-    <FlatList
-      testID="matches-list"
-      data={groupedMatches}
-      keyExtractor={(item) => item.date}
-      contentContainerStyle={styles.list}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      renderItem={({ item: group }) => (
-        <View testID="matches-screen">
-          <View style={styles.dateHeaderContainer}>
-            <Text style={styles.dateHeader}>{group.dateLabel}</Text>
-          </View>
-          {group.matches.map((match) => (
-            <View key={match.id} testID="match-card" style={styles.matchWrapper}>
-              <Text style={styles.leagueBadge}>{match.leagueName}</Text>
-              <MatchCard match={match} />
-            </View>
-          ))}
-        </View>
+    <View style={styles.container}>
+      {/* Sport filter chips */}
+      <SportChips
+        sports={sports}
+        selectedSport={selectedSport}
+        onSelect={setSelectedSport}
+        colors={colors}
+      />
+
+      {/* League filter chips (only when a sport is selected) */}
+      {selectedSport && availableLeagues.length > 0 && (
+        <LeagueChips
+          leagues={availableLeagues}
+          selectedLeague={selectedLeague}
+          onSelect={setSelectedLeague}
+          colors={colors}
+        />
       )}
-    />
+
+      {/* Match count indicator */}
+      <View style={styles.countContainer}>
+        <Text style={styles.countText}>
+          {matchCount} match{matchCount !== 1 ? 's' : ''} à venir
+        </Text>
+      </View>
+
+      {/* Empty state */}
+      {filteredMatches.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons
+            name="football-outline"
+            size={48}
+            color={colors.textSecondary}
+          />
+          <Text style={styles.emptyText}>
+            {selectedSport
+              ? 'Aucun match pour ce sport'
+              : 'Aucun match à venir'}
+          </Text>
+          {selectedSport && (
+            <TouchableOpacity
+              style={styles.resetBtn}
+              onPress={() => setSelectedSport(null)}
+            >
+              <Text style={styles.resetBtnText}>Voir tous les matchs</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <FlatList
+          testID="matches-list"
+          data={groupedMatches}
+          keyExtractor={(item) => item.date}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          renderItem={({ item: group, index }) => (
+            <View testID="matches-screen">
+              {/* Separator between days (except first) */}
+              {index > 0 && <View style={styles.daySeparator} />}
+              <View style={styles.dateHeaderContainer}>
+                <View style={styles.dateHeaderLine} />
+                <Text style={styles.dateHeader}>{group.dateLabel}</Text>
+                <View style={styles.dateHeaderLine} />
+              </View>
+              {group.matches.map((match) => (
+                <View
+                  key={match.id}
+                  testID="match-card"
+                  style={styles.matchWrapper}
+                >
+                  {/* Only show league badge if not filtering by league */}
+                  {!selectedLeague && (
+                    <Text style={styles.leagueBadge}>{match.leagueName}</Text>
+                  )}
+                  <MatchCard match={match} />
+                </View>
+              ))}
+            </View>
+          )}
+        />
+      )}
+    </View>
   );
 };
 
@@ -154,6 +255,10 @@ const useStyles = (colors: ThemeColors) =>
   useMemo(
     () =>
       StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
         center: {
           flex: 1,
           justifyContent: 'center',
@@ -164,21 +269,43 @@ const useStyles = (colors: ThemeColors) =>
         list: {
           padding: 12,
           paddingBottom: 24,
+        },
+        countContainer: {
+          paddingHorizontal: 16,
+          paddingVertical: 8,
           backgroundColor: colors.background,
         },
+        countText: {
+          fontSize: 13,
+          color: colors.textSecondary,
+          fontWeight: '500',
+        },
+        daySeparator: {
+          height: 8,
+          backgroundColor: colors.border,
+          marginTop: 20,
+          marginHorizontal: -12,
+        },
         dateHeaderContainer: {
-          backgroundColor: colors.surfaceSecondary,
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          marginTop: 16,
-          marginBottom: 10,
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginTop: 20,
+          marginBottom: 12,
+          gap: 12,
+        },
+        dateHeaderLine: {
+          flex: 1,
+          height: 1,
+          backgroundColor: colors.border,
         },
         dateHeader: {
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: '700',
           color: colors.text,
-          textTransform: 'capitalize',
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          backgroundColor: colors.background,
+          paddingHorizontal: 4,
         },
         matchWrapper: {
           marginBottom: 8,
@@ -198,6 +325,12 @@ const useStyles = (colors: ThemeColors) =>
           textAlign: 'center',
           marginTop: 12,
         },
+        emptyContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 24,
+        },
         emptyText: {
           color: colors.textSecondary,
           fontSize: 15,
@@ -214,6 +347,20 @@ const useStyles = (colors: ThemeColors) =>
         retryBtnText: {
           color: colors.textOnPrimary,
           fontSize: 15,
+          fontWeight: '600',
+        },
+        resetBtn: {
+          marginTop: 16,
+          backgroundColor: colors.surface,
+          borderRadius: 8,
+          paddingHorizontal: 20,
+          paddingVertical: 10,
+          borderWidth: 1,
+          borderColor: colors.primary,
+        },
+        resetBtnText: {
+          color: colors.primary,
+          fontSize: 14,
           fontWeight: '600',
         },
       }),

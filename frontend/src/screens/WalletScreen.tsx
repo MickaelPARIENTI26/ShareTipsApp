@@ -59,7 +59,7 @@ const TransactionRow: React.FC<{
     Commission: colors.textSecondary,
     Win: colors.success,
     Refund: colors.primary,
-    SubscriptionPurchase: '#AF52DE',
+    SubscriptionPurchase: colors.subscription,
     SubscriptionSale: colors.success,
   };
 
@@ -134,6 +134,9 @@ const TipsterEarningsCard: React.FC<{
   const canRequestPayout =
     isStripeConfigured && (tipsterWallet?.availableBalance ?? 0) >= 10;
 
+  // Show balance even if Stripe is not configured (earnings still accumulate)
+  const hasEarnings = (tipsterWallet?.availableBalance ?? 0) > 0 || (tipsterWallet?.totalEarned ?? 0) > 0;
+
   if (!isStripeConfigured) {
     return (
       <View style={styles.earningsCard}>
@@ -141,8 +144,29 @@ const TipsterEarningsCard: React.FC<{
           <Ionicons name="wallet-outline" size={24} color={colors.primary} />
           <Text style={styles.earningsTitle}>Mes revenus tipster</Text>
         </View>
+
+        {/* Show balance if user has earnings */}
+        {hasEarnings && (
+          <>
+            <View style={styles.balanceRow}>
+              <Text style={styles.balanceLabel}>Solde disponible</Text>
+              <Text style={styles.balanceValue}>
+                {tipsterWallet?.availableBalance.toFixed(2) ?? '0.00'} EUR
+              </Text>
+            </View>
+            <View style={[styles.totalRow, { marginBottom: 12 }]}>
+              <Text style={styles.totalLabel}>Total gagne</Text>
+              <Text style={styles.totalValue}>
+                {tipsterWallet?.totalEarned.toFixed(2) ?? '0.00'} EUR
+              </Text>
+            </View>
+          </>
+        )}
+
         <Text style={styles.setupText}>
-          Configurez Stripe pour recevoir vos paiements et retirer vos gains.
+          {hasEarnings
+            ? 'Configurez Stripe pour retirer vos gains vers votre compte bancaire.'
+            : 'Configurez Stripe pour recevoir vos paiements et retirer vos gains.'}
         </Text>
         <TouchableOpacity
           style={styles.setupBtn}
@@ -152,7 +176,9 @@ const TipsterEarningsCard: React.FC<{
           accessibilityRole="button"
         >
           <Ionicons name="card-outline" size={18} color={colors.textOnPrimary} />
-          <Text style={styles.setupBtnText}>Configurer mes paiements</Text>
+          <Text style={styles.setupBtnText}>
+            {hasEarnings ? 'Configurer pour retirer' : 'Configurer mes paiements'}
+          </Text>
         </TouchableOpacity>
         {stripeStatus?.status === 'Pending' && (
           <Text style={styles.pendingText}>

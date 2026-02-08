@@ -370,6 +370,9 @@ export type RootStackParamList = {
   CGU: undefined;
   CGV: undefined;
   PrivacyPolicy: undefined;
+  HowItWorks: undefined;
+  MyBadges: undefined;
+  XpGuide: undefined;
 };
 
 export type AppTabParamList = {

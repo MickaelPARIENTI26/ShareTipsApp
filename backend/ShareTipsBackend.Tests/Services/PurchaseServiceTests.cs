@@ -22,8 +22,11 @@ public class PurchaseServiceTests
         consentService.Setup(x => x.HasConsentAsync(It.IsAny<Guid>(), It.IsAny<string>()))
             .ReturnsAsync(true);
         var stripeService = new Mock<IStripeConnectService>();
+        var gamificationService = new Mock<IGamificationService>();
+        gamificationService.Setup(x => x.AwardXpAsync(It.IsAny<Guid>(), It.IsAny<Domain.Enums.XpActionType>(), It.IsAny<string?>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(new DTOs.XpGainResultDto(15, 100, 1, false, null, null, null));
         var logger = new Mock<ILogger<PurchaseService>>();
-        return new PurchaseService(context, consentService.Object, stripeService.Object, logger.Object);
+        return new PurchaseService(context, consentService.Object, stripeService.Object, gamificationService.Object, logger.Object);
     }
 
     private async Task<(User buyer, User seller, Ticket ticket)> SetupBuyerSellerTicketAsync(
@@ -76,7 +79,7 @@ public class PurchaseServiceTests
     }
 
     [Fact]
-    public async Task GetPurchasesByBuyerAsync_NoPurchases_ReturnsEmptyList()
+    public async Task GetPurchasesByBuyerPaginatedAsync_NoPurchases_ReturnsEmptyList()
     {
         // Arrange
         using var context = DbContextFactory.Create();
@@ -95,14 +98,14 @@ public class PurchaseServiceTests
         await context.SaveChangesAsync();
 
         // Act
-        var result = await purchaseService.GetPurchasesByBuyerAsync(buyer.Id);
+        var result = await purchaseService.GetPurchasesByBuyerPaginatedAsync(buyer.Id, 1, 20);
 
         // Assert
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task GetPurchasesByBuyerAsync_WithPurchases_ReturnsList()
+    public async Task GetPurchasesByBuyerPaginatedAsync_WithPurchases_ReturnsList()
     {
         // Arrange
         using var context = DbContextFactory.Create();
@@ -124,13 +127,14 @@ public class PurchaseServiceTests
         await context.SaveChangesAsync();
 
         // Act
-        var result = (await purchaseService.GetPurchasesByBuyerAsync(buyer.Id)).ToList();
+        var result = await purchaseService.GetPurchasesByBuyerPaginatedAsync(buyer.Id, 1, 20);
+        var items = result.Items.ToList();
 
         // Assert
-        result.Should().HaveCount(1);
-        result[0].TicketId.Should().Be(ticket.Id);
-        result[0].BuyerId.Should().Be(buyer.Id);
-        result[0].PriceEur.Should().Be(10.00m);
+        items.Should().HaveCount(1);
+        items[0].TicketId.Should().Be(ticket.Id);
+        items[0].BuyerId.Should().Be(buyer.Id);
+        items[0].PriceEur.Should().Be(10.00m);
     }
 
     [Fact]
@@ -183,7 +187,7 @@ public class PurchaseServiceTests
     }
 
     [Fact]
-    public async Task GetPurchasesByBuyerAsync_ReturnsOrderedByMostRecent()
+    public async Task GetPurchasesByBuyerPaginatedAsync_ReturnsOrderedByMostRecent()
     {
         // Arrange
         using var context = DbContextFactory.Create();
@@ -228,12 +232,13 @@ public class PurchaseServiceTests
         await context.SaveChangesAsync();
 
         // Act
-        var result = (await purchaseService.GetPurchasesByBuyerAsync(buyer.Id)).ToList();
+        var result = await purchaseService.GetPurchasesByBuyerPaginatedAsync(buyer.Id, 1, 20);
+        var items = result.Items.ToList();
 
         // Assert - most recent first
-        result.Should().HaveCount(3);
-        result[0].PriceEur.Should().Be(5.00m); // Most recent (i=0)
-        result[2].PriceEur.Should().Be(15.00m); // Oldest (i=2)
+        items.Should().HaveCount(3);
+        items[0].PriceEur.Should().Be(5.00m); // Most recent (i=0)
+        items[2].PriceEur.Should().Be(15.00m); // Oldest (i=2)
     }
 
     [Fact]

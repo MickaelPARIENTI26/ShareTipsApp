@@ -1,13 +1,24 @@
 using FluentAssertions;
+using Moq;
 using ShareTipsBackend.Domain.Entities;
 using ShareTipsBackend.Domain.Enums;
+using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services;
+using ShareTipsBackend.Services.Interfaces;
 using ShareTipsBackend.Tests.TestHelpers;
 
 namespace ShareTipsBackend.Tests.Services;
 
 public class FavoriteServiceTests
 {
+    private static Mock<IGamificationService> CreateMockGamificationService()
+    {
+        var mock = new Mock<IGamificationService>();
+        mock.Setup(x => x.AwardXpAsync(It.IsAny<Guid>(), It.IsAny<XpActionType>(), It.IsAny<string?>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(new XpGainResultDto(5, 100, 1, false, null, null, null));
+        return mock;
+    }
+
     private async Task<(User user, Ticket ticket)> SetupUserAndTicketAsync(
         Data.ApplicationDbContext context,
         string username = "testuser",
@@ -67,7 +78,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
         var (user, ticket) = await SetupUserAndTicketAsync(context);
 
         // Act
@@ -83,7 +95,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
         var (user, ticket) = await SetupUserAndTicketAsync(context);
 
         // First add to favorites
@@ -102,7 +115,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
 
         var user = new User
         {
@@ -129,7 +143,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
 
         // Create user who owns a ticket
         var userId = Guid.NewGuid();
@@ -175,7 +190,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
         var (user, ticket1) = await SetupUserAndTicketAsync(context);
 
         // Create a second ticket
@@ -227,7 +243,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
 
         var user = new User
         {
@@ -253,7 +270,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
         var (user, ticket) = await SetupUserAndTicketAsync(context);
 
         // Add to favorites
@@ -275,7 +293,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
         var (user, ticket) = await SetupUserAndTicketAsync(context);
 
         await favoriteService.ToggleFavoriteAsync(user.Id, ticket.Id);
@@ -292,7 +311,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
         var (user, ticket) = await SetupUserAndTicketAsync(context);
 
         // Act - don't add to favorites
@@ -307,7 +327,8 @@ public class FavoriteServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var favoriteService = new FavoriteService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var favoriteService = new FavoriteService(context, gamificationMock.Object);
         var (user, _) = await SetupUserAndTicketAsync(context);
 
         // Create 3 tickets with different creators

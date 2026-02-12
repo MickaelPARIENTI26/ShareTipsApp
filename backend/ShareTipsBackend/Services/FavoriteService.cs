@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ShareTipsBackend.Common;
 using ShareTipsBackend.Data;
 using ShareTipsBackend.Domain.Entities;
+using ShareTipsBackend.Domain.Enums;
 using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services.Interfaces;
 
@@ -10,10 +11,12 @@ namespace ShareTipsBackend.Services;
 public class FavoriteService : IFavoriteService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IGamificationService _gamificationService;
 
-    public FavoriteService(ApplicationDbContext context)
+    public FavoriteService(ApplicationDbContext context, IGamificationService gamificationService)
     {
         _context = context;
+        _gamificationService = gamificationService;
     }
 
     public async Task<FavoriteResultDto> ToggleFavoriteAsync(Guid userId, Guid ticketId)
@@ -38,6 +41,14 @@ public class FavoriteService : IFavoriteService
         {
             _context.FavoriteTickets.Remove(existing);
             await _context.SaveChangesAsync();
+
+            // Award negative XP for removing from favorites
+            await _gamificationService.AwardXpAsync(
+                userId,
+                XpActionType.UnfavoriteTicket,
+                "Retrait des favoris",
+                ticketId);
+
             return new FavoriteResultDto(false, "Removed from favorites");
         }
 
@@ -63,6 +74,13 @@ public class FavoriteService : IFavoriteService
                 .AnyAsync(f => f.UserId == userId && f.TicketId == ticketId);
             return new FavoriteResultDto(nowExists, nowExists ? "Already in favorites" : "Failed to add");
         }
+
+        // Award XP for adding to favorites
+        await _gamificationService.AwardXpAsync(
+            userId,
+            XpActionType.FavoriteTicket,
+            "Ticket ajouté aux favoris",
+            ticketId);
 
         return new FavoriteResultDto(true, "Added to favorites");
     }

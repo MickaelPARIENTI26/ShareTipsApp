@@ -2,6 +2,8 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ShareTipsBackend.Domain.Entities;
+using ShareTipsBackend.Domain.Enums;
+using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services;
 using ShareTipsBackend.Services.Interfaces;
 using ShareTipsBackend.Tests.TestHelpers;
@@ -20,8 +22,11 @@ public class SubscriptionServiceTests
         consentService.Setup(x => x.HasConsentAsync(It.IsAny<Guid>(), It.IsAny<string>()))
             .ReturnsAsync(true);
         var stripeService = new Mock<IStripeConnectService>();
+        var gamificationService = new Mock<IGamificationService>();
+        gamificationService.Setup(x => x.AwardXpAsync(It.IsAny<Guid>(), It.IsAny<XpActionType>(), It.IsAny<string?>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(new XpGainResultDto(25, 100, 1, false, null, null, null));
         var logger = new Mock<ILogger<SubscriptionService>>();
-        return new SubscriptionService(context, consentService.Object, stripeService.Object, logger.Object);
+        return new SubscriptionService(context, consentService.Object, stripeService.Object, gamificationService.Object, logger.Object);
     }
 
     private async Task<(User subscriber, User tipster)> SetupUsersAsync(Data.ApplicationDbContext context)

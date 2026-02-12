@@ -7,6 +7,8 @@ using ShareTipsBackend.Services.Interfaces;
 
 namespace ShareTipsBackend.BackgroundServices;
 
+// Gamification helper methods for MatchResultService
+
 public class MatchResultService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -103,6 +105,7 @@ public class MatchResultService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+        var gamificationService = scope.ServiceProvider.GetRequiredService<IGamificationService>();
 
         // Find locked tickets where all matches are finished
         var lockedTickets = await context.Tickets
@@ -126,16 +129,18 @@ public class MatchResultService : BackgroundService
                 ticket.Status = TicketStatus.Finished;
 
                 // Determine result based on selections
-                // In production, you would compare selections with actual match results
-                // For now, we use a placeholder logic
                 var allWin = await DetermineTicketResultAsync(context, ticket);
 
                 ticket.Result = allWin ? TicketResult.Win : TicketResult.Lose;
 
-                // If ticket won and was purchased, credit the buyers
+                // Award XP to tipster for ticket result
+                await AwardTicketResultXpAsync(context, gamificationService, ticket);
+
+                // Award XP to buyers if ticket won
                 if (ticket.Result == TicketResult.Win)
                 {
                     await ProcessWinningsAsync(context, ticket);
+                    await AwardBuyersWinXpAsync(gamificationService, ticket);
                 }
 
                 // Notify buyers and active subscribers about the result
@@ -147,6 +152,103 @@ public class MatchResultService : BackgroundService
         }
 
         await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Award XP to the tipster for ticket win/lose and update win streak
+    /// </summary>
+    private async Task AwardTicketResultXpAsync(
+        ApplicationDbContext context,
+        IGamificationService gamificationService,
+        Ticket ticket)
+    {
+        var tipsterId = ticket.CreatorId;
+        var isWin = ticket.Result == TicketResult.Win;
+
+        // Get or create gamification profile to update win streak
+        var gamification = await context.UserGamifications
+            .FirstOrDefaultAsync(g => g.UserId == tipsterId);
+
+        if (gamification != null)
+        {
+            if (isWin)
+            {
+                // Increment win streak
+                gamification.CurrentWinStreak++;
+                if (gamification.CurrentWinStreak > gamification.LongestWinStreak)
+                {
+                    gamification.LongestWinStreak = gamification.CurrentWinStreak;
+                }
+
+                // Award XP for ticket win
+                await gamificationService.AwardXpAsync(
+                    tipsterId,
+                    XpActionType.TicketWin,
+                    $"Ticket gagnant: {ticket.Title}",
+                    ticket.Id);
+
+                // Award bonus XP for win streak (every 3 wins)
+                if (gamification.CurrentWinStreak >= 3 && gamification.CurrentWinStreak % 3 == 0)
+                {
+                    await gamificationService.AwardXpAsync(
+                        tipsterId,
+                        XpActionType.TicketWinStreak,
+                        $"Win streak de {gamification.CurrentWinStreak}!",
+                        ticket.Id);
+                }
+            }
+            else
+            {
+                // Reset win streak on loss
+                gamification.CurrentWinStreak = 0;
+
+                // Award negative XP for ticket loss
+                await gamificationService.AwardXpAsync(
+                    tipsterId,
+                    XpActionType.TicketLose,
+                    $"Ticket perdant: {ticket.Title}",
+                    ticket.Id);
+            }
+
+            gamification.UpdatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            // No gamification profile yet - just award XP (will create profile)
+            if (isWin)
+            {
+                await gamificationService.AwardXpAsync(
+                    tipsterId,
+                    XpActionType.TicketWin,
+                    $"Ticket gagnant: {ticket.Title}",
+                    ticket.Id);
+            }
+            else
+            {
+                await gamificationService.AwardXpAsync(
+                    tipsterId,
+                    XpActionType.TicketLose,
+                    $"Ticket perdant: {ticket.Title}",
+                    ticket.Id);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Award XP to all buyers of a winning ticket
+    /// </summary>
+    private async Task AwardBuyersWinXpAsync(
+        IGamificationService gamificationService,
+        Ticket ticket)
+    {
+        foreach (var purchase in ticket.Purchases)
+        {
+            await gamificationService.AwardXpAsync(
+                purchase.BuyerId,
+                XpActionType.WinPurchasedTicket,
+                $"Ticket acheté gagnant: {ticket.Title}",
+                ticket.Id);
+        }
     }
 
     private async Task NotifyTicketResultAsync(

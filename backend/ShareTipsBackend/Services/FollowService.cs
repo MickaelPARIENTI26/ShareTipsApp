@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ShareTipsBackend.Data;
 using ShareTipsBackend.Domain.Entities;
+using ShareTipsBackend.Domain.Enums;
 using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services.Interfaces;
 
@@ -9,10 +10,12 @@ namespace ShareTipsBackend.Services;
 public class FollowService : IFollowService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IGamificationService _gamificationService;
 
-    public FollowService(ApplicationDbContext context)
+    public FollowService(ApplicationDbContext context, IGamificationService gamificationService)
     {
         _context = context;
+        _gamificationService = gamificationService;
     }
 
     public async Task<FollowResultDto> FollowAsync(Guid followerId, Guid followedId)
@@ -46,6 +49,13 @@ public class FollowService : IFollowService
             return new FollowResultDto(true, "Déjà suivi");
         }
 
+        // Award XP for following a user
+        await _gamificationService.AwardXpAsync(
+            followerId,
+            XpActionType.FollowUser,
+            "Nouveau follow",
+            followedId);
+
         return new FollowResultDto(true, "Suivi avec succès");
     }
 
@@ -59,6 +69,13 @@ public class FollowService : IFollowService
 
         _context.UserFollows.Remove(follow);
         await _context.SaveChangesAsync();
+
+        // Award negative XP for unfollowing
+        await _gamificationService.AwardXpAsync(
+            followerId,
+            XpActionType.UnfollowUser,
+            "Unfollow",
+            followedId);
 
         return new FollowResultDto(false, "Désabonné avec succès");
     }

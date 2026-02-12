@@ -14,6 +14,7 @@ public class SubscriptionService : ISubscriptionService
     private readonly ApplicationDbContext _context;
     private readonly IConsentService _consentService;
     private readonly IStripeConnectService _stripeService;
+    private readonly IGamificationService _gamificationService;
     private readonly ILogger<SubscriptionService> _logger;
     private const decimal PlatformFeePercent = 0.10m; // 10% commission
 
@@ -21,11 +22,13 @@ public class SubscriptionService : ISubscriptionService
         ApplicationDbContext context,
         IConsentService consentService,
         IStripeConnectService stripeService,
+        IGamificationService gamificationService,
         ILogger<SubscriptionService> logger)
     {
         _context = context;
         _consentService = consentService;
         _stripeService = stripeService;
+        _gamificationService = gamificationService;
         _logger = logger;
     }
 
@@ -133,6 +136,20 @@ public class SubscriptionService : ISubscriptionService
                 subscription.Status.ToString(),
                 subscription.CreatedAt
             );
+
+            // Award XP for subscribing (subscriber)
+            await _gamificationService.AwardXpAsync(
+                subscriberId,
+                XpActionType.Subscribe,
+                $"Abonnement à {tipster.Username}",
+                subscription.Id);
+
+            // Award XP for gaining a subscriber (tipster)
+            await _gamificationService.AwardXpAsync(
+                tipsterId,
+                XpActionType.GainSubscriber,
+                "Nouvel abonné",
+                subscription.Id);
 
             return new SubscriptionResultDto(true, "Subscription successful", subscriptionDto, 0);
         }
@@ -264,6 +281,20 @@ public class SubscriptionService : ISubscriptionService
                 paidSubscription.Status.ToString(),
                 paidSubscription.CreatedAt
             );
+
+            // Award XP for subscribing (subscriber)
+            await _gamificationService.AwardXpAsync(
+                subscriberId,
+                XpActionType.Subscribe,
+                $"Abonnement à {tipster.Username}",
+                paidSubscription.Id);
+
+            // Award XP for gaining a subscriber (tipster)
+            await _gamificationService.AwardXpAsync(
+                tipsterId,
+                XpActionType.GainSubscriber,
+                "Nouvel abonné",
+                paidSubscription.Id);
 
             return new SubscriptionResultDto(true, "Subscription successful", paidSubscriptionDto, subscriberWallet.TipsterBalanceCents);
         }
@@ -452,6 +483,20 @@ public class SubscriptionService : ISubscriptionService
                 subscription.CreatedAt
             );
 
+            // Award XP for subscribing (subscriber)
+            await _gamificationService.AwardXpAsync(
+                subscriberId,
+                XpActionType.Subscribe,
+                $"Abonnement à {plan.Tipster?.Username ?? "tipster"}",
+                subscription.Id);
+
+            // Award XP for gaining a subscriber (tipster)
+            await _gamificationService.AwardXpAsync(
+                tipsterId,
+                XpActionType.GainSubscriber,
+                "Nouvel abonné",
+                subscription.Id);
+
             return new SubscriptionResultDto(true, "Subscription successful", subscriptionDto, subscriberWallet.TipsterBalanceCents);
         }
         catch (Exception ex)
@@ -479,6 +524,21 @@ public class SubscriptionService : ISubscriptionService
         subscription.CancelledAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        // Award negative XP for unsubscribing (subscriber)
+        await _gamificationService.AwardXpAsync(
+            subscriberId,
+            XpActionType.Unsubscribe,
+            "Désabonnement",
+            subscription.Id);
+
+        // Award negative XP for losing a subscriber (tipster)
+        await _gamificationService.AwardXpAsync(
+            tipsterId,
+            XpActionType.LoseSubscriber,
+            "Perte d'abonné",
+            subscription.Id);
+
         return true;
     }
 
@@ -720,6 +780,20 @@ public class SubscriptionService : ISubscriptionService
         // Activate subscription
         subscription.Status = SubscriptionStatus.Active;
         await _context.SaveChangesAsync();
+
+        // Award XP for subscribing (subscriber)
+        await _gamificationService.AwardXpAsync(
+            subscription.SubscriberId,
+            XpActionType.Subscribe,
+            $"Abonnement à {subscription.Tipster?.Username ?? "tipster"}",
+            subscription.Id);
+
+        // Award XP for gaining a subscriber (tipster)
+        await _gamificationService.AwardXpAsync(
+            subscription.TipsterId,
+            XpActionType.GainSubscriber,
+            "Nouvel abonné",
+            subscription.Id);
 
         var subscriptionDto = MapToDto(subscription);
         return new SubscriptionResultDto(true, "Abonnement active", subscriptionDto, 0);

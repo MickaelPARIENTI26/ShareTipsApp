@@ -23,7 +23,10 @@ public class TicketServiceNotificationTests
     private static TicketService CreateTicketService(ApplicationDbContext context, INotificationService notificationService)
     {
         var cacheService = new Mock<ICacheService>();
-        return new TicketService(context, notificationService, cacheService.Object);
+        var gamificationService = new Mock<IGamificationService>();
+        gamificationService.Setup(x => x.AwardXpAsync(It.IsAny<Guid>(), It.IsAny<XpActionType>(), It.IsAny<string?>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(new XpGainResultDto(15, 100, 1, false, null, null, null));
+        return new TicketService(context, notificationService, cacheService.Object, gamificationService.Object);
     }
 
     private async Task<User> CreateUserAsync(ApplicationDbContext context, string username)

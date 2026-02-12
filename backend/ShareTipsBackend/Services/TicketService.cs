@@ -13,15 +13,18 @@ public class TicketService : ITicketService
     private readonly ApplicationDbContext _context;
     private readonly INotificationService _notificationService;
     private readonly ICacheService _cache;
+    private readonly IGamificationService _gamificationService;
 
     public TicketService(
         ApplicationDbContext context,
         INotificationService notificationService,
-        ICacheService cache)
+        ICacheService cache,
+        IGamificationService gamificationService)
     {
         _context = context;
         _notificationService = notificationService;
         _cache = cache;
+        _gamificationService = gamificationService;
     }
 
     public async Task<TicketDto?> GetByIdAsync(Guid ticketId)
@@ -306,6 +309,13 @@ public class TicketService : ITicketService
         await _context.Entry(ticket)
             .Reference(t => t.Creator)
             .LoadAsync();
+
+        // Award XP for creating a ticket
+        await _gamificationService.AwardXpAsync(
+            creatorId,
+            XpActionType.CreateTicket,
+            $"Création du ticket: {ticket.Title}",
+            ticket.Id);
 
         // Notify followers and active subscribers
         await NotifyFollowersAndSubscribersAsync(ticket);

@@ -13,16 +13,20 @@ public class TicketServiceTests
 {
     private readonly Mock<INotificationService> _mockNotificationService;
     private readonly Mock<ICacheService> _mockCacheService;
+    private readonly Mock<IGamificationService> _mockGamificationService;
 
     public TicketServiceTests()
     {
         _mockNotificationService = new Mock<INotificationService>();
         _mockCacheService = new Mock<ICacheService>();
+        _mockGamificationService = new Mock<IGamificationService>();
+        _mockGamificationService.Setup(x => x.AwardXpAsync(It.IsAny<Guid>(), It.IsAny<XpActionType>(), It.IsAny<string?>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(new XpGainResultDto(15, 100, 1, false, null, null, null));
     }
 
     private TicketService CreateService(Data.ApplicationDbContext context)
     {
-        return new TicketService(context, _mockNotificationService.Object, _mockCacheService.Object);
+        return new TicketService(context, _mockNotificationService.Object, _mockCacheService.Object, _mockGamificationService.Object);
     }
 
     private async Task<(User user, Domain.Entities.Match match)> SetupUserAndMatchAsync(Data.ApplicationDbContext context)

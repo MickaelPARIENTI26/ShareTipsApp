@@ -14,6 +14,7 @@ public class PurchaseService : IPurchaseService
     private readonly ApplicationDbContext _context;
     private readonly IConsentService _consentService;
     private readonly IStripeConnectService _stripeService;
+    private readonly IGamificationService _gamificationService;
     private readonly ILogger<PurchaseService> _logger;
     private const decimal PlatformFeePercent = 0.10m; // 10% commission
 
@@ -21,11 +22,13 @@ public class PurchaseService : IPurchaseService
         ApplicationDbContext context,
         IConsentService consentService,
         IStripeConnectService stripeService,
+        IGamificationService gamificationService,
         ILogger<PurchaseService> logger)
     {
         _context = context;
         _consentService = consentService;
         _stripeService = stripeService;
+        _gamificationService = gamificationService;
         _logger = logger;
     }
 
@@ -134,6 +137,23 @@ public class PurchaseService : IPurchaseService
         if (purchase.StripePayment?.Status != StripePaymentStatus.Succeeded)
         {
             return new PurchaseResultDto(false, "Paiement non confirmé", null, 0);
+        }
+
+        // Award XP for purchase - buyer gets XP for purchasing
+        await _gamificationService.AwardXpAsync(
+            purchase.BuyerId,
+            XpActionType.PurchaseTicket,
+            $"Achat du ticket: {purchase.Ticket?.Title}",
+            purchase.Id);
+
+        // Award XP for sale - seller (tipster) gets XP for selling
+        if (purchase.Ticket?.CreatorId != null)
+        {
+            await _gamificationService.AwardXpAsync(
+                purchase.Ticket.CreatorId,
+                XpActionType.SellTicket,
+                $"Vente du ticket: {purchase.Ticket.Title}",
+                purchase.Id);
         }
 
         var purchaseDto = MapToDto(purchase);

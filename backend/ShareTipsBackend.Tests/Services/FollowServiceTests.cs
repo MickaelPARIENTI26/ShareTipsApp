@@ -1,12 +1,24 @@
 using FluentAssertions;
+using Moq;
 using ShareTipsBackend.Domain.Entities;
+using ShareTipsBackend.Domain.Enums;
+using ShareTipsBackend.DTOs;
 using ShareTipsBackend.Services;
+using ShareTipsBackend.Services.Interfaces;
 using ShareTipsBackend.Tests.TestHelpers;
 
 namespace ShareTipsBackend.Tests.Services;
 
 public class FollowServiceTests
 {
+    private static Mock<IGamificationService> CreateMockGamificationService()
+    {
+        var mock = new Mock<IGamificationService>();
+        mock.Setup(x => x.AwardXpAsync(It.IsAny<Guid>(), It.IsAny<XpActionType>(), It.IsAny<string?>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(new XpGainResultDto(10, 100, 1, false, null, null, null));
+        return mock;
+    }
+
     private async Task<User> CreateUserAsync(Data.ApplicationDbContext context, string username)
     {
         var user = new User
@@ -28,7 +40,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var follower = await CreateUserAsync(context, "follower");
         var tipster = await CreateUserAsync(context, "tipster");
 
@@ -45,7 +58,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var follower = await CreateUserAsync(context, "follower");
         var tipster = await CreateUserAsync(context, "tipster");
 
@@ -65,7 +79,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var user = await CreateUserAsync(context, "narcissist");
 
         // Act - try to follow yourself
@@ -81,7 +96,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var follower = await CreateUserAsync(context, "follower");
         var tipster = await CreateUserAsync(context, "tipster");
 
@@ -101,7 +117,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var follower = await CreateUserAsync(context, "follower");
         var tipster = await CreateUserAsync(context, "tipster");
 
@@ -118,7 +135,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var tipster = await CreateUserAsync(context, "tipster");
         var follower1 = await CreateUserAsync(context, "follower1");
         var follower2 = await CreateUserAsync(context, "follower2");
@@ -144,7 +162,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var tipster = await CreateUserAsync(context, "tipster");
         var currentUser = await CreateUserAsync(context, "currentUser");
 
@@ -163,7 +182,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var tipster = await CreateUserAsync(context, "tipster");
         var currentUser = await CreateUserAsync(context, "currentUser");
 
@@ -181,7 +201,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var tipster = await CreateUserAsync(context, "tipster");
         var follower1 = await CreateUserAsync(context, "follower1");
         var follower2 = await CreateUserAsync(context, "follower2");
@@ -203,7 +224,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var lonelyUser = await CreateUserAsync(context, "lonely");
 
         // Act
@@ -218,7 +240,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var user = await CreateUserAsync(context, "user");
         var tipster1 = await CreateUserAsync(context, "tipster1");
         var tipster2 = await CreateUserAsync(context, "tipster2");
@@ -240,7 +263,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var user = await CreateUserAsync(context, "hermit");
 
         // Act
@@ -255,7 +279,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var tipster = await CreateUserAsync(context, "tipster");
 
         var followers = new List<User>();
@@ -281,7 +306,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var follower = await CreateUserAsync(context, "follower");
         var tipster = await CreateUserAsync(context, "tipster");
 
@@ -300,7 +326,8 @@ public class FollowServiceTests
     {
         // Arrange
         using var context = DbContextFactory.Create();
-        var followService = new FollowService(context);
+        var gamificationMock = CreateMockGamificationService();
+        var followService = new FollowService(context, gamificationMock.Object);
         var follower = await CreateUserAsync(context, "follower");
         var tipster = await CreateUserAsync(context, "tipster");
 

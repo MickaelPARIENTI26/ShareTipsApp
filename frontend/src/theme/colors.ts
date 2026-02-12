@@ -1,16 +1,28 @@
 /**
  * ShareTips Design System — Color Palette
  *
- * Primary brand color is teal (from the "BET" part of the logo).
+ * Sporty theme with stadium night atmosphere.
+ * Primary: Stadium blue night, Secondary: Field green, Accent: Energy gold/orange
  * All components MUST use theme colors via useTheme() — no hardcoded hex.
  */
 
 // ── Raw palette ──────────────────────────────────────────────
 export const palette = {
-  // Brand
-  teal: '#00B4AA',
+  // Brand - Sporty theme
+  teal: '#00B4AA',           // Keep for compatibility
   tealDark: '#008C84',
   tealLight: '#33C3BB',
+
+  // Sporty colors
+  stadiumBlue: '#1B2A4A',    // Primary - Deep stadium night blue
+  stadiumBlueDark: '#0F1923', // Dark background
+  stadiumBlueLight: '#2A3F6A',
+  fieldGreen: '#2ECC71',     // Secondary - Vibrant field green
+  fieldGreenDark: '#27AE60',
+  fieldGreenLight: '#58D68D',
+  energyGold: '#F39C12',     // Accent - Energy gold/orange
+  energyGoldDark: '#D68910',
+  energyGoldLight: '#F5B041',
 
   // Grays (iOS-style scale)
   white: '#FFFFFF',
@@ -18,25 +30,25 @@ export const palette = {
   gray100: '#F2F2F7',
   gray200: '#E5E5EA',
   gray300: '#C7C7CC',
-  gray400: '#8E8E93',
+  gray400: '#94A3B8',        // Updated for sporty theme
   gray500: '#636B73',
   gray600: '#48484A',
   gray700: '#3A3A3C',
-  gray800: '#2C2C2E',
-  gray850: '#1C1C1E',
+  gray800: '#1E293B',        // Slate for sporty dark
+  gray850: '#0F172A',        // Deep slate
   gray900: '#000000',
 
   // Semantic
-  green: '#34C759',
-  greenDark: '#248A3D',
-  greenLight: '#E8F8EC',
-  red: '#FF3B30',
-  redDark: '#C0392B',
+  green: '#10B981',          // Updated success green
+  greenDark: '#059669',
+  greenLight: '#D1FAE5',
+  red: '#EF4444',            // Updated error red
+  redDark: '#DC2626',
   redLight: '#FEE2E2',
   redBorder: '#FECACA',
-  orange: '#FF9500',
-  orangeDark: '#E65100',
-  orangeLight: '#FFF3E0',
+  orange: '#F39C12',
+  orangeDark: '#D68910',
+  orangeLight: '#FEF3C7',
   blue: '#007AFF',
   purple: '#AF52DE',
   purpleDark: '#8E44AD',
@@ -93,6 +105,11 @@ export interface ThemeColors {
 
   // Subscriptions
   subscription: string;
+
+  // Sporty accent colors
+  accent: string;
+  accentDark: string;
+  accentLight: string;
 }
 
 // ── Light theme ──────────────────────────────────────────────
@@ -137,48 +154,56 @@ export const lightColors: ThemeColors = {
   badgeBackground: palette.gray100,
 
   subscription: palette.purple,
+
+  accent: palette.energyGold,
+  accentDark: palette.energyGoldDark,
+  accentLight: palette.energyGoldLight,
 };
 
-// ── Dark theme ───────────────────────────────────────────────
+// ── Dark theme (Sporty Stadium Night) ────────────────────────
 export const darkColors: ThemeColors = {
-  primary: palette.teal,
-  primaryDark: palette.tealDark,
-  primaryLight: palette.tealLight,
+  primary: palette.fieldGreen,           // Vibrant green for CTAs
+  primaryDark: palette.fieldGreenDark,
+  primaryLight: palette.fieldGreenLight,
 
-  background: palette.gray900,
-  surface: palette.gray850,
-  surfaceSecondary: palette.gray800,
+  background: palette.stadiumBlueDark,   // Deep stadium night
+  surface: palette.stadiumBlue,          // Stadium blue surfaces
+  surfaceSecondary: palette.stadiumBlueLight,
 
   text: palette.white,
   textSecondary: palette.gray400,
-  textTertiary: palette.gray500, // Improved contrast: 4.5:1 on dark (WCAG AA)
+  textTertiary: palette.gray500,
   textOnPrimary: palette.white,
 
-  border: palette.gray700,
-  borderLight: palette.gray600,
-  separator: palette.gray700,
+  border: '#2A3F6A',                      // Subtle blue border
+  borderLight: '#3D5A80',
+  separator: '#2A3F6A',
 
-  inputBackground: palette.gray800,
-  inputBorder: palette.gray600,
+  inputBackground: 'rgba(255, 255, 255, 0.08)', // Glassmorphism effect
+  inputBorder: 'rgba(255, 255, 255, 0.15)',
   placeholder: palette.gray400,
 
   success: palette.green,
   successDark: palette.greenDark,
-  successLight: '#1B3D26',
+  successLight: '#064E3B',
   danger: palette.red,
   dangerDark: palette.redDark,
-  dangerLight: '#3D1B1B',
-  dangerBorder: '#5C2626',
-  warning: palette.orange,
-  warningDark: palette.orangeDark,
-  warningLight: '#3D2E1B',
+  dangerLight: '#7F1D1D',
+  dangerBorder: '#991B1B',
+  warning: palette.energyGold,
+  warningDark: palette.energyGoldDark,
+  warningLight: '#78350F',
 
-  tabActive: palette.teal,
+  tabActive: palette.fieldGreen,
   tabInactive: palette.gray400,
-  tabBarBackground: palette.gray850,
+  tabBarBackground: palette.stadiumBlue,
 
-  cardBackground: palette.gray850,
-  badgeBackground: palette.gray800,
+  cardBackground: palette.stadiumBlue,
+  badgeBackground: palette.stadiumBlueLight,
 
   subscription: palette.purple,
+
+  accent: palette.energyGold,
+  accentDark: palette.energyGoldDark,
+  accentLight: palette.energyGoldLight,
 };

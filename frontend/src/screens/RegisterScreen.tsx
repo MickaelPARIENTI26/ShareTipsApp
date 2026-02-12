@@ -1,15 +1,14 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Image,
+  TouchableOpacity,
+  Animated,
   type TextInput as TextInputType,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +25,7 @@ import {
   dateToISOFormat,
   isFormValid,
 } from '../utils/validation';
+import { SportyBackground, SportyInput, SportyButton } from '../components/auth';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
@@ -46,6 +46,17 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const confirmPasswordRef = useRef<TextInputType>(null);
   const dateOfBirthRef = useRef<TextInputType>(null);
 
+  // Animation values
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslate = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(formOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(formTranslate, { toValue: 0, duration: 500, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
   const usernameValidation = validateUsername(username);
   const emailValidation = validateEmail(email);
   const passwordValidation = validatePassword(password);
@@ -56,7 +67,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
   const logo = isDark
     ? require('../../assets/logos/logo_wbg.png')
-    : require('../../assets/logos/logo_bbg.png');
+    : require('../../assets/logos/logo_wbg.png');
 
   const handleRegister = async () => {
     if (!formValid) return;
@@ -99,220 +110,256 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
+    <SportyBackground>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.subtitle}>Créer un compte</Text>
-
-        {error && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        <TextInput
-          testID="username-input"
-          style={[
-            styles.input,
-            username.length > 0 && !usernameValidation.isValid && styles.inputError,
-          ]}
-          placeholder={"Nom d'utilisateur"}
-          placeholderTextColor={colors.placeholder}
-          value={username}
-          onChangeText={clearOnChange(setUsername)}
-          autoCapitalize="none"
-          textContentType="username"
-          autoComplete="username"
-          editable={!loading}
-          returnKeyType="next"
-          blurOnSubmit={false}
-          onSubmitEditing={() => emailRef.current?.focus()}
-          accessibilityLabel="Nom d'utilisateur"
-          accessibilityHint="Entrez votre nom d'utilisateur"
-        />
-        {username.length > 0 && !usernameValidation.isValid && (
-          <Text style={styles.fieldError}>{usernameValidation.error}</Text>
-        )}
-
-        <TextInput
-          testID="register-email-input"
-          ref={emailRef}
-          style={[
-            styles.input,
-            email.length > 0 && !emailValidation.isValid && styles.inputError,
-          ]}
-          placeholder="Email"
-          placeholderTextColor={colors.placeholder}
-          value={email}
-          onChangeText={clearOnChange(setEmail)}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          textContentType="emailAddress"
-          autoComplete="email"
-          editable={!loading}
-          returnKeyType="next"
-          blurOnSubmit={false}
-          onSubmitEditing={() => passwordRef.current?.focus()}
-          accessibilityLabel="Adresse email"
-          accessibilityHint="Entrez votre adresse email"
-        />
-        {email.length > 0 && !emailValidation.isValid && (
-          <Text style={styles.fieldError}>{emailValidation.error}</Text>
-        )}
-
-        <TextInput
-          testID="register-password-input"
-          ref={passwordRef}
-          style={[
-            styles.input,
-            password.length > 0 && !passwordValidation.isValid && styles.inputError,
-          ]}
-          placeholder="Mot de passe"
-          placeholderTextColor={colors.placeholder}
-          value={password}
-          onChangeText={clearOnChange(setPassword)}
-          secureTextEntry
-          textContentType="newPassword"
-          autoComplete="new-password"
-          editable={!loading}
-          returnKeyType="next"
-          blurOnSubmit={false}
-          onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-          accessibilityLabel="Mot de passe"
-          accessibilityHint="Entrez votre mot de passe"
-        />
-        {password.length > 0 && !passwordValidation.isValid && (
-          <Text style={styles.fieldError}>{passwordValidation.error}</Text>
-        )}
-
-        <TextInput
-          testID="confirm-password-input"
-          ref={confirmPasswordRef}
-          style={[
-            styles.input,
-            confirmPassword.length > 0 && !confirmValidation.isValid && styles.inputError,
-          ]}
-          placeholder="Confirmer le mot de passe"
-          placeholderTextColor={colors.placeholder}
-          value={confirmPassword}
-          onChangeText={clearOnChange(setConfirmPassword)}
-          secureTextEntry
-          textContentType="newPassword"
-          editable={!loading}
-          returnKeyType="next"
-          blurOnSubmit={false}
-          onSubmitEditing={() => dateOfBirthRef.current?.focus()}
-          accessibilityLabel="Confirmer le mot de passe"
-          accessibilityHint="Entrez à nouveau votre mot de passe pour confirmer"
-        />
-        {confirmPassword.length > 0 && !confirmValidation.isValid && (
-          <Text style={styles.fieldError}>{confirmValidation.error}</Text>
-        )}
-
-        <TextInput
-          testID="dob-input"
-          ref={dateOfBirthRef}
-          style={[
-            styles.input,
-            dateOfBirth.length > 0 && !dobValidation.isValid && styles.inputError,
-          ]}
-          placeholder="Date de naissance (JJ/MM/AAAA)"
-          placeholderTextColor={colors.placeholder}
-          value={dateOfBirth}
-          onChangeText={handleDateChange}
-          keyboardType="number-pad"
-          maxLength={10}
-          editable={!loading}
-          returnKeyType="done"
-          onSubmitEditing={handleRegister}
-          accessibilityLabel="Date de naissance"
-          accessibilityHint="Entrez votre date de naissance au format jour, mois, année"
-        />
-        {dateOfBirth.length > 0 && !dobValidation.isValid && (
-          <Text style={styles.fieldError}>{dobValidation.error}</Text>
-        )}
-        {dateOfBirth.length === 0 && (
-          <Text style={styles.ageHint}>Vous devez avoir 18 ans minimum</Text>
-        )}
-
-        {/* Disclaimer */}
-        <View style={styles.disclaimerBox}>
-          <Ionicons name="warning-outline" size={18} color={colors.warning} />
-          <Text style={styles.disclaimerText}>
-            ShareTips est une plateforme de partage de pronostics sportifs. Les paris sportifs comportent des risques de pertes financières. Pariez de manière responsable et dans la limite de vos moyens.
-          </Text>
-        </View>
-
-        {/* CGV Checkbox */}
-        <TouchableOpacity
-          testID="cgv-checkbox"
-          style={styles.checkboxRow}
-          onPress={() => setAcceptedCGV(!acceptedCGV)}
-          activeOpacity={0.7}
-          accessibilityLabel="Accepter les conditions générales"
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: acceptedCGV }}
-          accessibilityHint="Appuyez pour accepter ou refuser les conditions générales de vente et d'utilisation"
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.checkbox, acceptedCGV && styles.checkboxChecked]}>
-            {acceptedCGV && (
-              <Ionicons name="checkmark" size={16} color={colors.textOnPrimary} />
-            )}
-          </View>
-          <Text style={styles.checkboxLabel}>
-            {"J'ai lu et j'accepte les "}
-            <Text
-              style={styles.linkText}
-              onPress={() => navigation.navigate('CGV')}
-            >
-              Conditions Générales de Vente
-            </Text>
-            {" et les "}
-            <Text
-              style={styles.linkText}
-              onPress={() => navigation.navigate('CGU')}
-            >
-              {"Conditions d'Utilisation"}
-            </Text>
-          </Text>
-        </TouchableOpacity>
+          {/* Back Button */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          testID="register-submit-button"
-          style={[styles.button, (!formValid || loading) && styles.buttonDisabled]}
-          onPress={handleRegister}
-          disabled={!formValid || loading}
-          activeOpacity={0.7}
-          accessibilityLabel="S'inscrire"
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !formValid || loading }}
-          accessibilityHint="Appuyez pour créer votre compte"
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.textOnPrimary} />
-          ) : (
-            <Text style={styles.buttonText}>{"S'inscrire"}</Text>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image source={logo} style={styles.logo} resizeMode="contain" />
+          </View>
+
+          {/* Header */}
+          <Animated.View
+            style={[
+              styles.headerContainer,
+              {
+                opacity: formOpacity,
+                transform: [{ translateY: formTranslate }],
+              },
+            ]}
+          >
+            <Text style={styles.title}>Rejoins la communauté !</Text>
+            <Text style={styles.subtitle}>
+              Crée ton compte et commence à partager tes pronostics
+            </Text>
+          </Animated.View>
+
+          {/* Progress indicator */}
+          <Animated.View style={[styles.progressContainer, { opacity: formOpacity }]}>
+            <View style={styles.progressBadge}>
+              <Ionicons name="flash" size={14} color={colors.accent} />
+              <Text style={styles.progressText}>Inscription rapide</Text>
+            </View>
+          </Animated.View>
+
+          {/* Error Box */}
+          {error && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={20} color={colors.danger} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
           )}
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          testID="login-link"
-          onPress={() => navigation.navigate('Login')}
-          disabled={loading}
-          accessibilityLabel="Se connecter"
-          accessibilityRole="link"
-          accessibilityHint="Appuyez pour aller à la page de connexion"
-        >
-          <Text style={styles.link}>Déjà un compte ? Se connecter</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* Form */}
+          <Animated.View
+            style={[
+              styles.formContainer,
+              {
+                opacity: formOpacity,
+                transform: [{ translateY: formTranslate }],
+              },
+            ]}
+          >
+            <SportyInput
+              testID="username-input"
+              placeholder="Nom d'utilisateur"
+              icon="person-outline"
+              value={username}
+              onChangeText={clearOnChange(setUsername)}
+              autoCapitalize="none"
+              textContentType="username"
+              autoComplete="username"
+              editable={!loading}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => emailRef.current?.focus()}
+              error={username.length > 0 && !usernameValidation.isValid ? usernameValidation.error : undefined}
+              accessibilityLabel="Nom d'utilisateur"
+              accessibilityHint="Entrez votre nom d'utilisateur"
+            />
+
+            <SportyInput
+              testID="register-email-input"
+              inputRef={emailRef}
+              placeholder="Email"
+              icon="mail-outline"
+              value={email}
+              onChangeText={clearOnChange(setEmail)}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              autoComplete="email"
+              editable={!loading}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              error={email.length > 0 && !emailValidation.isValid ? emailValidation.error : undefined}
+              accessibilityLabel="Adresse email"
+              accessibilityHint="Entrez votre adresse email"
+            />
+
+            <SportyInput
+              testID="register-password-input"
+              inputRef={passwordRef}
+              placeholder="Mot de passe"
+              icon="lock-closed-outline"
+              isPassword
+              value={password}
+              onChangeText={clearOnChange(setPassword)}
+              textContentType="newPassword"
+              autoComplete="new-password"
+              editable={!loading}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+              error={password.length > 0 && !passwordValidation.isValid ? passwordValidation.error : undefined}
+              accessibilityLabel="Mot de passe"
+              accessibilityHint="Entrez votre mot de passe"
+            />
+
+            <SportyInput
+              testID="confirm-password-input"
+              inputRef={confirmPasswordRef}
+              placeholder="Confirmer le mot de passe"
+              icon="shield-checkmark-outline"
+              isPassword
+              value={confirmPassword}
+              onChangeText={clearOnChange(setConfirmPassword)}
+              textContentType="newPassword"
+              editable={!loading}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => dateOfBirthRef.current?.focus()}
+              error={confirmPassword.length > 0 && !confirmValidation.isValid ? confirmValidation.error : undefined}
+              accessibilityLabel="Confirmer le mot de passe"
+              accessibilityHint="Entrez à nouveau votre mot de passe"
+            />
+
+            <SportyInput
+              testID="dob-input"
+              inputRef={dateOfBirthRef}
+              placeholder="Date de naissance (JJ/MM/AAAA)"
+              icon="calendar-outline"
+              value={dateOfBirth}
+              onChangeText={handleDateChange}
+              keyboardType="number-pad"
+              maxLength={10}
+              editable={!loading}
+              returnKeyType="done"
+              onSubmitEditing={handleRegister}
+              error={dateOfBirth.length > 0 && !dobValidation.isValid ? dobValidation.error : undefined}
+              accessibilityLabel="Date de naissance"
+              accessibilityHint="Entrez votre date de naissance"
+            />
+
+            {dateOfBirth.length === 0 && (
+              <Text style={styles.ageHint}>
+                <Ionicons name="information-circle-outline" size={12} color={colors.textSecondary} />
+                {' '}Tu dois avoir 18 ans minimum
+              </Text>
+            )}
+
+            {/* Disclaimer */}
+            <View style={styles.disclaimerBox}>
+              <Ionicons name="warning-outline" size={20} color={colors.accent} />
+              <Text style={styles.disclaimerText}>
+                ShareTips est une plateforme de partage de pronostics. Les paris sportifs comportent des risques. Joue de manière responsable.
+              </Text>
+            </View>
+
+            {/* CGV Checkbox */}
+            <TouchableOpacity
+              testID="cgv-checkbox"
+              style={styles.checkboxRow}
+              onPress={() => setAcceptedCGV(!acceptedCGV)}
+              activeOpacity={0.7}
+              accessibilityLabel="Accepter les conditions"
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: acceptedCGV }}
+            >
+              <View style={[styles.checkbox, acceptedCGV && styles.checkboxChecked]}>
+                {acceptedCGV && (
+                  <Ionicons name="checkmark" size={16} color={colors.textOnPrimary} />
+                )}
+              </View>
+              <Text style={styles.checkboxLabel}>
+                {"J'ai lu et j'accepte les "}
+                <Text
+                  style={styles.linkText}
+                  onPress={() => navigation.navigate('CGV')}
+                >
+                  CGV
+                </Text>
+                {" et les "}
+                <Text
+                  style={styles.linkText}
+                  onPress={() => navigation.navigate('CGU')}
+                >
+                  CGU
+                </Text>
+              </Text>
+            </TouchableOpacity>
+
+            {/* Register Button */}
+            <View style={styles.buttonContainer}>
+              <SportyButton
+                testID="register-submit-button"
+                title="Créer mon compte"
+                onPress={handleRegister}
+                disabled={!formValid}
+                loading={loading}
+                icon="rocket-outline"
+                accessibilityLabel="S'inscrire"
+                accessibilityHint="Appuyez pour créer votre compte"
+              />
+            </View>
+          </Animated.View>
+
+          {/* Login Link */}
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Déjà un compte ?</Text>
+            <TouchableOpacity
+              testID="login-link"
+              onPress={() => navigation.navigate('Login')}
+              disabled={loading}
+              accessibilityLabel="Se connecter"
+              accessibilityRole="link"
+            >
+              <Text style={styles.loginLink}>Se connecter</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Trust indicators */}
+          <View style={styles.trustIndicators}>
+            <View style={styles.trustItem}>
+              <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
+              <Text style={styles.trustText}>Données protégées</Text>
+            </View>
+            <View style={styles.trustSeparator} />
+            <View style={styles.trustItem}>
+              <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
+              <Text style={styles.trustText}>100% gratuit</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SportyBackground>
   );
 };
 
@@ -322,92 +369,117 @@ const useStyles = (colors: ThemeColors) =>
       StyleSheet.create({
         flex: {
           flex: 1,
-          backgroundColor: colors.surface,
         },
         container: {
           flexGrow: 1,
-          justifyContent: 'center',
           padding: 24,
+          paddingTop: 16,
         },
-        logo: {
-          width: 180,
-          height: 60,
-          alignSelf: 'center',
-          marginBottom: 12,
-        },
-        subtitle: {
-          fontSize: 18,
-          textAlign: 'center',
-          color: colors.textSecondary,
-          marginBottom: 32,
-        },
-        errorBox: {
-          backgroundColor: colors.dangerLight,
-          borderWidth: 1,
-          borderColor: colors.dangerBorder,
-          borderRadius: 8,
-          padding: 12,
+        backButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          alignItems: 'center',
+          justifyContent: 'center',
           marginBottom: 16,
         },
+        logoContainer: {
+          alignItems: 'center',
+          marginBottom: 16,
+        },
+        logo: {
+          width: 140,
+          height: 48,
+        },
+        headerContainer: {
+          marginBottom: 16,
+        },
+        title: {
+          fontSize: 26,
+          fontWeight: '700',
+          color: colors.text,
+          textAlign: 'center',
+          marginBottom: 8,
+        },
+        subtitle: {
+          fontSize: 14,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          lineHeight: 20,
+        },
+        progressContainer: {
+          alignItems: 'center',
+          marginBottom: 20,
+        },
+        progressBadge: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: 'rgba(243, 156, 18, 0.15)',
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          borderRadius: 20,
+          gap: 6,
+        },
+        progressText: {
+          color: colors.accent,
+          fontSize: 13,
+          fontWeight: '600',
+        },
+        errorBox: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          borderWidth: 1,
+          borderColor: colors.danger,
+          borderRadius: 12,
+          padding: 14,
+          marginBottom: 20,
+          gap: 10,
+        },
         errorText: {
+          flex: 1,
           color: colors.danger,
           fontSize: 14,
-          textAlign: 'center',
         },
-        input: {
-          borderWidth: 1,
-          borderColor: colors.inputBorder,
-          borderRadius: 8,
-          padding: 14,
-          fontSize: 16,
-          marginBottom: 4,
-          backgroundColor: colors.inputBackground,
-          color: colors.text,
-        },
-        inputError: {
-          borderColor: colors.danger,
-        },
-        fieldError: {
-          color: colors.danger,
-          fontSize: 12,
-          marginBottom: 8,
-          marginLeft: 4,
+        formContainer: {
+          marginBottom: 16,
         },
         ageHint: {
           color: colors.textSecondary,
           fontSize: 12,
-          marginBottom: 8,
+          marginTop: -8,
+          marginBottom: 16,
           marginLeft: 4,
         },
         disclaimerBox: {
           flexDirection: 'row',
-          backgroundColor: colors.warningLight,
+          backgroundColor: 'rgba(243, 156, 18, 0.1)',
           borderWidth: 1,
-          borderColor: colors.warning,
-          borderRadius: 8,
-          padding: 12,
-          marginTop: 12,
+          borderColor: 'rgba(243, 156, 18, 0.3)',
+          borderRadius: 12,
+          padding: 14,
           marginBottom: 16,
-          gap: 10,
+          gap: 12,
         },
         disclaimerText: {
           flex: 1,
-          color: colors.text,
+          color: colors.textSecondary,
           fontSize: 12,
           lineHeight: 18,
         },
         checkboxRow: {
           flexDirection: 'row',
           alignItems: 'flex-start',
-          marginBottom: 8,
-          gap: 10,
+          marginBottom: 20,
+          gap: 12,
         },
         checkbox: {
-          width: 22,
-          height: 22,
-          borderRadius: 4,
+          width: 24,
+          height: 24,
+          borderRadius: 8,
           borderWidth: 2,
-          borderColor: colors.inputBorder,
+          borderColor: 'rgba(255, 255, 255, 0.3)',
           alignItems: 'center',
           justifyContent: 'center',
           marginTop: 2,
@@ -426,26 +498,46 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.primary,
           textDecorationLine: 'underline',
         },
-        button: {
-          backgroundColor: colors.primary,
-          padding: 16,
-          borderRadius: 8,
+        buttonContainer: {
+          marginTop: 8,
+        },
+        loginContainer: {
+          flexDirection: 'row',
+          justifyContent: 'center',
           alignItems: 'center',
-          marginTop: 12,
-          marginBottom: 16,
+          gap: 6,
+          paddingTop: 8,
         },
-        buttonDisabled: {
-          opacity: 0.5,
+        loginText: {
+          color: colors.textSecondary,
+          fontSize: 14,
         },
-        buttonText: {
-          color: colors.textOnPrimary,
-          fontSize: 16,
-          fontWeight: '600',
-        },
-        link: {
-          textAlign: 'center',
+        loginLink: {
           color: colors.primary,
           fontSize: 14,
+          fontWeight: '600',
+        },
+        trustIndicators: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 16,
+          paddingBottom: 8,
+        },
+        trustItem: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+        },
+        trustSeparator: {
+          width: 1,
+          height: 12,
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          marginHorizontal: 16,
+        },
+        trustText: {
+          color: colors.textSecondary,
+          fontSize: 12,
         },
       }),
     [colors]

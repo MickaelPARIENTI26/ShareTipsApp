@@ -1,15 +1,14 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Image,
+  TouchableOpacity,
+  Animated,
   type TextInput as TextInputType,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,13 +17,13 @@ import { useAuthStore } from '../store/auth.store';
 import { useTheme, type ThemeColors } from '../theme';
 import type { AuthStackParamList } from '../types';
 import { validateEmail, validateLoginPassword, isFormValid } from '../utils/validation';
+import { SportyBackground, SportyInput, SportyButton } from '../components/auth';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const { loading, error, login, clearError } = useAuthStore();
   const { colors, isDark } = useTheme();
   const styles = useStyles(colors);
@@ -32,13 +31,24 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   // Ref for password input focus navigation
   const passwordRef = useRef<TextInputType>(null);
 
+  // Animation values
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslate = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(formOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(formTranslate, { toValue: 0, duration: 500, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
   const emailValidation = validateEmail(email);
   const passwordValidation = validateLoginPassword(password);
   const formValid = isFormValid(emailValidation, passwordValidation);
 
   const logo = isDark
     ? require('../../assets/logos/logo_wbg.png')
-    : require('../../assets/logos/logo_bbg.png');
+    : require('../../assets/logos/logo_wbg.png');
 
   const handleLogin = async () => {
     if (!formValid) return;
@@ -60,124 +70,163 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
+    <SportyBackground>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.subtitle}>Connectez-vous</Text>
-
-        {error && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        <TextInput
-          testID="email-input"
-          accessibilityLabel="Adresse email"
-          accessibilityHint="Entrez votre adresse email"
-          style={[
-            styles.input,
-            email.length > 0 && !emailValidation.isValid && styles.inputError,
-          ]}
-          placeholder="Email"
-          placeholderTextColor={colors.placeholder}
-          value={email}
-          onChangeText={handleEmailChange}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          textContentType="emailAddress"
-          autoComplete="email"
-          editable={!loading}
-          returnKeyType="next"
-          blurOnSubmit={false}
-          onSubmitEditing={() => passwordRef.current?.focus()}
-        />
-        {email.length > 0 && !emailValidation.isValid && (
-          <Text style={styles.fieldError}>{emailValidation.error}</Text>
-        )}
-
-        <View style={styles.passwordContainer}>
-          <TextInput
-            testID="password-input"
-            ref={passwordRef}
-            accessibilityLabel="Mot de passe"
-            accessibilityHint="Entrez votre mot de passe"
-            style={[
-              styles.input,
-              styles.passwordInput,
-              password.length > 0 && !passwordValidation.isValid && styles.inputError,
-            ]}
-            placeholder="Mot de passe"
-            placeholderTextColor={colors.placeholder}
-            value={password}
-            onChangeText={handlePasswordChange}
-            secureTextEntry={!showPassword}
-            textContentType="password"
-            autoComplete="password"
-            editable={!loading}
-            returnKeyType="go"
-            onSubmitEditing={handleLogin}
-          />
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Back Button */}
           <TouchableOpacity
-            style={styles.eyeButton}
-            onPress={() => setShowPassword(!showPassword)}
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            accessibilityLabel={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-            accessibilityRole="button"
           >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={22}
-              color={colors.textSecondary}
-            />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-        </View>
-        {password.length > 0 && !passwordValidation.isValid && (
-          <Text style={styles.fieldError}>{passwordValidation.error}</Text>
-        )}
 
-        <TouchableOpacity
-          style={[styles.button, (!formValid || loading) && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={!formValid || loading}
-          activeOpacity={0.7}
-          accessibilityLabel="Se connecter"
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !formValid || loading }}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.textOnPrimary} accessibilityLabel="Connexion en cours" />
-          ) : (
-            <Text style={styles.buttonText}>Se connecter</Text>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image source={logo} style={styles.logo} resizeMode="contain" />
+          </View>
+
+          {/* Header */}
+          <Animated.View
+            style={[
+              styles.headerContainer,
+              {
+                opacity: formOpacity,
+                transform: [{ translateY: formTranslate }],
+              },
+            ]}
+          >
+            <Text style={styles.title}>Bon retour !</Text>
+            <Text style={styles.subtitle}>
+              Connecte-toi pour retrouver tes pronostics
+            </Text>
+          </Animated.View>
+
+          {/* Error Box */}
+          {error && (
+            <Animated.View style={[styles.errorBox, { opacity: formOpacity }]}>
+              <Ionicons name="alert-circle" size={20} color={colors.danger} />
+              <Text style={styles.errorText}>{error}</Text>
+            </Animated.View>
           )}
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate('ForgotPassword')}
-          disabled={loading}
-          accessibilityLabel="Mot de passe oublié"
-          accessibilityRole="link"
-        >
-          <Text style={styles.link}>Mot de passe oublié ?</Text>
-        </TouchableOpacity>
+          {/* Form */}
+          <Animated.View
+            style={[
+              styles.formContainer,
+              {
+                opacity: formOpacity,
+                transform: [{ translateY: formTranslate }],
+              },
+            ]}
+          >
+            <SportyInput
+              testID="email-input"
+              placeholder="Email"
+              icon="mail-outline"
+              value={email}
+              onChangeText={handleEmailChange}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              autoComplete="email"
+              editable={!loading}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              error={email.length > 0 && !emailValidation.isValid ? emailValidation.error : undefined}
+              accessibilityLabel="Adresse email"
+              accessibilityHint="Entrez votre adresse email"
+            />
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Register')}
-          disabled={loading}
-          style={styles.registerLink}
-          accessibilityLabel="Créer un compte"
-          accessibilityRole="link"
-        >
-          <Text style={styles.link}>{"Pas de compte ? S'inscrire"}</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <SportyInput
+              testID="password-input"
+              inputRef={passwordRef}
+              placeholder="Mot de passe"
+              icon="lock-closed-outline"
+              isPassword
+              value={password}
+              onChangeText={handlePasswordChange}
+              textContentType="password"
+              autoComplete="password"
+              editable={!loading}
+              returnKeyType="go"
+              onSubmitEditing={handleLogin}
+              error={password.length > 0 && !passwordValidation.isValid ? passwordValidation.error : undefined}
+              accessibilityLabel="Mot de passe"
+              accessibilityHint="Entrez votre mot de passe"
+            />
+
+            {/* Forgot Password Link */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}
+              disabled={loading}
+              style={styles.forgotPasswordContainer}
+              accessibilityLabel="Mot de passe oublié"
+              accessibilityRole="link"
+            >
+              <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+            </TouchableOpacity>
+
+            {/* Login Button */}
+            <View style={styles.buttonContainer}>
+              <SportyButton
+                testID="login-submit-button"
+                title="Se connecter"
+                onPress={handleLogin}
+                disabled={!formValid}
+                loading={loading}
+                icon="log-in-outline"
+                accessibilityLabel="Se connecter"
+                accessibilityHint="Appuyez pour vous connecter"
+              />
+            </View>
+
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Social Login - Placeholder for future */}
+            <TouchableOpacity style={styles.socialButton} disabled>
+              <Ionicons name="logo-google" size={20} color={colors.textSecondary} />
+              <Text style={styles.socialButtonText}>Continuer avec Google</Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Register Link */}
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Pas encore de compte ?</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Register')}
+              disabled={loading}
+              accessibilityLabel="Créer un compte"
+              accessibilityRole="link"
+            >
+              <Text style={styles.registerLink}>Créer un compte</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Trust indicators */}
+          <View style={styles.trustIndicators}>
+            <View style={styles.trustItem}>
+              <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
+              <Text style={styles.trustText}>Connexion sécurisée</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SportyBackground>
   );
 };
 
@@ -187,94 +236,138 @@ const useStyles = (colors: ThemeColors) =>
       StyleSheet.create({
         flex: {
           flex: 1,
-          backgroundColor: colors.surface,
         },
         container: {
           flexGrow: 1,
-          justifyContent: 'center',
           padding: 24,
+          paddingTop: 16,
+        },
+        backButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 16,
+        },
+        logoContainer: {
+          alignItems: 'center',
+          marginBottom: 24,
         },
         logo: {
-          width: 180,
-          height: 60,
-          alignSelf: 'center',
-          marginBottom: 12,
+          width: 160,
+          height: 55,
+        },
+        headerContainer: {
+          marginBottom: 24,
+        },
+        title: {
+          fontSize: 28,
+          fontWeight: '700',
+          color: colors.text,
+          textAlign: 'center',
+          marginBottom: 8,
         },
         subtitle: {
-          fontSize: 18,
-          textAlign: 'center',
+          fontSize: 15,
           color: colors.textSecondary,
-          marginBottom: 32,
+          textAlign: 'center',
+          lineHeight: 22,
         },
         errorBox: {
-          backgroundColor: colors.dangerLight,
-          borderWidth: 1,
-          borderColor: colors.dangerBorder,
-          borderRadius: 8,
-          padding: 12,
-          marginBottom: 16,
-        },
-        errorText: {
-          color: colors.danger,
-          fontSize: 14,
-          textAlign: 'center',
-        },
-        input: {
-          borderWidth: 1,
-          borderColor: colors.inputBorder,
-          borderRadius: 8,
-          padding: 14,
-          fontSize: 16,
-          marginBottom: 4,
-          backgroundColor: colors.inputBackground,
-          color: colors.text,
-        },
-        passwordContainer: {
-          position: 'relative',
           flexDirection: 'row',
           alignItems: 'center',
-        },
-        passwordInput: {
-          flex: 1,
-          paddingRight: 50,
-        },
-        eyeButton: {
-          position: 'absolute',
-          right: 14,
-          top: 14,
-        },
-        inputError: {
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          borderWidth: 1,
           borderColor: colors.danger,
+          borderRadius: 12,
+          padding: 14,
+          marginBottom: 20,
+          gap: 10,
         },
-        fieldError: {
+        errorText: {
+          flex: 1,
           color: colors.danger,
-          fontSize: 12,
-          marginBottom: 8,
-          marginLeft: 4,
+          fontSize: 14,
         },
-        button: {
-          backgroundColor: colors.primary,
-          padding: 16,
-          borderRadius: 8,
+        formContainer: {
+          marginBottom: 24,
+        },
+        forgotPasswordContainer: {
+          alignSelf: 'flex-end',
+          marginBottom: 24,
+          marginTop: -8,
+        },
+        forgotPasswordText: {
+          color: colors.primary,
+          fontSize: 14,
+          fontWeight: '500',
+        },
+        buttonContainer: {
+          marginBottom: 24,
+        },
+        divider: {
+          flexDirection: 'row',
           alignItems: 'center',
-          marginTop: 12,
-          marginBottom: 16,
+          marginBottom: 20,
         },
-        buttonDisabled: {
+        dividerLine: {
+          flex: 1,
+          height: 1,
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        },
+        dividerText: {
+          color: colors.textSecondary,
+          fontSize: 13,
+          marginHorizontal: 16,
+        },
+        socialButton: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
+          borderRadius: 16,
+          paddingVertical: 16,
+          gap: 10,
           opacity: 0.5,
         },
-        buttonText: {
-          color: colors.textOnPrimary,
-          fontSize: 16,
-          fontWeight: '600',
+        socialButtonText: {
+          color: colors.textSecondary,
+          fontSize: 15,
+          fontWeight: '500',
         },
-        link: {
-          textAlign: 'center',
-          color: colors.primary,
+        registerContainer: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 6,
+          marginTop: 'auto',
+          paddingTop: 16,
+        },
+        registerText: {
+          color: colors.textSecondary,
           fontSize: 14,
         },
         registerLink: {
-          marginTop: 12,
+          color: colors.primary,
+          fontSize: 14,
+          fontWeight: '600',
+        },
+        trustIndicators: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          marginTop: 16,
+          paddingBottom: 8,
+        },
+        trustItem: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+        },
+        trustText: {
+          color: colors.textSecondary,
+          fontSize: 12,
         },
       }),
     [colors]

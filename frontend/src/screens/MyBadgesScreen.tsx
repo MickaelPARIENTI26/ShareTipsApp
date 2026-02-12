@@ -6,11 +6,109 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type ThemeColors } from '../theme';
 import { gamificationApi } from '../api/gamification.api';
 import type { BadgeDto, UserBadgeDto } from '../types/gamification.types';
+
+// Badge unlock requirements explanations
+const BADGE_REQUIREMENTS: Record<string, string> = {
+  // Sales
+  FirstTicketSold: 'Vendez votre premier ticket payant à un acheteur.',
+  TenTicketsSold: 'Vendez 10 tickets payants.',
+  TwentyFiveTicketsSold: 'Vendez 25 tickets payants.',
+  FiftyTicketsSold: 'Vendez 50 tickets payants.',
+  HundredTicketsSold: 'Vendez 100 tickets payants.',
+  TwoHundredFiftyTicketsSold: 'Vendez 250 tickets payants.',
+  FiveHundredTicketsSold: 'Vendez 500 tickets payants.',
+  ThousandTicketsSold: 'Vendez 1000 tickets payants.',
+  // Creation
+  FirstTicketCreated: 'Créez votre premier ticket de pronostic.',
+  TenTicketsCreated: 'Créez 10 tickets de pronostic.',
+  FiftyTicketsCreated: 'Créez 50 tickets de pronostic.',
+  HundredTicketsCreated: 'Créez 100 tickets de pronostic.',
+  FiveHundredTicketsCreated: 'Créez 500 tickets de pronostic.',
+  // Wins
+  FirstWin: 'Gagnez votre premier ticket (résultat positif).',
+  TenWins: 'Gagnez 10 tickets.',
+  FiftyWins: 'Gagnez 50 tickets.',
+  HundredWins: 'Gagnez 100 tickets.',
+  // Win streaks
+  WinStreak3: 'Gagnez 3 tickets consécutifs.',
+  WinStreak5: 'Gagnez 5 tickets consécutifs.',
+  WinStreak7: 'Gagnez 7 tickets consécutifs.',
+  WinStreak10: 'Gagnez 10 tickets consécutifs.',
+  WinStreak15: 'Gagnez 15 tickets consécutifs.',
+  WinStreak20: 'Gagnez 20 tickets consécutifs.',
+  // Win rate
+  WinRate50: 'Atteignez un taux de réussite de 50% (min. 10 tickets).',
+  WinRate60: 'Atteignez un taux de réussite de 60% (min. 20 tickets).',
+  WinRate70: 'Atteignez un taux de réussite de 70% (min. 30 tickets).',
+  WinRate80: 'Atteignez un taux de réussite de 80% (min. 50 tickets).',
+  WinRate90: 'Atteignez un taux de réussite de 90% (min. 50 tickets).',
+  // Subscribers
+  FirstSubscriber: 'Obtenez votre premier abonné premium.',
+  FiveSubscribers: 'Obtenez 5 abonnés premium.',
+  TenSubscribers: 'Obtenez 10 abonnés premium.',
+  TwentyFiveSubscribers: 'Obtenez 25 abonnés premium.',
+  FiftySubscribers: 'Obtenez 50 abonnés premium.',
+  HundredSubscribers: 'Obtenez 100 abonnés premium.',
+  TwoHundredFiftySubscribers: 'Obtenez 250 abonnés premium.',
+  FiveHundredSubscribers: 'Obtenez 500 abonnés premium.',
+  ThousandSubscribers: 'Obtenez 1000 abonnés premium.',
+  // Purchases
+  FirstPurchase: 'Achetez votre premier ticket.',
+  FivePurchases: 'Achetez 5 tickets.',
+  TenPurchases: 'Achetez 10 tickets.',
+  TwentyFivePurchases: 'Achetez 25 tickets.',
+  FiftyPurchases: 'Achetez 50 tickets.',
+  HundredPurchases: 'Achetez 100 tickets.',
+  // Engagement
+  FirstFollow: 'Suivez votre premier tipster.',
+  FiveFollows: 'Suivez 5 tipsters.',
+  TenFollows: 'Suivez 10 tipsters.',
+  TwentyFiveFollows: 'Suivez 25 tipsters.',
+  FiftyFollows: 'Suivez 50 tipsters.',
+  FirstFavorite: 'Ajoutez un ticket à vos favoris.',
+  FiveFavorites: 'Ajoutez 5 tickets à vos favoris.',
+  TenFavorites: 'Ajoutez 10 tickets à vos favoris.',
+  TwentyFiveFavorites: 'Ajoutez 25 tickets à vos favoris.',
+  FiftyFavorites: 'Ajoutez 50 tickets à vos favoris.',
+  // Daily streak
+  DailyStreak3: 'Connectez-vous 3 jours consécutifs.',
+  DailyStreak7: 'Connectez-vous 7 jours consécutifs.',
+  DailyStreak14: 'Connectez-vous 14 jours consécutifs.',
+  DailyStreak30: 'Connectez-vous 30 jours consécutifs.',
+  DailyStreak60: 'Connectez-vous 60 jours consécutifs.',
+  DailyStreak100: 'Connectez-vous 100 jours consécutifs.',
+  DailyStreak365: 'Connectez-vous 365 jours consécutifs.',
+  // Levels
+  Level5: 'Atteignez le niveau 5.',
+  Level10: 'Atteignez le niveau 10.',
+  Level15: 'Atteignez le niveau 15.',
+  Level20: 'Atteignez le niveau 20.',
+  Level25: 'Atteignez le niveau 25.',
+  Level30: 'Atteignez le niveau 30.',
+  Level40: 'Atteignez le niveau 40.',
+  Level50: 'Atteignez le niveau 50.',
+  // XP
+  Xp1000: 'Accumulez 1 000 XP au total.',
+  Xp5000: 'Accumulez 5 000 XP au total.',
+  Xp10000: 'Accumulez 10 000 XP au total.',
+  Xp25000: 'Accumulez 25 000 XP au total.',
+  Xp50000: 'Accumulez 50 000 XP au total.',
+  Xp100000: 'Accumulez 100 000 XP au total.',
+  // Special
+  EarlyAdopter: 'Inscrivez-vous pendant la phase de lancement.',
+  BetaTester: 'Participez au programme de beta test.',
+  Verified: 'Faites vérifier votre profil par l\'équipe.',
+  Premium: 'Souscrivez à un abonnement premium.',
+  Ambassador: 'Devenez ambassadeur de la plateforme.',
+  Legend: 'Accomplissez des exploits exceptionnels.',
+};
 
 // Badge categories for grouping
 const BADGE_CATEGORIES: Record<string, { label: string; types: string[] }> = {
@@ -72,6 +170,7 @@ const MyBadgesScreen: React.FC = () => {
   const [myBadges, setMyBadges] = useState<UserBadgeDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedBadge, setSelectedBadge] = useState<{ badge: BadgeDto; earned: boolean } | null>(null);
 
   useEffect(() => {
     loadBadges();
@@ -129,9 +228,11 @@ const MyBadgesScreen: React.FC = () => {
   const renderBadge = (item: { badge: BadgeDto; earned: boolean }) => {
     const { badge, earned } = item;
     return (
-      <View
+      <TouchableOpacity
         key={badge.id}
         style={[styles.badgeItem, !earned && styles.badgeLocked]}
+        onPress={() => setSelectedBadge(item)}
+        activeOpacity={0.7}
       >
         <View style={[styles.badgeIcon, { backgroundColor: earned ? badge.color + '20' : colors.border }]}>
           <Ionicons
@@ -149,8 +250,20 @@ const MyBadgesScreen: React.FC = () => {
           {badge.name}
         </Text>
         <Text style={styles.badgeXp}>+{badge.xpReward} XP</Text>
-      </View>
+      </TouchableOpacity>
     );
+  };
+
+  const getEarnedDate = (badgeType: string): string | null => {
+    const userBadge = myBadges.find(b => b.type === badgeType);
+    if (userBadge?.earnedAt) {
+      return new Date(userBadge.earnedAt).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+    return null;
   };
 
   return (
@@ -207,6 +320,110 @@ const MyBadgesScreen: React.FC = () => {
             </View>
           </View>
         ))}
+
+      {/* Badge Detail Modal */}
+      <Modal
+        visible={selectedBadge !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedBadge(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setSelectedBadge(null)}>
+          <Pressable style={styles.modalContent} onPress={e => e.stopPropagation()}>
+            {selectedBadge && (
+              <>
+                {/* Badge Icon */}
+                <View
+                  style={[
+                    styles.modalBadgeIcon,
+                    {
+                      backgroundColor: selectedBadge.earned
+                        ? selectedBadge.badge.color + '20'
+                        : colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={selectedBadge.badge.icon as keyof typeof Ionicons.glyphMap}
+                    size={48}
+                    color={selectedBadge.earned ? selectedBadge.badge.color : colors.textSecondary}
+                  />
+                </View>
+
+                {/* Badge Name */}
+                <Text style={styles.modalBadgeName}>{selectedBadge.badge.name}</Text>
+
+                {/* Status Badge */}
+                <View
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor: selectedBadge.earned
+                        ? '#34C75920'
+                        : colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={selectedBadge.earned ? 'checkmark-circle' : 'lock-closed'}
+                    size={14}
+                    color={selectedBadge.earned ? '#34C759' : colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.statusText,
+                      { color: selectedBadge.earned ? '#34C759' : colors.textSecondary },
+                    ]}
+                  >
+                    {selectedBadge.earned ? 'Obtenu' : 'Non obtenu'}
+                  </Text>
+                </View>
+
+                {/* Earned Date */}
+                {selectedBadge.earned && getEarnedDate(selectedBadge.badge.type) && (
+                  <Text style={styles.earnedDate}>
+                    Obtenu le {getEarnedDate(selectedBadge.badge.type)}
+                  </Text>
+                )}
+
+                {/* Description */}
+                <Text style={styles.modalDescription}>
+                  {selectedBadge.badge.description}
+                </Text>
+
+                {/* How to unlock */}
+                <View style={styles.requirementSection}>
+                  <View style={styles.requirementHeader}>
+                    <Ionicons name="bulb-outline" size={18} color={colors.primary} />
+                    <Text style={styles.requirementTitle}>
+                      {selectedBadge.earned ? 'Comment vous l\'avez obtenu' : 'Comment l\'obtenir'}
+                    </Text>
+                  </View>
+                  <Text style={styles.requirementText}>
+                    {BADGE_REQUIREMENTS[selectedBadge.badge.type] || selectedBadge.badge.description}
+                  </Text>
+                </View>
+
+                {/* XP Reward */}
+                <View style={styles.xpRewardSection}>
+                  <Ionicons name="flash" size={20} color={colors.primary} />
+                  <Text style={styles.xpRewardText}>
+                    {selectedBadge.earned ? 'Récompense obtenue' : 'Récompense'}: +{selectedBadge.badge.xpReward} XP
+                  </Text>
+                </View>
+
+                {/* Close Button */}
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setSelectedBadge(null)}
+                >
+                  <Text style={styles.closeButtonText}>Fermer</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 };
@@ -327,6 +544,114 @@ const getStyles = (colors: ThemeColors) =>
       fontSize: 10,
       color: colors.primary,
       marginTop: 2,
+      fontWeight: '600',
+    },
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    modalContent: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 20,
+      padding: 24,
+      width: '100%',
+      maxWidth: 340,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    modalBadgeIcon: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    modalBadgeName: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    statusBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      gap: 6,
+      marginBottom: 8,
+    },
+    statusText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    earnedDate: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 12,
+    },
+    modalDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 16,
+      lineHeight: 20,
+    },
+    requirementSection: {
+      backgroundColor: colors.background,
+      borderRadius: 12,
+      padding: 16,
+      width: '100%',
+      marginBottom: 16,
+    },
+    requirementHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
+    requirementTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    requirementText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    xpRewardSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 20,
+    },
+    xpRewardText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.primary,
+    },
+    closeButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 32,
+      borderRadius: 12,
+      width: '100%',
+      alignItems: 'center',
+    },
+    closeButtonText: {
+      color: colors.textOnPrimary,
+      fontSize: 15,
       fontWeight: '600',
     },
   });

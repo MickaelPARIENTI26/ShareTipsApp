@@ -33,12 +33,12 @@ public class RankingService : IRankingService
         var (periodStart, periodEnd) = GetPeriodRange(period);
 
         // Aggregate stats at database level (single query, no N+1)
+        // Include both public and private tickets in ranking
         var userStats = await _context.Tickets
             .Where(t => t.DeletedAt == null)
             .Where(t => t.Status == TicketStatus.Finished)
             .Where(t => t.Result != TicketResult.Pending)
             .Where(t => t.FirstMatchTime >= periodStart && t.FirstMatchTime < periodEnd)
-            .Where(t => t.IsPublic)
             .GroupBy(t => new { t.CreatorId, t.Creator!.Username })
             .Select(g => new
             {

@@ -240,7 +240,7 @@ const useStyles = (colors: ThemeColors) =>
         container: {
           flexGrow: 1,
           padding: 24,
-          paddingTop: 16,
+          paddingTop: 50,
         },
         backButton: {
           width: 40,
@@ -265,13 +265,13 @@ const useStyles = (colors: ThemeColors) =>
         title: {
           fontSize: 28,
           fontWeight: '700',
-          color: colors.text,
+          color: '#FFFFFF',
           textAlign: 'center',
           marginBottom: 8,
         },
         subtitle: {
           fontSize: 15,
-          color: colors.textSecondary,
+          color: 'rgba(255, 255, 255, 0.7)',
           textAlign: 'center',
           lineHeight: 22,
         },

@@ -49,8 +49,10 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({ match }) => {
   const isSelected = (selectionId: string) =>
     selections.some((s) => s.selectionId === selectionId);
 
-  const matchResult = match.markets.find((m) => m.type === 'MatchResult');
+  // MatchResult for football, MoneyLine for basketball/tennis
+  const matchResult = match.markets.find((m) => m.type === 'MatchResult' || m.type === 'MoneyLine');
   const started = isMatchStarted(match);
+  const hasNoDrawOption = match.sportCode !== 'FOOTBALL'; // Basketball, Tennis, Esport have no draw
 
   const handlePress = (sel: MarketSelection) => {
     if (started || !matchResult) return;
@@ -69,22 +71,30 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({ match }) => {
     toggleSelection(selection);
   };
 
-  // Map MatchResult selections to ordered 1 / X / 2
+  // Map MatchResult/MoneyLine selections to ordered 1 / X / 2
   const homeTeamSel = matchResult?.selections.find(
-    (s) => s.label === match.homeTeam.name || s.code === 'HOME'
+    (s) => s.label === match.homeTeam.name || s.label === match.homeTeam.shortName ||
+           s.label === '1' || s.code === 'HOME' || s.code === 'HOME_WIN' || s.code === 'HOME_ML'
   );
-  const drawSel = matchResult?.selections.find(
-    (s) => s.label === 'Draw' || s.code === 'X' || s.code === 'DRAW'
-  );
+  const drawSel = !hasNoDrawOption ? matchResult?.selections.find(
+    (s) => s.label === 'Draw' || s.label === 'X' || s.code === 'X' || s.code === 'DRAW'
+  ) : null;
   const awayTeamSel = matchResult?.selections.find(
-    (s) => s.label === match.awayTeam.name || s.code === 'AWAY'
+    (s) => s.label === match.awayTeam.name || s.label === match.awayTeam.shortName ||
+           s.label === '2' || s.code === 'AWAY' || s.code === 'AWAY_WIN' || s.code === 'AWAY_ML'
   );
 
-  const oddsSelections = [
-    { sel: homeTeamSel, label: '1' },
-    { sel: drawSel, label: 'X' },
-    { sel: awayTeamSel, label: '2' },
-  ];
+  // For sports without draw, show only 1 and 2
+  const oddsSelections = hasNoDrawOption
+    ? [
+        { sel: homeTeamSel, label: '1' },
+        { sel: awayTeamSel, label: '2' },
+      ]
+    : [
+        { sel: homeTeamSel, label: '1' },
+        { sel: drawSel, label: 'X' },
+        { sel: awayTeamSel, label: '2' },
+      ];
 
   const navigateToDetails = () => {
     navigation.navigate('MatchDetails', {

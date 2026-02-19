@@ -174,14 +174,14 @@ const useStyles = (colors: ThemeColors) =>
         welcomeTitle: {
           fontSize: 26,
           fontWeight: '700',
-          color: colors.text,
+          color: '#FFFFFF',
           textAlign: 'center',
           marginBottom: 8,
           letterSpacing: 0.3,
         },
         welcomeSubtitle: {
           fontSize: 16,
-          color: colors.textSecondary,
+          color: 'rgba(255, 255, 255, 0.7)',
           textAlign: 'center',
           lineHeight: 22,
         },
@@ -204,7 +204,7 @@ const useStyles = (colors: ThemeColors) =>
         },
         featureText: {
           fontSize: 15,
-          color: colors.text,
+          color: '#FFFFFF',
           fontWeight: '500',
         },
         bottomSection: {

@@ -1,11 +1,10 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   TextInput,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   type TextInputProps,
   type TextInput as TextInputType,
 } from 'react-native';
@@ -38,31 +37,6 @@ const SportyInput: React.FC<SportyInputProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Animation values
-  const focusAnim = useRef(new Animated.Value(0)).current;
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-
-  // Focus animation
-  useEffect(() => {
-    Animated.timing(focusAnim, {
-      toValue: isFocused ? 1 : 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  }, [isFocused, focusAnim]);
-
-  // Shake animation on error
-  useEffect(() => {
-    if (error) {
-      Animated.sequence([
-        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [error, shakeAnim]);
-
   const handleFocus = (e: any) => {
     setIsFocused(true);
     onFocus?.(e);
@@ -73,20 +47,12 @@ const SportyInput: React.FC<SportyInputProps> = ({
     onBlur?.(e);
   };
 
-  // Animated border color
-  const borderColor = focusAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [
-      error ? colors.danger : 'rgba(255, 255, 255, 0.15)',
-      error ? colors.danger : colors.primary,
-    ],
-  });
-
-  // Animated border width for glow effect
-  const borderWidth = focusAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1.5, 2],
-  });
+  // Determine border color based on state
+  const getBorderColor = () => {
+    if (error) return colors.danger;
+    if (isFocused) return colors.primary;
+    return 'rgba(255, 255, 255, 0.15)';
+  };
 
   return (
     <View style={styles.container}>
@@ -94,14 +60,11 @@ const SportyInput: React.FC<SportyInputProps> = ({
         <Text style={styles.label}>{label}</Text>
       )}
 
-      <Animated.View
+      <View
         style={[
           styles.inputContainer,
-          {
-            borderColor,
-            borderWidth,
-            transform: [{ translateX: shakeAnim }],
-          },
+          { borderColor: getBorderColor() },
+          isFocused && styles.inputContainerFocused,
           error && styles.inputContainerError,
           !editable && styles.inputContainerDisabled,
         ]}
@@ -122,7 +85,7 @@ const SportyInput: React.FC<SportyInputProps> = ({
             icon && styles.inputWithIcon,
             isPassword && styles.inputWithPassword,
           ]}
-          placeholderTextColor={colors.placeholder}
+          placeholderTextColor="rgba(255, 255, 255, 0.5)"
           value={value}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -152,7 +115,7 @@ const SportyInput: React.FC<SportyInputProps> = ({
         {isFocused && (
           <View style={[styles.glowEffect, { backgroundColor: colors.primary }]} />
         )}
-      </Animated.View>
+      </View>
 
       {error && (
         <View style={styles.errorContainer}>
@@ -184,6 +147,10 @@ const useStyles = (colors: ThemeColors) =>
           borderRadius: 16,
           overflow: 'hidden',
           position: 'relative',
+          borderWidth: 1.5,
+        },
+        inputContainerFocused: {
+          borderWidth: 2,
         },
         inputContainerError: {
           backgroundColor: 'rgba(239, 68, 68, 0.08)',
@@ -199,7 +166,7 @@ const useStyles = (colors: ThemeColors) =>
           paddingVertical: 16,
           paddingHorizontal: 16,
           fontSize: 16,
-          color: colors.text,
+          color: '#FFFFFF',
         },
         inputWithIcon: {
           paddingLeft: 12,

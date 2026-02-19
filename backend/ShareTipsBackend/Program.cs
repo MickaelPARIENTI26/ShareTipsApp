@@ -391,6 +391,8 @@ using (var scope = app.Services.CreateScope())
     if (app.Environment.IsDevelopment())
     {
         await TestDataSeeder.SeedTestDataAsync(context);
+        // Seed comprehensive mock data for demo/investor presentations
+        await MockMatchDataSeeder.SeedMockDataAsync(context);
     }
 #endif
 }

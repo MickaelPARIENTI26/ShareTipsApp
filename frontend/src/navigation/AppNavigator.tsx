@@ -6,6 +6,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 import { useTheme } from '../theme';
 import { usePushNotifications } from '../hooks/usePushNotifications';
+import FloatingTabBar from '../components/navigation/FloatingTabBar';
 import type {
   RootStackParamList,
   AppTabParamList,
@@ -146,52 +147,34 @@ const MainTabs: React.FC = () => {
   const { colors } = useTheme();
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home';
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Marketplace') {
-            iconName = focused ? 'storefront' : 'storefront-outline';
-          } else if (route.name === 'Matches') {
-            iconName = focused ? 'football' : 'football-outline';
-          } else if (route.name === 'Ranking') {
-            iconName = focused ? 'trophy' : 'trophy-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: colors.tabActive,
-        tabBarInactiveTintColor: colors.tabInactive,
-        tabBarStyle: { backgroundColor: colors.tabBarBackground },
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      screenOptions={{
         headerShown: false,
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
-      })}
+      }}
     >
+      {/* Order: Home > Matches > Marketplace (center FAB) > Ranking > Profile */}
       <Tab.Screen
         name="Home"
         component={HomeStackScreen}
         options={{ title: 'Accueil' }}
       />
       <Tab.Screen
-        name="Marketplace"
-        component={MarketplaceScreen}
+        name="Matches"
+        component={MatchesScreen}
         options={{
-          title: 'Marché',
+          title: 'Matchs',
           headerShown: true,
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.text,
         }}
       />
       <Tab.Screen
-        name="Matches"
-        component={MatchesScreen}
+        name="Marketplace"
+        component={MarketplaceScreen}
         options={{
-          title: 'Matchs',
+          title: 'Marché',
           headerShown: true,
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.text,

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,24 +14,27 @@ import type {
   RootStackParamList,
 } from '../../types';
 
-function formatDate(iso: string): string {
+function formatTime(iso: string): string {
   const d = new Date(iso);
-  const day = d.toLocaleDateString('fr-FR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
-  const time = d.toLocaleTimeString('fr-FR', {
+  return d.toLocaleTimeString('fr-FR', {
     hour: '2-digit',
     minute: '2-digit',
   });
-  return `${day} · ${time}`;
 }
 
 function isMatchStarted(match: MatchDetail): boolean {
   return (
     match.status !== 'Scheduled' || new Date(match.startTime) <= new Date()
   );
+}
+
+// Get team initials for avatar placeholder
+function getTeamInitials(name: string): string {
+  const words = name.split(' ');
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
 }
 
 interface MatchCardProps {
@@ -107,42 +110,59 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({ match }) => {
     <TouchableOpacity
       style={styles.card}
       onPress={navigateToDetails}
-      activeOpacity={0.7}
+      activeOpacity={0.85}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.dateRow}>
-          <Ionicons name="time-outline" size={13} color={colors.text} />
-          <Text style={styles.date}>{formatDate(match.startTime)}</Text>
+      {/* Time badge - top right corner */}
+      <View style={styles.timeBadge}>
+        <Ionicons name="time-outline" size={11} color={colors.textSecondary} />
+        <Text style={styles.timeText}>{formatTime(match.startTime)}</Text>
+      </View>
+
+      {/* Live/Soon badge */}
+      {started && (
+        <View style={styles.statusBadge}>
+          <View style={styles.statusDot} />
+          <Text style={styles.statusText}>
+            {match.status === 'Scheduled' ? 'Bientôt' : 'LIVE'}
+          </Text>
         </View>
-        <View style={styles.headerRight}>
-          {started && (
-            <View style={styles.liveBadge}>
-              <Text style={styles.liveBadgeText}>
-                {match.status === 'Scheduled' ? 'Bientôt' : match.status}
-              </Text>
-            </View>
-          )}
-          <View style={styles.sportBadge}>
-            <Text style={styles.sportBadgeText}>{match.sportCode}</Text>
+      )}
+
+      {/* Teams section */}
+      <View style={styles.teamsContainer}>
+        {/* Home team */}
+        <View style={styles.teamSection}>
+          <View style={styles.teamAvatar}>
+            <Text style={styles.teamInitials}>
+              {getTeamInitials(match.homeTeam.name)}
+            </Text>
           </View>
+          <Text style={styles.teamName} numberOfLines={2}>
+            {match.homeTeam.name}
+          </Text>
+        </View>
+
+        {/* VS divider */}
+        <View style={styles.vsContainer}>
+          <Text style={styles.vsText}>VS</Text>
+        </View>
+
+        {/* Away team */}
+        <View style={styles.teamSection}>
+          <View style={styles.teamAvatar}>
+            <Text style={styles.teamInitials}>
+              {getTeamInitials(match.awayTeam.name)}
+            </Text>
+          </View>
+          <Text style={styles.teamName} numberOfLines={2}>
+            {match.awayTeam.name}
+          </Text>
         </View>
       </View>
 
-      {/* Teams */}
-      <View style={styles.teamsRow}>
-        <Text style={styles.teamName} numberOfLines={1}>
-          {match.homeTeam.name}
-        </Text>
-        <Text style={styles.vs}>—</Text>
-        <Text style={styles.teamName} numberOfLines={1}>
-          {match.awayTeam.name}
-        </Text>
-      </View>
-
-      {/* Odds row — inner touchables take priority over card press */}
+      {/* Odds row */}
       {matchResult && (
-        <View style={styles.oddsRow}>
+        <View style={styles.oddsContainer}>
           {oddsSelections.map(({ sel, label }) =>
             sel ? (
               <OddsButton
@@ -158,11 +178,17 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({ match }) => {
         </View>
       )}
 
-      {/* Markets count indicator */}
-      <Text style={styles.marketsCount}>
-        +{match.markets.length} marché{match.markets.length > 1 ? 's' : ''}{' '}
-        →
-      </Text>
+      {/* Footer - markets count */}
+      <TouchableOpacity
+        style={styles.footer}
+        onPress={navigateToDetails}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.marketsText}>
+          +{match.markets.length} marché{match.markets.length > 1 ? 's' : ''}
+        </Text>
+        <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 };
@@ -175,79 +201,130 @@ const useStyles = (colors: ThemeColors) =>
     () =>
       StyleSheet.create({
         card: {
-          backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 8,
-        },
-        header: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          backgroundColor: `${colors.surface}F5`, // Slightly off-white
+          borderRadius: 16,
+          padding: 16,
           marginBottom: 10,
+          position: 'relative',
+          // Subtle shadow
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.text,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
-        dateRow: {
+        timeBadge: {
+          position: 'absolute',
+          top: 12,
+          right: 12,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 4,
+          backgroundColor: `${colors.background}CC`,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          borderRadius: 12,
         },
-        date: {
+        timeText: {
           fontSize: 12,
-          color: colors.text,
+          fontWeight: '600',
+          color: colors.textSecondary,
+          letterSpacing: 0.3,
         },
-        headerRight: {
+        statusBadge: {
+          position: 'absolute',
+          top: 12,
+          left: 12,
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
+          gap: 5,
+          backgroundColor: `${colors.danger}15`,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          borderRadius: 12,
         },
-        liveBadge: {
+        statusDot: {
+          width: 6,
+          height: 6,
+          borderRadius: 3,
           backgroundColor: colors.danger,
-          borderRadius: 4,
-          paddingHorizontal: 6,
-          paddingVertical: 2,
         },
-        liveBadgeText: {
-          color: colors.textOnPrimary,
+        statusText: {
           fontSize: 10,
           fontWeight: '700',
+          color: colors.danger,
+          letterSpacing: 0.5,
         },
-        sportBadge: {
-          backgroundColor: colors.primary + '20',
-          borderRadius: 4,
-          paddingHorizontal: 6,
-          paddingVertical: 2,
-        },
-        sportBadgeText: {
-          color: colors.primary,
-          fontSize: 10,
-          fontWeight: '600',
-        },
-        teamsRow: {
+        teamsContainer: {
           flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: 32,
+          marginBottom: 16,
+          paddingHorizontal: 8,
+        },
+        teamSection: {
+          flex: 1,
+          alignItems: 'center',
+          gap: 10,
+        },
+        teamAvatar: {
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: `${colors.primary}12`,
+          alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 12,
+          borderWidth: 1.5,
+          borderColor: `${colors.primary}25`,
+        },
+        teamInitials: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: colors.primary,
+          letterSpacing: 0.5,
         },
         teamName: {
-          flex: 1,
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: '700',
           color: colors.text,
           textAlign: 'center',
+          lineHeight: 18,
         },
-        vs: {
-          fontSize: 14,
+        vsContainer: {
+          width: 40,
+          alignItems: 'center',
+        },
+        vsText: {
+          fontSize: 11,
+          fontWeight: '600',
           color: colors.textTertiary,
-          marginHorizontal: 8,
+          letterSpacing: 1,
         },
-        oddsRow: {
+        oddsContainer: {
           flexDirection: 'row',
-          marginBottom: 8,
+          gap: 8,
+          marginBottom: 12,
         },
-        marketsCount: {
-          fontSize: 12,
+        footer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+          paddingTop: 12,
+          borderTopWidth: 1,
+          borderTopColor: `${colors.border}50`,
+        },
+        marketsText: {
+          fontSize: 13,
+          fontWeight: '600',
           color: colors.primary,
-          textAlign: 'right',
         },
       }),
     [colors]

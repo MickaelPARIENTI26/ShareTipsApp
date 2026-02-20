@@ -5,7 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import type { ThemeColors } from '../../theme';
 
@@ -37,8 +39,13 @@ const LeagueChips: React.FC<LeagueChipsProps> = ({
         <TouchableOpacity
           style={[styles.chip, selectedLeague === null && styles.chipActive]}
           onPress={() => onSelect(null)}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
+          <Ionicons
+            name={selectedLeague === null ? 'layers' : 'layers-outline'}
+            size={12}
+            color={selectedLeague === null ? colors.primary : colors.textSecondary}
+          />
           <Text
             style={[
               styles.chipText,
@@ -57,7 +64,7 @@ const LeagueChips: React.FC<LeagueChipsProps> = ({
               key={league}
               style={[styles.chip, isActive && styles.chipActive]}
               onPress={() => onSelect(league)}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <Text
                 style={[styles.chipText, isActive && styles.chipTextActive]}
@@ -77,31 +84,56 @@ const useStyles = (colors: ThemeColors) =>
     () =>
       StyleSheet.create({
         container: {
-          backgroundColor: colors.background,
+          backgroundColor: 'transparent',
           paddingVertical: 10,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
         },
         scrollContent: {
-          paddingHorizontal: 12,
+          paddingHorizontal: 16,
           gap: 8,
         },
         chip: {
-          backgroundColor: colors.surface,
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          // Glassmorphism - lighter variant
+          backgroundColor: `${colors.surface}B3`, // 70% opacity
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          borderRadius: 20,
+          borderWidth: 0.5,
+          borderColor: `${colors.border}60`,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.text,
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.04,
+              shadowRadius: 4,
+            },
+            android: {
+              elevation: 1,
+            },
+          }),
         },
         chipActive: {
-          backgroundColor: colors.primary + '20',
-          borderColor: colors.primary,
+          backgroundColor: `${colors.primary}18`,
+          borderColor: `${colors.primary}50`,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         chipText: {
           fontSize: 13,
           fontWeight: '500',
           color: colors.textSecondary,
+          letterSpacing: 0.1,
         },
         chipTextActive: {
           color: colors.primary,

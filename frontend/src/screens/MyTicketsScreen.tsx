@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,38 +7,72 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  Platform,
-  Animated,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 
 import { ticketApi } from '../api/ticket.api';
+import { DS } from '../theme/designSystem';
 import type { RootStackParamList, TicketDto } from '../types';
-import { SkeletonTicketList } from '../components/common/Skeleton';
-import { TicketRefreshControl } from '../components/common/PremiumRefreshControl';
-import {
-  useTheme,
-  type ThemeColors,
-  spacing,
-  radius,
-  typography,
-  effectGlass,
-  effectShadows,
-  springConfigs,
-} from '../theme';
 
-const PAGE_SIZE = 15;
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
 
-const SPORT_LABELS: Record<string, string> = {
-  FOOTBALL: 'Football',
-  BASKETBALL: 'Basketball',
-  TENNIS: 'Tennis',
-  ESPORT: 'Esport',
-};
+interface DateGroup {
+  date: string;
+  dateLabel: string;
+  tickets: TicketDto[];
+}
+
+type FilterType = 'all' | 'pending' | 'win' | 'lose';
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function formatDateHeader(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  if (date.toDateString() === now.toDateString()) return "Aujourd'hui";
+  if (date.toDateString() === tomorrow.toDateString()) return 'Demain';
+
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+function groupByDate(tickets: TicketDto[]): DateGroup[] {
+  const sorted = [...tickets].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const groups = new Map<string, TicketDto[]>();
+  for (const ticket of sorted) {
+    const dateKey = new Date(ticket.createdAt).toDateString();
+    const list = groups.get(dateKey) ?? [];
+    list.push(ticket);
+    groups.set(dateKey, list);
+  }
+
+  return Array.from(groups.entries()).map(([dateKey, groupTickets]) => ({
+    date: dateKey,
+    dateLabel: formatDateHeader(groupTickets[0].createdAt),
+    tickets: groupTickets,
+  }));
+}
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
 
 const SPORT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   FOOTBALL: 'football',
@@ -47,426 +81,289 @@ const SPORT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   ESPORT: 'game-controller',
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatDateRange(firstMatchTime: string, lastMatchTime: string, selectionCount: number): string {
-  const first = new Date(firstMatchTime);
-  const last = new Date(lastMatchTime);
-
-  const formatShort = (d: Date) => d.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  // Single selection or same time - show only start
-  if (selectionCount <= 1 || first.getTime() === last.getTime()) {
-    return formatShort(first);
-  }
-
-  // Multiple selections with different times
-  return `${formatShort(first)} → ${formatShort(last)}`;
-}
-
-const STATUS_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  Open: 'radio-button-on',
-  Locked: 'lock-closed',
-  Finished: 'checkmark-circle',
+const SPORT_LABELS: Record<string, string> = {
+  FOOTBALL: 'Football',
+  BASKETBALL: 'Basketball',
+  TENNIS: 'Tennis',
+  ESPORT: 'Esport',
 };
 
-// ─────────────────────────────────────────────────────────────
-// Sub-components with glassmorphism & animations
-// ─────────────────────────────────────────────────────────────
+const STATUS_LABELS: Record<string, string> = {
+  Open: 'Ouvert',
+  Locked: 'Verrouillé',
+  Finished: 'Terminé',
+};
 
-interface TicketCardProps {
+const RESULT_LABELS: Record<string, string> = {
+  Pending: 'En cours',
+  Win: 'Gagné',
+  Lose: 'Perdu',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TICKET CARD COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
+interface TicketCardInlineProps {
   ticket: TicketDto;
-  colors: ThemeColors;
   onPress: () => void;
 }
 
-const TicketCard: React.FC<TicketCardProps> = React.memo(({ ticket, colors, onPress }) => {
-  const styles = useTicketCardStyles(colors);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const statusColors: Record<string, string> = {
-    Open: colors.success,
-    Locked: colors.accent,
-    Finished: colors.textSecondary,
-  };
-
-  const statusLabels: Record<string, string> = {
-    Open: 'Ouvert',
-    Locked: 'Verrouillé',
-    Finished: 'Terminé',
-  };
-
-  const resultColors: Record<string, string> = {
-    Pending: colors.textSecondary,
-    Win: colors.success,
-    Lose: colors.danger,
-  };
-
-  const resultLabels: Record<string, string> = {
-    Pending: 'En cours',
-    Win: 'Validé',
-    Lose: 'Non validé',
-  };
-
-  const resultIcons: Record<string, keyof typeof Ionicons.glyphMap> = {
-    Pending: 'time',
-    Win: 'checkmark-circle',
-    Lose: 'close-circle',
-  };
-
-  const handlePressIn = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.98,
-      ...springConfigs.responsive,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      ...springConfigs.bouncy,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
+const TicketCardInline: React.FC<TicketCardInlineProps> = ({ ticket, onPress }) => {
   const selectionCount = ticket.selectionCount ?? ticket.selections?.length ?? 0;
-  const dateRangeText = formatDateRange(ticket.firstMatchTime, ticket.lastMatchTime, selectionCount);
 
-  const CardContainer = Platform.OS === 'ios' ? BlurView : View;
-  const cardContainerProps = Platform.OS === 'ios'
-    ? { intensity: 25, tint: 'dark' as const }
-    : {};
+  const resultColor = useMemo(() => {
+    switch (ticket.result) {
+      case 'Win': return '#22C55E';
+      case 'Lose': return '#EF4444';
+      default: return DS.colors.textSecondary;
+    }
+  }, [ticket.result]);
 
-  return (
-    <Animated.View style={[styles.cardWrapper, { transform: [{ scale: scaleAnim }] }]}>
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
-      >
-        <CardContainer {...cardContainerProps} style={styles.card}>
-          {/* Gradient overlay for glass effect on Android */}
-          {Platform.OS === 'android' && (
-            <View style={StyleSheet.absoluteFill}>
-              <LinearGradient
-                colors={[`${colors.surface}F2`, `${colors.surface}E6`]}
-                style={StyleSheet.absoluteFill}
-              />
-            </View>
-          )}
-
-          {/* Card Header */}
-          <View style={styles.cardHeader}>
-            <View style={styles.cardTitleRow}>
-              <LinearGradient
-                colors={[colors.primary, colors.primaryLight]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.ticketIcon}
-              >
-                <Ionicons name="receipt" size={14} color={colors.textOnPrimary} />
-              </LinearGradient>
-              <Text style={styles.cardTitle} numberOfLines={1}>
-                {ticket.title}
-              </Text>
-            </View>
-            <LinearGradient
-              colors={[
-                statusColors[ticket.status] ?? colors.textSecondary,
-                `${statusColors[ticket.status] ?? colors.textSecondary}CC`,
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.statusBadge}
-            >
-              <Ionicons
-                name={STATUS_ICONS[ticket.status] ?? 'ellipse'}
-                size={10}
-                color={colors.textOnPrimary}
-              />
-              <Text style={styles.statusText}>{statusLabels[ticket.status] ?? ticket.status}</Text>
-            </LinearGradient>
-          </View>
-
-          {/* Match dates */}
-          <View style={styles.dateRangeWrapper}>
-            <LinearGradient
-              colors={[colors.primary, colors.primaryLight]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.dateRangeContainer}
-            >
-              <Ionicons name="calendar" size={12} color={colors.textOnPrimary} />
-              <Text style={styles.dateRangeText}>{dateRangeText}</Text>
-            </LinearGradient>
-          </View>
-
-          {/* Meta stats */}
-          <View style={styles.cardMeta}>
-            <View style={styles.metaItem}>
-              <View style={styles.metaIconWrapper}>
-                <Ionicons name="layers" size={14} color={colors.primary} />
-              </View>
-              <Text style={styles.metaLabel}>Sélections</Text>
-              <Text style={styles.metaValue}>{ticket.selections.length}</Text>
-            </View>
-            <View style={styles.metaDivider} />
-            <View style={styles.metaItem}>
-              <View style={[styles.metaIconWrapper, { backgroundColor: colors.accentBg }]}>
-                <Ionicons name="trending-up" size={14} color={colors.accent} />
-              </View>
-              <Text style={styles.metaLabel}>Cote moy.</Text>
-              <LinearGradient
-                colors={[colors.accent, colors.accentLight || colors.accent]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.oddsGradient}
-              >
-                <Text style={styles.metaValueHighlight}>
-                  {ticket.avgOdds.toFixed(2)}
-                </Text>
-              </LinearGradient>
-            </View>
-            <View style={styles.metaDivider} />
-            <View style={styles.metaItem}>
-              <View style={[styles.metaIconWrapper, { backgroundColor: colors.successBg }]}>
-                <Ionicons name="shield-checkmark" size={14} color={colors.success} />
-              </View>
-              <Text style={styles.metaLabel}>Confiance</Text>
-              <Text style={styles.metaValue}>{ticket.confidenceIndex}/10</Text>
-            </View>
-          </View>
-
-          {/* Sports badges */}
-          <View style={styles.sportsRow}>
-            {ticket.sports.map((s) => (
-              <View key={s} style={styles.sportBadge}>
-                <Ionicons name={SPORT_ICONS[s] || 'trophy'} size={12} color={colors.primary} />
-                <Text style={styles.sportBadgeText}>
-                  {SPORT_LABELS[s] ?? s}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Card Footer */}
-          <View style={styles.cardFooter}>
-            <View style={styles.footerLeft}>
-              <View style={[
-                styles.visibilityBadge,
-                ticket.isPublic ? styles.visibilityPublic : styles.visibilityPrivate,
-              ]}>
-                <Ionicons
-                  name={ticket.isPublic ? 'earth' : 'lock-closed'}
-                  size={11}
-                  color={ticket.isPublic ? colors.primary : colors.accent}
-                />
-                <Text
-                  style={[
-                    styles.visibilityText,
-                    { color: ticket.isPublic ? colors.primary : colors.accent },
-                  ]}
-                >
-                  {ticket.isPublic ? 'Public' : `${ticket.priceEur.toFixed(2)} €`}
-                </Text>
-              </View>
-              <View style={styles.dateWrapper}>
-                <Ionicons name="time-outline" size={10} color={colors.textTertiary} />
-                <Text style={styles.dateText}>{formatDate(ticket.createdAt)}</Text>
-              </View>
-            </View>
-            <View
-              style={[
-                styles.resultBadge,
-                {
-                  backgroundColor:
-                    (resultColors[ticket.result] ?? colors.textSecondary) + '20',
-                  borderColor: (resultColors[ticket.result] ?? colors.textSecondary) + '40',
-                },
-              ]}
-            >
-              <Ionicons
-                name={resultIcons[ticket.result] ?? 'ellipse'}
-                size={14}
-                color={resultColors[ticket.result] ?? colors.textSecondary}
-              />
-              <Text
-                style={[
-                  styles.resultText,
-                  { color: resultColors[ticket.result] ?? colors.textSecondary },
-                ]}
-              >
-                {resultLabels[ticket.result] ?? ticket.result}
-              </Text>
-            </View>
-          </View>
-
-          {/* Decorative accent line */}
-          <LinearGradient
-            colors={[colors.primary, colors.accent, colors.primary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.accentLine}
-          />
-        </CardContainer>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-});
-
-const LoadingState: React.FC<{ colors: ThemeColors }> = React.memo(({ colors }) => {
-  const styles = useLoadingStyles(colors);
+  const resultIcon = useMemo((): keyof typeof Ionicons.glyphMap => {
+    switch (ticket.result) {
+      case 'Win': return 'checkmark-circle';
+      case 'Lose': return 'close-circle';
+      default: return 'time-outline';
+    }
+  }, [ticket.result]);
 
   return (
-    <View style={styles.container}>
-      <SkeletonTicketList count={4} />
-    </View>
-  );
-});
-
-const ErrorState: React.FC<{ colors: ThemeColors; error: string; onRetry: () => void }> = React.memo(
-  ({ colors, error, onRetry }) => {
-    const styles = useErrorStyles(colors);
-    const shakeAnim = useRef(new Animated.Value(0)).current;
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-
-    useEffect(() => {
-      Animated.sequence([
-        Animated.timing(shakeAnim, { toValue: 10, duration: 80, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -10, duration: 80, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
-      ]).start();
-    }, [shakeAnim]);
-
-    const handlePressIn = useCallback(() => {
-      Animated.spring(scaleAnim, {
-        toValue: 0.95,
-        ...springConfigs.responsive,
-        useNativeDriver: true,
-      }).start();
-    }, [scaleAnim]);
-
-    const handlePressOut = useCallback(() => {
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        ...springConfigs.bouncy,
-        useNativeDriver: true,
-      }).start();
-    }, [scaleAnim]);
-
-    return (
-      <View style={styles.center}>
-        <Animated.View
-          style={[styles.errorIconWrapper, { transform: [{ translateX: shakeAnim }] }]}
-        >
-          <LinearGradient
-            colors={[colors.danger, `${colors.danger}CC`]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.errorGradient}
-          >
-            <Ionicons name="cloud-offline" size={36} color={colors.textOnPrimary} />
-          </LinearGradient>
-        </Animated.View>
-        <Text style={styles.errorTitle}>Oups !</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          <TouchableOpacity
-            onPress={onRetry}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            activeOpacity={1}
-          >
-            <LinearGradient
-              colors={[colors.primary, colors.primaryLight]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.retryBtn}
-            >
-              <Ionicons name="refresh" size={18} color={colors.textOnPrimary} />
-              <Text style={styles.retryBtnText}>Réessayer</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
+    <TouchableOpacity
+      style={cardStyles.container}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      {/* Header: Result badge + Time */}
+      <View style={cardStyles.header}>
+        <View style={cardStyles.titleRow}>
+          <View style={[cardStyles.resultBar, { backgroundColor: resultColor }]} />
+          <View style={[cardStyles.resultBadge, { backgroundColor: `${resultColor}20` }]}>
+            <Ionicons name={resultIcon} size={12} color={resultColor} />
+            <Text style={[cardStyles.resultText, { color: resultColor }]}>
+              {RESULT_LABELS[ticket.result] ?? ticket.result}
+            </Text>
+          </View>
+        </View>
+        <View style={cardStyles.timeContainer}>
+          <Ionicons name="time-outline" size={12} color="#8A9A8F" />
+          <Text style={cardStyles.timeText}>{formatTime(ticket.createdAt)}</Text>
+        </View>
       </View>
-    );
-  }
-);
 
-const EmptyState: React.FC<{ colors: ThemeColors }> = React.memo(({ colors }) => {
-  const styles = useEmptyStyles(colors);
-  const floatAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const floatLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: -8,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    floatLoop.start();
-    return () => floatLoop.stop();
-  }, [floatAnim]);
-
-  return (
-    <View style={styles.center}>
-      <Animated.View style={[styles.emptyIconWrapper, { transform: [{ translateY: floatAnim }] }]}>
-        <LinearGradient
-          colors={[`${colors.primary}20`, `${colors.primary}10`]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.emptyGradient}
-        >
-          <Ionicons name="receipt-outline" size={40} color={colors.primary} />
-        </LinearGradient>
-      </Animated.View>
-      <Text style={styles.emptyTitle}>Aucun ticket créé</Text>
-      <Text style={styles.emptyHint}>
-        Créez votre premier ticket depuis le coupon
+      {/* Title */}
+      <Text style={cardStyles.title} numberOfLines={2}>
+        {ticket.title}
       </Text>
-      <View style={styles.emptyArrow}>
-        <Ionicons name="arrow-down" size={24} color={colors.textTertiary} />
+
+      {/* Sports badges */}
+      <View style={cardStyles.sportsRow}>
+        {ticket.sports.map((sport) => (
+          <View key={sport} style={cardStyles.sportBadge}>
+            <Ionicons
+              name={SPORT_ICONS[sport] ?? 'trophy'}
+              size={12}
+              color={DS.colors.green}
+            />
+            <Text style={cardStyles.sportText}>{SPORT_LABELS[sport] ?? sport}</Text>
+          </View>
+        ))}
       </View>
-    </View>
+
+      {/* Stats row */}
+      <View style={cardStyles.statsRow}>
+        <View style={cardStyles.statItem}>
+          <Text style={cardStyles.statLabel}>Sélections</Text>
+          <Text style={cardStyles.statValue}>{selectionCount}</Text>
+        </View>
+        <View style={cardStyles.statDivider} />
+        <View style={cardStyles.statItem}>
+          <Text style={cardStyles.statLabel}>Cote moy.</Text>
+          <Text style={cardStyles.statValueHighlight}>{ticket.avgOdds.toFixed(2)}</Text>
+        </View>
+        <View style={cardStyles.statDivider} />
+        <View style={cardStyles.statItem}>
+          <Text style={cardStyles.statLabel}>Statut</Text>
+          <Text style={cardStyles.statValue}>{STATUS_LABELS[ticket.status] ?? ticket.status}</Text>
+        </View>
+      </View>
+
+      {/* Footer */}
+      <View style={cardStyles.footer}>
+        <View style={cardStyles.visibilityBadge}>
+          <Ionicons
+            name={ticket.isPublic ? 'earth-outline' : 'lock-closed-outline'}
+            size={12}
+            color={ticket.isPublic ? DS.colors.green : '#F59E0B'}
+          />
+          <Text style={[
+            cardStyles.visibilityText,
+            { color: ticket.isPublic ? DS.colors.green : '#F59E0B' }
+          ]}>
+            {ticket.isPublic ? 'Public' : `${ticket.priceEur.toFixed(2)} €`}
+          </Text>
+        </View>
+        <View style={cardStyles.detailsLink}>
+          <Text style={cardStyles.detailsText}>Voir détails</Text>
+          <Ionicons name="chevron-forward" size={12} color={DS.colors.green} />
+        </View>
+      </View>
+    </TouchableOpacity>
   );
+};
+
+const cardStyles = StyleSheet.create({
+  container: {
+    backgroundColor: '#131916',
+    borderWidth: 1,
+    borderColor: '#1E2A22',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    shadowColor: DS.colors.green,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  resultBar: {
+    width: 3,
+    height: 18,
+    borderRadius: 2,
+    marginRight: 10,
+  },
+  resultBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  resultText: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  timeText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#8A9A8F',
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: DS.colors.white,
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  sportsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 12,
+  },
+  sportBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: DS.colors.greenBgSubtle,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  sportText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: DS.colors.greenLight,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#0F1611',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#1E2A22',
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '400',
+    color: '#8A9A8F',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: DS.colors.white,
+  },
+  statValueHighlight: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: DS.colors.green,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#1E2A22',
+  },
+  visibilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  visibilityText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  detailsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  detailsText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: DS.colors.green,
+  },
 });
 
-// ─────────────────────────────────────────────────────────────
-// Main Screen Component
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
+const PAGE_SIZE = 15;
 
 const MyTicketsScreen: React.FC = () => {
-  const { colors } = useTheme();
-  const styles = useStyles(colors);
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [tickets, setTickets] = useState<TicketDto[]>([]);
+  // Data states
+  const [allTickets, setAllTickets] = useState<TicketDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -474,15 +371,19 @@ const MyTicketsScreen: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // Filter state
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
+
+  // Fetch tickets
   const fetchTickets = useCallback(async (pageNum: number, isRefresh: boolean = false) => {
     try {
       setError(null);
       const { data } = await ticketApi.getMyTicketsPaginated(pageNum, PAGE_SIZE);
 
       if (isRefresh || pageNum === 1) {
-        setTickets(data.items);
+        setAllTickets(data.items);
       } else {
-        setTickets(prev => [...prev, ...data.items]);
+        setAllTickets(prev => [...prev, ...data.items]);
       }
 
       setHasMore(data.hasNextPage);
@@ -513,6 +414,25 @@ const MyTicketsScreen: React.FC = () => {
     fetchTickets(page + 1);
   }, [hasMore, loadingMore, loading, page, fetchTickets]);
 
+  // Apply filters
+  const filteredTickets = useMemo(() => {
+    switch (selectedFilter) {
+      case 'pending':
+        return allTickets.filter(t => t.result === 'Pending');
+      case 'win':
+        return allTickets.filter(t => t.result === 'Win');
+      case 'lose':
+        return allTickets.filter(t => t.result === 'Lose');
+      default:
+        return allTickets;
+    }
+  }, [allTickets, selectedFilter]);
+
+  const groupedTickets = useMemo(
+    () => groupByDate(filteredTickets),
+    [filteredTickets]
+  );
+
   const handleTicketPress = useCallback(
     (ticketId: string) => {
       navigation.navigate('TicketDetail', { ticketId });
@@ -520,416 +440,329 @@ const MyTicketsScreen: React.FC = () => {
     [navigation]
   );
 
-  const renderTicket = useCallback(
-    ({ item }: { item: TicketDto }) => (
-      <TicketCard
-        ticket={item}
-        colors={colors}
-        onPress={() => handleTicketPress(item.id)}
-      />
-    ),
-    [colors, handleTicketPress]
+  // ── Render Filters ───────────────────────────────────────────
+  const renderFilters = () => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.filtersContainer}
+      contentContainerStyle={styles.filtersContent}
+    >
+      {/* "Tous" filter */}
+      <TouchableOpacity
+        style={[
+          styles.filterChip,
+          selectedFilter === 'all' && styles.filterChipActive,
+        ]}
+        onPress={() => setSelectedFilter('all')}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="receipt-outline"
+          size={14}
+          color={selectedFilter === 'all' ? DS.colors.white : '#8A9A8F'}
+        />
+        <Text style={[
+          styles.filterLabel,
+          selectedFilter === 'all' && styles.filterLabelActive,
+        ]}>
+          Tous
+        </Text>
+      </TouchableOpacity>
+
+      {/* "En cours" filter */}
+      <TouchableOpacity
+        style={[
+          styles.filterChip,
+          selectedFilter === 'pending' && styles.filterChipActive,
+        ]}
+        onPress={() => setSelectedFilter('pending')}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="time-outline"
+          size={14}
+          color={selectedFilter === 'pending' ? DS.colors.white : '#8A9A8F'}
+        />
+        <Text style={[
+          styles.filterLabel,
+          selectedFilter === 'pending' && styles.filterLabelActive,
+        ]}>
+          En cours
+        </Text>
+      </TouchableOpacity>
+
+      {/* "Gagnés" filter */}
+      <TouchableOpacity
+        style={[
+          styles.filterChip,
+          selectedFilter === 'win' && styles.filterChipActive,
+        ]}
+        onPress={() => setSelectedFilter('win')}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="checkmark-circle-outline"
+          size={14}
+          color={selectedFilter === 'win' ? DS.colors.white : '#8A9A8F'}
+        />
+        <Text style={[
+          styles.filterLabel,
+          selectedFilter === 'win' && styles.filterLabelActive,
+        ]}>
+          Gagnés
+        </Text>
+      </TouchableOpacity>
+
+      {/* "Perdus" filter */}
+      <TouchableOpacity
+        style={[
+          styles.filterChip,
+          selectedFilter === 'lose' && styles.filterChipActive,
+        ]}
+        onPress={() => setSelectedFilter('lose')}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="close-circle-outline"
+          size={14}
+          color={selectedFilter === 'lose' ? DS.colors.white : '#8A9A8F'}
+        />
+        <Text style={[
+          styles.filterLabel,
+          selectedFilter === 'lose' && styles.filterLabelActive,
+        ]}>
+          Perdus
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 
-  const keyExtractor = useCallback((item: TicketDto) => item.id, []);
+  // ── Render Date Header ───────────────────────────────────────
+  const renderDateHeader = (dateLabel: string) => (
+    <View style={styles.dateSection}>
+      <Ionicons name="calendar-outline" size={14} color={DS.colors.greenLight} />
+      <Text style={styles.dateText}>{dateLabel}</Text>
+      <Ionicons name="chevron-forward" size={14} color={DS.colors.greenLight} />
+    </View>
+  );
 
-  if (loading && tickets.length === 0) {
-    return <LoadingState colors={colors} />;
+  // ── Loading State ─────────────────────────────────────────────
+  if (loading && allTickets.length === 0) {
+    return (
+      <View style={styles.container}>
+        {renderFilters()}
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={DS.colors.green} />
+        </View>
+      </View>
+    );
   }
 
-  if (error && tickets.length === 0) {
-    return <ErrorState colors={colors} error={error} onRetry={onRefresh} />;
+  // ── Error State ───────────────────────────────────────────────
+  if (error && allTickets.length === 0) {
+    return (
+      <View style={styles.container}>
+        {renderFilters()}
+        <View style={styles.center}>
+          <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={onRefresh}>
+            <Text style={styles.retryBtnText}>Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
-  if (tickets.length === 0) {
-    return <EmptyState colors={colors} />;
+  // ── Empty State ───────────────────────────────────────────────
+  if (filteredTickets.length === 0) {
+    return (
+      <View style={styles.container}>
+        {renderFilters()}
+        <View style={styles.center}>
+          <Ionicons name="receipt-outline" size={48} color="#8A9A8F" />
+          <Text style={styles.emptyText}>
+            {selectedFilter === 'all'
+              ? 'Aucun ticket créé'
+              : `Aucun ticket ${selectedFilter === 'pending' ? 'en cours' : selectedFilter === 'win' ? 'gagné' : 'perdu'}`}
+          </Text>
+          {selectedFilter !== 'all' && (
+            <TouchableOpacity
+              style={styles.resetBtn}
+              onPress={() => setSelectedFilter('all')}
+            >
+              <Text style={styles.resetBtnText}>Voir tous les tickets</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
   }
 
+  // ── Main Content ──────────────────────────────────────────────
   return (
     <View style={styles.container}>
+      {renderFilters()}
       <FlatList
-        data={tickets}
-        keyExtractor={keyExtractor}
+        data={groupedTickets}
+        keyExtractor={(item) => item.date}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <TicketRefreshControl
+          <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
+            tintColor={DS.colors.green}
+            colors={[DS.colors.green]}
           />
         }
-        renderItem={renderTicket}
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
+        renderItem={({ item: group }) => (
+          <View>
+            {renderDateHeader(group.dateLabel)}
+            {group.tickets.map((ticket) => (
+              <TicketCardInline
+                key={ticket.id}
+                ticket={ticket}
+                onPress={() => handleTicketPress(ticket.id)}
+              />
+            ))}
+          </View>
+        )}
         ListFooterComponent={
           loadingMore ? (
             <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={DS.colors.green} />
               <Text style={styles.loadingMoreText}>Chargement...</Text>
             </View>
           ) : null
         }
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </View>
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-// Styles
-// ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 
-const useStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-        list: {
-          padding: spacing.md,
-          paddingBottom: spacing.xxl + 80,
-          flexGrow: 1,
-        },
-        separator: {
-          height: spacing.sm,
-        },
-        loadingMore: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing.sm,
-          paddingVertical: spacing.xl,
-        },
-        loadingMoreText: {
-          ...typography.caption,
-          color: colors.textSecondary,
-        },
-      }),
-    [colors]
-  );
-
-const useTicketCardStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        cardWrapper: {
-          borderRadius: radius.xl,
-          ...effectShadows.lg,
-        },
-        card: {
-          borderRadius: radius.xl,
-          padding: spacing.lg,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: effectGlass.borderColor,
-          backgroundColor: Platform.OS === 'android' ? 'transparent' : undefined,
-        },
-        cardHeader: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.md,
-        },
-        cardTitleRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-          flex: 1,
-          marginRight: spacing.sm,
-        },
-        ticketIcon: {
-          width: 32,
-          height: 32,
-          borderRadius: radius.full,
-          alignItems: 'center',
-          justifyContent: 'center',
-          ...effectShadows.sm,
-        },
-        cardTitle: {
-          ...typography.h4,
-          color: colors.text,
-          flex: 1,
-        },
-        statusBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xxs,
-          borderRadius: radius.full,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: spacing.xs,
-        },
-        statusText: {
-          ...typography.badge,
-          color: colors.textOnPrimary,
-          fontWeight: '600',
-        },
-        dateRangeWrapper: {
-          marginBottom: spacing.lg,
-        },
-        dateRangeContainer: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          alignSelf: 'flex-start',
-          borderRadius: radius.full,
-          paddingHorizontal: spacing.md,
-          paddingVertical: spacing.sm,
-          gap: spacing.xs,
-          ...effectShadows.md,
-        },
-        dateRangeText: {
-          ...typography.caption,
-          fontWeight: '600',
-          color: colors.textOnPrimary,
-        },
-        cardMeta: {
-          flexDirection: 'row',
-          backgroundColor: `${colors.background}90`,
-          borderRadius: radius.lg,
-          padding: spacing.md,
-          marginBottom: spacing.md,
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
-        metaItem: {
-          flex: 1,
-          alignItems: 'center',
-          gap: spacing.xxs,
-        },
-        metaIconWrapper: {
-          width: 28,
-          height: 28,
-          borderRadius: radius.full,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: spacing.xxs,
-        },
-        metaDivider: {
-          width: 1,
-          backgroundColor: colors.border,
-          marginHorizontal: spacing.xs,
-        },
-        metaLabel: {
-          ...typography.caption,
-          fontSize: 10,
-          color: colors.textTertiary,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        },
-        metaValue: {
-          ...typography.body,
-          fontWeight: '700',
-          color: colors.text,
-        },
-        oddsGradient: {
-          borderRadius: radius.sm,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: spacing.xxs,
-        },
-        metaValueHighlight: {
-          ...typography.odds,
-          color: colors.textOnPrimary,
-          fontWeight: '700',
-        },
-        sportsRow: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: spacing.xs,
-          marginBottom: spacing.md,
-        },
-        sportBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xxs,
-          backgroundColor: colors.primaryBg,
-          borderRadius: radius.full,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: spacing.xs,
-          borderWidth: 1,
-          borderColor: `${colors.primary}30`,
-        },
-        sportBadgeText: {
-          ...typography.badge,
-          color: colors.primary,
-          fontWeight: '600',
-        },
-        cardFooter: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: spacing.md,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-        },
-        footerLeft: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.md,
-        },
-        visibilityBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xxs,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: spacing.xs,
-          borderRadius: radius.full,
-          borderWidth: 1,
-        },
-        visibilityPublic: {
-          backgroundColor: colors.primaryBg,
-          borderColor: `${colors.primary}30`,
-        },
-        visibilityPrivate: {
-          backgroundColor: colors.accentBg,
-          borderColor: `${colors.accent}30`,
-        },
-        visibilityText: {
-          ...typography.badge,
-          fontWeight: '600',
-        },
-        dateWrapper: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xxs,
-        },
-        dateText: {
-          ...typography.caption,
-          color: colors.textTertiary,
-        },
-        resultBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-          borderRadius: radius.full,
-          paddingHorizontal: spacing.md,
-          paddingVertical: spacing.sm,
-          borderWidth: 1,
-        },
-        resultText: {
-          ...typography.badge,
-          fontWeight: '600',
-        },
-        accentLine: {
-          position: 'absolute',
-          bottom: 0,
-          left: spacing.lg,
-          right: spacing.lg,
-          height: 2,
-          borderRadius: radius.full,
-        },
-      }),
-    [colors]
-  );
-
-const useLoadingStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-          padding: spacing.md,
-        },
-      }),
-    [colors]
-  );
-
-const useErrorStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        center: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-          padding: spacing.xl,
-        },
-        errorIconWrapper: {
-          marginBottom: spacing.lg,
-        },
-        errorGradient: {
-          width: 88,
-          height: 88,
-          borderRadius: radius.full,
-          alignItems: 'center',
-          justifyContent: 'center',
-          ...effectShadows.lg,
-        },
-        errorTitle: {
-          ...typography.h3,
-          color: colors.text,
-          marginBottom: spacing.xs,
-        },
-        errorText: {
-          ...typography.body,
-          color: colors.textSecondary,
-          textAlign: 'center',
-          marginBottom: spacing.xl,
-          maxWidth: 280,
-        },
-        retryBtn: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-          borderRadius: radius.lg,
-          paddingHorizontal: spacing.xl,
-          paddingVertical: spacing.md,
-          ...effectShadows.md,
-        },
-        retryBtnText: {
-          ...typography.button,
-          color: colors.textOnPrimary,
-        },
-      }),
-    [colors]
-  );
-
-const useEmptyStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        center: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-          padding: spacing.xl,
-        },
-        emptyIconWrapper: {
-          marginBottom: spacing.lg,
-        },
-        emptyGradient: {
-          width: 100,
-          height: 100,
-          borderRadius: radius.full,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 2,
-          borderColor: `${colors.primary}30`,
-          borderStyle: 'dashed',
-        },
-        emptyTitle: {
-          ...typography.h4,
-          color: colors.text,
-          textAlign: 'center',
-          marginBottom: spacing.sm,
-        },
-        emptyHint: {
-          ...typography.body,
-          color: colors.textSecondary,
-          textAlign: 'center',
-          lineHeight: 22,
-          maxWidth: 280,
-          marginBottom: spacing.lg,
-        },
-        emptyArrow: {
-          opacity: 0.5,
-        },
-      }),
-    [colors]
-  );
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: DS.colors.background,
+  },
+  filtersContainer: {
+    maxHeight: 50,
+    marginTop: 8,
+  },
+  filtersContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 8,
+    flexDirection: 'row',
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: DS.colors.buttonBorder,
+    marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: DS.colors.green,
+    borderColor: DS.colors.green,
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#8A9A8F',
+  },
+  filterLabelActive: {
+    color: DS.colors.white,
+  },
+  dateSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: 16,
+    marginBottom: 8,
+    backgroundColor: DS.colors.greenBgSubtle,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  dateText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: DS.colors.greenLight,
+    textTransform: 'capitalize',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  list: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  emptyText: {
+    color: '#8A9A8F',
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  retryBtn: {
+    marginTop: 16,
+    backgroundColor: DS.colors.green,
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
+  retryBtnText: {
+    color: DS.colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  resetBtn: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: DS.colors.green,
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
+  resetBtnText: {
+    color: DS.colors.green,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  loadingMore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 20,
+  },
+  loadingMoreText: {
+    fontSize: 13,
+    color: '#8A9A8F',
+  },
+});
 
 export default MyTicketsScreen;

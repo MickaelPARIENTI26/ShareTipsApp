@@ -118,12 +118,6 @@ const ODDS_RANGES: Range[] = [
   { label: '10+', min: 10 },
 ];
 
-const CONFIDENCE_RANGES: Range[] = [
-  { label: 'Faible (1-3)', min: 1, max: 3 },
-  { label: 'Moyen (4-6)', min: 4, max: 6 },
-  { label: 'Élevé (7-10)', min: 7, max: 10 },
-];
-
 const SELECTIONS_RANGES: Range[] = [
   { label: '1', min: 1, max: 1 },
   { label: '2 – 3', min: 2, max: 3 },
@@ -309,15 +303,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     });
   }, []);
 
-  const toggleConfidenceRange = useCallback((range: Range) => {
-    setDraft((prev) => {
-      if (rangeMatches(range, prev.minConfidence, prev.maxConfidence)) {
-        return { ...prev, minConfidence: undefined, maxConfidence: undefined };
-      }
-      return { ...prev, minConfidence: range.min, maxConfidence: range.max };
-    });
-  }, []);
-
   const toggleSelectionsRange = useCallback((range: Range) => {
     setDraft((prev) => {
       if (rangeMatches(range, prev.minSelections, prev.maxSelections)) {
@@ -405,9 +390,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         draft.sports?.length ?? 0,
         draft.ticketType ? 1 : 0,
         draft.minOdds !== undefined || draft.maxOdds !== undefined ? 1 : 0,
-        draft.minConfidence !== undefined || draft.maxConfidence !== undefined
-          ? 1
-          : 0,
         draft.minSelections !== undefined || draft.maxSelections !== undefined
           ? 1
           : 0,
@@ -537,27 +519,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 label={range.label}
                 isSelected={rangeMatches(range, draft.minOdds, draft.maxOdds)}
                 onPress={() => toggleOddsRange(range)}
-                variant={variant}
-                colors={colors}
-                animated={animated}
-              />
-            ))
-          )}
-
-          {/* Confidence range */}
-          {renderSection(
-            'Indice de confiance',
-            'analytics',
-            CONFIDENCE_RANGES.map((range) => (
-              <AnimatedChip
-                key={range.label}
-                label={range.label}
-                isSelected={rangeMatches(
-                  range,
-                  draft.minConfidence,
-                  draft.maxConfidence
-                )}
-                onPress={() => toggleConfidenceRange(range)}
                 variant={variant}
                 colors={colors}
                 animated={animated}

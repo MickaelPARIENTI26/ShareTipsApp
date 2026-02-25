@@ -14,8 +14,8 @@ public class CreateTicketDtoValidator : AbstractValidator<CreateTicketDto>
         RuleFor(x => x.PriceEur)
             .GreaterThanOrEqualTo(0).WithMessage("Price must be non-negative");
 
-        RuleFor(x => x.ConfidenceIndex)
-            .InclusiveBetween(1, 10).WithMessage("Confidence index must be between 1 and 10");
+        // ConfidenceIndex is deprecated - uses default value of 5
+        // Kept for backwards compatibility with older clients
 
         RuleFor(x => x.Selections)
             .NotEmpty().WithMessage("At least one selection is required")

@@ -121,11 +121,10 @@ describe('ticketBuilder.store', () => {
 
   describe('clear', () => {
     it('should reset all state to initial values', () => {
-      const { addSelection, setConfidenceIndex, setVisibility, setPriceEur, clear } =
+      const { addSelection, setVisibility, setPriceEur, clear } =
         useTicketBuilderStore.getState();
 
       addSelection(createSelection());
-      setConfidenceIndex(8);
       setVisibility('PRIVATE');
       setPriceEur(5.0);
 
@@ -135,7 +134,6 @@ describe('ticketBuilder.store', () => {
       expect(state.selections).toHaveLength(0);
       expect(state.isOpen).toBe(false);
       expect(state.isManuallyCollapsed).toBe(false);
-      expect(state.confidenceIndex).toBeNull();
       expect(state.visibility).toBe('PUBLIC');
       expect(state.priceEur).toBeNull();
     });
@@ -210,14 +208,6 @@ describe('ticketBuilder.store', () => {
   });
 
   describe('ticket settings', () => {
-    it('should set confidence index', () => {
-      const { setConfidenceIndex } = useTicketBuilderStore.getState();
-
-      setConfidenceIndex(7);
-
-      expect(useTicketBuilderStore.getState().confidenceIndex).toBe(7);
-    });
-
     it('should set visibility', () => {
       const { setVisibility } = useTicketBuilderStore.getState();
 

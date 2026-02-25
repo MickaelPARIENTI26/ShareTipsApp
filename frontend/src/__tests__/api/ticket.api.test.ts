@@ -21,7 +21,6 @@ describe('ticketApi', () => {
         title: 'My Ticket',
         isPublic: true,
         priceEur: 5.0,
-        confidenceIndex: 8,
         selections: [],
       };
       mockedClient.post.mockResolvedValueOnce({ data: mockTicket });
@@ -30,7 +29,6 @@ describe('ticketApi', () => {
         title: 'My Ticket',
         isPublic: true,
         priceEur: 5.0,
-        confidenceIndex: 8,
         selections: [
           {
             matchId: 'match-1',

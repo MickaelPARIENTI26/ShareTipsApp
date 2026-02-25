@@ -17,11 +17,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { purchaseApi } from '../api/purchase.api';
 import { subscriptionApi } from '../api/subscription.api';
 import type { RootStackParamList, PurchaseDto, SubscriptionDto } from '../types';
-import { useTheme, type ThemeColors, spacing, radius, typography, palette } from '../theme';
+import { DS } from '../theme/designSystem';
+
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
 
 type TabType = 'achats' | 'abonnements';
 
-// Unified item for display
 interface HistoryItem {
   id: string;
   type: 'purchase' | 'subscription';
@@ -29,10 +32,14 @@ interface HistoryItem {
   subtitle: string;
   date: string;
   status: string;
-  targetId: string; // ticketId or tipsterId
+  targetId: string;
   targetUsername: string;
   priceEur: number;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -70,73 +77,104 @@ function getSubscriptionStatusLabel(status: string, endDate: string): string {
   return status;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// HISTORY CARD COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
 const HistoryCard: React.FC<{
   item: HistoryItem;
   onPress: () => void;
-  styles: ReturnType<typeof useStyles>;
-  colors: ThemeColors;
-}> = ({ item, onPress, styles, colors }) => {
+  index: number;
+}> = ({ item, onPress, index }) => {
   const isPurchase = item.type === 'purchase';
-  const isActive = item.status === 'Active' || item.status === 'Actif';
+  const isActive = item.status === 'Active' || item.status === 'Actif' || item.status.includes('Actif');
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [index]);
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.7}
-      onPress={onPress}
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}
     >
-      <View style={styles.cardHeader}>
-        <View
-          style={[
-            styles.iconContainer,
-            { backgroundColor: isPurchase ? colors.primary + '18' : colors.success + '18' },
-          ]}
-        >
-          <Ionicons
-            name={isPurchase ? 'document-text' : 'people'}
-            size={20}
-            color={isPurchase ? colors.primary : colors.success}
-          />
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.8}
+        onPress={onPress}
+      >
+        <View style={styles.cardHeader}>
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: isPurchase ? DS.colors.greenBgSubtle : 'rgba(251, 191, 36, 0.15)' },
+            ]}
+          >
+            <Ionicons
+              name={isPurchase ? 'document-text' : 'people'}
+              size={20}
+              color={isPurchase ? DS.colors.green : '#FBBF24'}
+            />
+          </View>
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+          </View>
         </View>
-        <View style={styles.cardInfo}>
-          <Text style={styles.cardTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-        </View>
-      </View>
 
-      <View style={styles.cardFooter}>
-        <View style={styles.cardMeta}>
-          <Text style={styles.dateText}>{item.date}</Text>
-          {!isPurchase && (
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: isActive ? colors.success + '18' : colors.textTertiary + '18' },
-              ]}
-            >
-              <Text
+        <View style={styles.cardFooter}>
+          <View style={styles.cardMeta}>
+            <Text style={styles.dateText}>{item.date}</Text>
+            {!isPurchase && (
+              <View
                 style={[
-                  styles.statusText,
-                  { color: isActive ? colors.success : colors.textTertiary },
+                  styles.statusBadge,
+                  { backgroundColor: isActive ? DS.colors.greenBgSubtle : 'rgba(138, 154, 143, 0.15)' },
                 ]}
               >
-                {item.status}
-              </Text>
-            </View>
-          )}
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: isActive ? DS.colors.green : DS.colors.textSecondary },
+                  ]}
+                >
+                  {item.status}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.priceText}>{item.priceEur.toFixed(2)} €</Text>
         </View>
-        <Text style={styles.priceText}>{item.priceEur.toFixed(2)} €</Text>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
-const HistoriqueScreen: React.FC = () => {
-  const { colors } = useTheme();
-  const styles = useStyles(colors);
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
 
+const HistoriqueScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -153,7 +191,6 @@ const HistoriqueScreen: React.FC = () => {
   const handleTabChange = useCallback((tab: TabType) => {
     if (tab === activeTab) return;
 
-    // Animate out
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -169,7 +206,6 @@ const HistoriqueScreen: React.FC = () => {
       setActiveTab(tab);
       slideAnim.setValue(tab === 'achats' ? -10 : 10);
 
-      // Animate in
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -194,7 +230,6 @@ const HistoriqueScreen: React.FC = () => {
       setPurchases(Array.isArray(purchasesRes.data) ? purchasesRes.data : []);
       setSubscriptions(Array.isArray(subscriptionsRes.data) ? subscriptionsRes.data : []);
     } catch {
-      // Silent error handling - ensure arrays are set
       setPurchases([]);
       setSubscriptions([]);
     } finally {
@@ -264,7 +299,7 @@ const HistoriqueScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={DS.colors.green} />
         <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
@@ -277,12 +312,12 @@ const HistoriqueScreen: React.FC = () => {
         <TouchableOpacity
           style={[styles.tab, activeTab === 'achats' && styles.tabActive]}
           onPress={() => handleTabChange('achats')}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
           <Ionicons
             name="document-text-outline"
             size={18}
-            color={activeTab === 'achats' ? colors.primary : colors.textSecondary}
+            color={activeTab === 'achats' ? DS.colors.white : DS.colors.textSecondary}
           />
           <Text
             style={[
@@ -301,12 +336,12 @@ const HistoriqueScreen: React.FC = () => {
         <TouchableOpacity
           style={[styles.tab, activeTab === 'abonnements' && styles.tabActive]}
           onPress={() => handleTabChange('abonnements')}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
           <Ionicons
             name="people-outline"
             size={18}
-            color={activeTab === 'abonnements' ? colors.primary : colors.textSecondary}
+            color={activeTab === 'abonnements' ? DS.colors.white : DS.colors.textSecondary}
           />
           <Text
             style={[
@@ -336,7 +371,7 @@ const HistoriqueScreen: React.FC = () => {
       >
         {/* Info banner */}
         <View style={styles.infoBanner}>
-          <Ionicons name="information-circle" size={16} color={colors.primary} />
+          <Ionicons name="information-circle" size={16} color={DS.colors.green} />
           <Text style={styles.infoText}>
             {activeTab === 'achats'
               ? 'Retrouvez ici les tickets auxquels vous avez accès.'
@@ -346,256 +381,263 @@ const HistoriqueScreen: React.FC = () => {
 
         {/* List */}
         <FlatList
-        data={displayItems}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <HistoryCard
-            item={item}
-            onPress={() => handleItemPress(item)}
-            styles={styles}
-            colors={colors}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconWrapper}>
-              <Ionicons
-                name={activeTab === 'achats' ? 'document-outline' : 'people-outline'}
-                size={40}
-                color={colors.primary}
-              />
+          data={displayItems}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <HistoryCard
+              item={item}
+              onPress={() => handleItemPress(item)}
+              index={index}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={DS.colors.green}
+              colors={[DS.colors.green]}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconWrapper}>
+                <Ionicons
+                  name={activeTab === 'achats' ? 'document-outline' : 'people-outline'}
+                  size={40}
+                  color={DS.colors.green}
+                />
+              </View>
+              <Text style={styles.emptyTitle}>
+                {activeTab === 'achats' ? 'Aucun achat' : 'Aucune souscription'}
+              </Text>
+              <Text style={styles.emptyHint}>
+                {activeTab === 'achats'
+                  ? 'Achetez des tickets pour y accéder ici.'
+                  : 'Souscrivez à des pronostiqueurs pour accéder à leurs contenus premium.'}
+              </Text>
             </View>
-            <Text style={styles.emptyTitle}>
-              {activeTab === 'achats' ? 'Aucun achat' : 'Aucune souscription'}
-            </Text>
-            <Text style={styles.emptyHint}>
-              {activeTab === 'achats'
-                ? 'Achetez des tickets pour y accéder ici.'
-                : 'Souscrivez à des pronostiqueurs pour accéder à leurs contenus premium.'}
-            </Text>
-          </View>
-        }
-      />
+          }
+        />
       </Animated.View>
     </View>
   );
 };
 
-const useStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-        // Loading state
-        loadingContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-          gap: spacing.md,
-        },
-        loadingText: {
-          ...typography.body,
-          color: colors.textSecondary,
-        },
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 
-        // Animated content wrapper
-        animatedContent: {
-          flex: 1,
-        },
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: DS.colors.background,
+  },
+  // Loading state
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: DS.colors.background,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 15,
+    color: DS.colors.textSecondary,
+  },
 
-        // Tabs
-        tabs: {
-          flexDirection: 'row',
-          backgroundColor: colors.surface,
-          marginHorizontal: spacing.md,
-          marginTop: spacing.md,
-          borderRadius: radius.lg,
-          padding: spacing.xxs,
-        },
-        tab: {
-          flex: 1,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingVertical: spacing.sm,
-          borderRadius: radius.md,
-          gap: spacing.xs,
-        },
-        tabActive: {
-          backgroundColor: colors.primaryBg,
-        },
-        tabText: {
-          ...typography.caption,
-          fontWeight: '600',
-          color: colors.textSecondary,
-        },
-        tabTextActive: {
-          color: colors.primary,
-        },
-        tabBadge: {
-          backgroundColor: colors.primary,
-          minWidth: 18,
-          height: 18,
-          borderRadius: radius.full,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: spacing.xxs,
-        },
-        tabBadgeText: {
-          ...typography.badge,
-          color: colors.textOnPrimary,
-        },
+  // Animated content wrapper
+  animatedContent: {
+    flex: 1,
+  },
 
-        // Info banner
-        infoBanner: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.primaryBg,
-          marginHorizontal: spacing.md,
-          marginTop: spacing.sm,
-          borderRadius: radius.md,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: spacing.sm,
-          gap: spacing.xs,
-        },
-        infoText: {
-          flex: 1,
-          ...typography.caption,
-          color: colors.primary,
-          lineHeight: 16,
-        },
+  // Tabs
+  tabs: {
+    flexDirection: 'row',
+    backgroundColor: DS.colors.cardBg,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  tabActive: {
+    backgroundColor: DS.colors.green,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: DS.colors.textSecondary,
+  },
+  tabTextActive: {
+    color: DS.colors.white,
+  },
+  tabBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  tabBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: DS.colors.white,
+  },
 
-        // List
-        listContent: {
-          padding: spacing.md,
-          paddingBottom: spacing.xl,
-        },
+  // Info banner
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DS.colors.greenBgSubtle,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 12,
+    color: DS.colors.green,
+    lineHeight: 16,
+  },
 
-        // Card
-        card: {
-          backgroundColor: colors.surface,
-          borderRadius: radius.lg,
-          padding: spacing.md,
-          marginBottom: spacing.sm,
-          borderWidth: 1,
-          borderColor: colors.border,
-          ...Platform.select({
-            ios: {
-              shadowColor: palette.black,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: palette.opacity[8],
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 2,
-            },
-          }),
-        },
-        cardHeader: {
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          marginBottom: spacing.sm,
-        },
-        iconContainer: {
-          width: 40,
-          height: 40,
-          borderRadius: radius.full,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: spacing.sm,
-        },
-        cardInfo: {
-          flex: 1,
-        },
-        cardTitle: {
-          ...typography.bodyLarge,
-          fontWeight: '700',
-          color: colors.text,
-          marginBottom: 2,
-        },
-        cardSubtitle: {
-          ...typography.body,
-          color: colors.textSecondary,
-        },
-        cardFooter: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.separator,
-          paddingTop: spacing.sm,
-        },
-        cardMeta: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-        },
-        dateText: {
-          ...typography.caption,
-          color: colors.textTertiary,
-        },
-        statusBadge: {
-          paddingHorizontal: spacing.xs,
-          paddingVertical: 3,
-          borderRadius: radius.sm,
-        },
-        statusText: {
-          ...typography.caption,
-          fontWeight: '600',
-        },
-        priceText: {
-          ...typography.body,
-          fontWeight: '700',
-          color: colors.text,
-        },
+  // List
+  listContent: {
+    padding: 16,
+    paddingBottom: 120,
+  },
 
-        // Empty state
-        emptyContainer: {
-          alignItems: 'center',
-          paddingTop: spacing.xxl,
-          paddingHorizontal: spacing.lg,
-        },
-        emptyIconWrapper: {
-          width: 80,
-          height: 80,
-          borderRadius: radius.full,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: spacing.md,
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        emptyTitle: {
-          ...typography.h4,
-          color: colors.text,
-          marginBottom: spacing.xs,
-        },
-        emptyHint: {
-          ...typography.body,
-          color: colors.textSecondary,
-          textAlign: 'center',
-          maxWidth: 280,
-        },
-      }),
-    [colors]
-  );
+  // Card
+  card: {
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: DS.colors.white,
+    marginBottom: 2,
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    color: DS.colors.textSecondary,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: DS.colors.cardBorder,
+    paddingTop: 12,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  priceText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: DS.colors.white,
+  },
+
+  // Empty state
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+  },
+  emptyIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: DS.colors.greenBgSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: DS.colors.white,
+    marginBottom: 8,
+  },
+  emptyHint: {
+    fontSize: 14,
+    color: DS.colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+});
 
 export default HistoriqueScreen;

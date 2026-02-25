@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -17,14 +18,104 @@ import { followApi, type FollowerDto } from '../api/follow.api';
 import { useAuthStore } from '../store/auth.store';
 import { useFollowStore } from '../store/follow.store';
 import type { RootStackParamList } from '../types';
-import { useTheme, type ThemeColors, spacing, radius, typography, palette } from '../theme';
+import { DS } from '../theme/designSystem';
+
+// ═══════════════════════════════════════════════════════════════
+// FOLLOWER ITEM COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
+interface FollowerItemProps {
+  item: FollowerDto;
+  onPress: (user: FollowerDto) => void;
+  onFollowBack: (user: FollowerDto) => void;
+  isFollowing: boolean;
+  index: number;
+}
+
+const FollowerItem = React.memo<FollowerItemProps>(function FollowerItem({
+  item,
+  onPress,
+  onFollowBack,
+  isFollowing,
+  index,
+}) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [index]);
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  return (
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}
+    >
+      <View style={styles.card}>
+        <TouchableOpacity
+          style={styles.cardContent}
+          onPress={() => onPress(item)}
+          activeOpacity={0.6}
+        >
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={20} color={DS.colors.green} />
+          </View>
+          <View style={styles.info}>
+            <Text style={styles.username}>@{item.username}</Text>
+            <Text style={styles.dates}>
+              Vous suit depuis le {formatDate(item.followedAt)}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.followBtn, isFollowing && styles.followingBtn]}
+          onPress={() => onFollowBack(item)}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={isFollowing ? 'checkmark' : 'person-add-outline'}
+            size={14}
+            color={isFollowing ? DS.colors.green : DS.colors.white}
+          />
+          <Text style={[styles.followText, isFollowing && styles.followingText]}>
+            {isFollowing ? 'Suivi' : 'Suivre'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
 
 const MesAbonnesScreen: React.FC = () => {
-  const { colors } = useTheme();
-  const styles = useStyles(colors);
-
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const currentUserId = useAuthStore((s) => s.user?.id);
 
   const isFollowing = useFollowStore((s) => s.isFollowing);
@@ -70,52 +161,23 @@ const MesAbonnesScreen: React.FC = () => {
     [navigation]
   );
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
-  const renderItem = ({ item }: { item: FollowerDto }) => {
-    const following = isFollowing(item.userId);
-
-    return (
-      <View style={styles.card}>
-        <TouchableOpacity
-          style={styles.cardContent}
-          onPress={() => handleTipsterPress(item)}
-          activeOpacity={0.6}
-        >
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={20} color={colors.primary} />
-          </View>
-          <View style={styles.info}>
-            <Text style={styles.username}>@{item.username}</Text>
-            <Text style={styles.dates}>
-              Vous suit depuis le {formatDate(item.followedAt)}
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.followBtn, following && styles.followingBtn]}
-          onPress={() => handleFollowBack(item)}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.followText, following && styles.followingText]}>
-            {following ? 'Suivi' : 'Suivre'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  const renderItem = useCallback(
+    ({ item, index }: { item: FollowerDto; index: number }) => (
+      <FollowerItem
+        item={item}
+        onPress={handleTipsterPress}
+        onFollowBack={handleFollowBack}
+        isFollowing={isFollowing(item.userId)}
+        index={index}
+      />
+    ),
+    [handleTipsterPress, handleFollowBack, isFollowing]
+  );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={DS.colors.green} />
         <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
@@ -123,17 +185,30 @@ const MesAbonnesScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Header Stats */}
+      {followers.length > 0 && (
+        <View style={styles.headerStats}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="people" size={18} color={DS.colors.green} />
+          </View>
+          <Text style={styles.headerStatsText}>
+            <Text style={styles.headerStatsCount}>{followers.length}</Text> abonné{followers.length > 1 ? 's' : ''}
+          </Text>
+        </View>
+      )}
+
       <FlatList
         data={followers}
         keyExtractor={(item) => item.userId}
         renderItem={renderItem}
         contentContainerStyle={
-          followers.length === 0 ? styles.emptyContainer : styles.listContent
+          followers.length === 0 ? styles.emptyContainerStyle : styles.listContent
         }
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconWrapper}>
-              <Ionicons name="people-outline" size={40} color={colors.primary} />
+              <Ionicons name="people-outline" size={40} color={DS.colors.green} />
             </View>
             <Text style={styles.emptyTitle}>Aucun abonné</Text>
             <Text style={styles.emptyHint}>
@@ -147,137 +222,167 @@ const MesAbonnesScreen: React.FC = () => {
   );
 };
 
-const useStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-        // Loading state
-        loadingContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-          gap: spacing.md,
-        },
-        loadingText: {
-          ...typography.body,
-          color: colors.textSecondary,
-        },
-        listContent: {
-          padding: spacing.md,
-          paddingBottom: spacing.xl,
-        },
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 
-        // Card
-        card: {
-          backgroundColor: colors.surface,
-          borderRadius: radius.lg,
-          padding: spacing.md,
-          marginBottom: spacing.sm,
-          borderWidth: 1,
-          borderColor: colors.border,
-          ...Platform.select({
-            ios: {
-              shadowColor: palette.black,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 2,
-            },
-          }),
-        },
-        cardContent: {
-          flexDirection: 'row',
-          alignItems: 'center',
-        },
-        avatar: {
-          width: 40,
-          height: 40,
-          borderRadius: radius.full,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: spacing.sm,
-        },
-        info: {
-          flex: 1,
-        },
-        username: {
-          ...typography.bodyLarge,
-          fontWeight: '700',
-          color: colors.primary,
-          marginBottom: 2,
-        },
-        dates: {
-          ...typography.caption,
-          color: colors.textSecondary,
-        },
-        followBtn: {
-          marginTop: spacing.sm,
-          alignSelf: 'flex-end',
-          backgroundColor: colors.primary,
-          borderRadius: radius.md,
-          paddingHorizontal: spacing.md,
-          paddingVertical: spacing.xs,
-        },
-        followingBtn: {
-          backgroundColor: colors.primaryBg,
-        },
-        followText: {
-          ...typography.body,
-          fontWeight: '600',
-          color: colors.textOnPrimary,
-        },
-        followingText: {
-          color: colors.primary,
-        },
-
-        // Empty state
-        emptyContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: spacing.lg,
-        },
-        emptyIconWrapper: {
-          width: 80,
-          height: 80,
-          borderRadius: radius.full,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: spacing.md,
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        emptyTitle: {
-          ...typography.h4,
-          color: colors.text,
-          marginBottom: spacing.xs,
-        },
-        emptyHint: {
-          ...typography.body,
-          color: colors.textSecondary,
-          textAlign: 'center',
-          maxWidth: 280,
-        },
-      }),
-    [colors]
-  );
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: DS.colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: DS.colors.background,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 15,
+    color: DS.colors.textSecondary,
+  },
+  headerStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: DS.colors.cardBg,
+    borderBottomWidth: 1,
+    borderBottomColor: DS.colors.cardBorder,
+  },
+  statIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: DS.colors.greenBgSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerStatsText: {
+    fontSize: 15,
+    color: DS.colors.textSecondary,
+  },
+  headerStatsCount: {
+    fontWeight: '700',
+    color: DS.colors.white,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 120,
+  },
+  card: {
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: DS.colors.greenBgSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  info: {
+    flex: 1,
+  },
+  username: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: DS.colors.green,
+    marginBottom: 2,
+  },
+  dates: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+  },
+  followBtn: {
+    marginTop: 12,
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: DS.colors.green,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  followingBtn: {
+    backgroundColor: DS.colors.greenBgSubtle,
+    borderWidth: 1,
+    borderColor: 'rgba(45, 140, 78, 0.3)',
+  },
+  followText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: DS.colors.white,
+  },
+  followingText: {
+    color: DS.colors.green,
+  },
+  emptyContainerStyle: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  emptyIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: DS.colors.greenBgSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: DS.colors.white,
+    marginBottom: 8,
+  },
+  emptyHint: {
+    fontSize: 14,
+    color: DS.colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 280,
+    lineHeight: 20,
+  },
+});
 
 export default MesAbonnesScreen;

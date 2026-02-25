@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,30 +8,277 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useTheme, type ThemeColors, spacing, radius, typography, size, palette } from '../theme';
+import { DS } from '../theme/designSystem';
+import { palette } from '../theme/colors';
+import { PodiumCard, RankCard } from '../components/ranking';
 import {
   rankingApi,
   type RankingEntryDto,
   type RankingPeriod,
 } from '../api/ranking.api';
+import { useAuthStore } from '../store/auth.store';
 import type { RootStackParamList } from '../types';
+
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const PERIODS: { key: RankingPeriod; label: string }[] = [
-  { key: 'daily', label: 'Jour' },
-  { key: 'weekly', label: 'Semaine' },
-  { key: 'monthly', label: 'Mois' },
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const PERIODS: { key: RankingPeriod; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'daily', label: 'Jour', icon: 'today' },
+  { key: 'weekly', label: 'Semaine', icon: 'calendar' },
+  { key: 'monthly', label: 'Mois', icon: 'calendar-outline' },
 ];
 
+// ═══════════════════════════════════════════════════════════════
+// SUB-COMPONENTS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Period Filter Chips
+ */
+const PeriodFilter: React.FC<{
+  period: RankingPeriod;
+  onPeriodChange: (period: RankingPeriod) => void;
+}> = ({ period, onPeriodChange }) => (
+  <View style={styles.periodContainer}>
+    {PERIODS.map((p) => (
+      <TouchableOpacity
+        key={p.key}
+        style={[
+          styles.periodChip,
+          period === p.key && styles.periodChipActive,
+        ]}
+        onPress={() => onPeriodChange(p.key)}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name={p.icon}
+          size={14}
+          color={period === p.key ? DS.colors.white : DS.colors.textSecondary}
+        />
+        <Text
+          style={[
+            styles.periodChipText,
+            period === p.key && styles.periodChipTextActive,
+          ]}
+        >
+          {p.label}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+);
+
+/**
+ * Podium Section with top 3
+ */
+const PodiumSection: React.FC<{
+  top3: RankingEntryDto[];
+  onUserPress: (userId: string, username: string) => void;
+}> = ({ top3, onUserPress }) => {
+  if (top3.length === 0) return null;
+
+  // Reorder: 2nd, 1st, 3rd for visual layout
+  const rank2 = top3.find((r) => r.rank === 2);
+  const rank1 = top3.find((r) => r.rank === 1);
+  const rank3 = top3.find((r) => r.rank === 3);
+
+  return (
+    <View style={styles.podiumContainer}>
+      {/* Background gradient */}
+      <LinearGradient
+        colors={['rgba(45, 140, 78, 0.08)', 'transparent']}
+        style={styles.podiumGradient}
+      />
+
+      {/* Podium Cards */}
+      <View style={styles.podiumCards}>
+        {/* 2nd Place */}
+        {rank2 ? (
+          <PodiumCard
+            rank={2}
+            username={rank2.username}
+            userId={rank2.userId}
+            totalTickets={rank2.totalTickets}
+            winRate={rank2.winRate}
+            roi={rank2.roi}
+            avgOdds={rank2.avgOdds}
+            onPress={onUserPress}
+            animationDelay={100}
+          />
+        ) : (
+          <EmptyPodiumSlot rank={2} />
+        )}
+
+        {/* 1st Place (Champion) */}
+        {rank1 ? (
+          <PodiumCard
+            rank={1}
+            username={rank1.username}
+            userId={rank1.userId}
+            totalTickets={rank1.totalTickets}
+            winRate={rank1.winRate}
+            roi={rank1.roi}
+            avgOdds={rank1.avgOdds}
+            onPress={onUserPress}
+            animationDelay={0}
+          />
+        ) : (
+          <EmptyPodiumSlot rank={1} />
+        )}
+
+        {/* 3rd Place */}
+        {rank3 ? (
+          <PodiumCard
+            rank={3}
+            username={rank3.username}
+            userId={rank3.userId}
+            totalTickets={rank3.totalTickets}
+            winRate={rank3.winRate}
+            roi={rank3.roi}
+            avgOdds={rank3.avgOdds}
+            onPress={onUserPress}
+            animationDelay={200}
+          />
+        ) : (
+          <EmptyPodiumSlot rank={3} />
+        )}
+      </View>
+
+      {/* Podium Base Visual */}
+      <View style={styles.podiumBase}>
+        <View style={[styles.podiumStep, styles.podiumStep2]} />
+        <View style={[styles.podiumStep, styles.podiumStep1]} />
+        <View style={[styles.podiumStep, styles.podiumStep3]} />
+      </View>
+    </View>
+  );
+};
+
+/**
+ * Empty Podium Slot
+ */
+const EmptyPodiumSlot: React.FC<{ rank: 1 | 2 | 3 }> = ({ rank }) => {
+  const colors = {
+    1: palette.medal.gold,
+    2: palette.medal.silver,
+    3: palette.medal.bronze,
+  };
+
+  return (
+    <View style={[styles.emptySlot, rank === 1 && styles.emptySlotChampion]}>
+      <View style={[styles.emptySlotIcon, { borderColor: colors[rank] }]}>
+        <Ionicons name="person-add-outline" size={24} color={colors[rank]} />
+      </View>
+      <Text style={styles.emptySlotText}>Place #{rank}</Text>
+      <Text style={styles.emptySlotHint}>En attente</Text>
+    </View>
+  );
+};
+
+/**
+ * Separator between podium and rest
+ */
+const RankingSeparator: React.FC = () => (
+  <View style={styles.separatorContainer}>
+    <LinearGradient
+      colors={[
+        'rgba(255, 215, 0, 0.3)',
+        'rgba(192, 192, 192, 0.3)',
+        'rgba(205, 127, 50, 0.3)',
+        'transparent',
+      ]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.separatorGradient}
+    />
+    <View style={styles.separatorContent}>
+      <View style={styles.separatorLine} />
+      <Text style={styles.separatorText}>Classement</Text>
+      <View style={styles.separatorLine} />
+    </View>
+  </View>
+);
+
+/**
+ * Loading State
+ */
+const LoadingState: React.FC = () => {
+  const pulseAnim = useRef(new Animated.Value(0.6)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.6, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <View style={styles.loadingContainer}>
+      <Animated.View style={[styles.loadingIcon, { opacity: pulseAnim }]}>
+        <Ionicons name="trophy" size={48} color={palette.medal.gold} />
+      </Animated.View>
+      <Text style={styles.loadingTitle}>Chargement du classement</Text>
+      <Text style={styles.loadingSubtitle}>Calcul des positions...</Text>
+    </View>
+  );
+};
+
+/**
+ * Empty State
+ */
+const EmptyState: React.FC = () => (
+  <View style={styles.emptyContainer}>
+    <View style={styles.emptyIcon}>
+      <Ionicons name="trophy-outline" size={48} color={DS.colors.textSecondary} />
+    </View>
+    <Text style={styles.emptyTitle}>Aucun classement</Text>
+    <Text style={styles.emptySubtitle}>
+      Les classements apparaîtront une fois que des tickets seront validés
+    </Text>
+  </View>
+);
+
+/**
+ * Error State
+ */
+const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
+  <View style={styles.errorContainer}>
+    <View style={styles.errorIcon}>
+      <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+    </View>
+    <Text style={styles.errorTitle}>Erreur</Text>
+    <Text style={styles.errorSubtitle}>Impossible de charger le classement</Text>
+    <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+      <Text style={styles.retryButtonText}>Réessayer</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
 const RankingScreen: React.FC = () => {
-  const { colors } = useTheme();
-  const styles = useStyles(colors);
   const navigation = useNavigation<NavigationProp>();
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   const [period, setPeriod] = useState<RankingPeriod>('weekly');
   const [rankings, setRankings] = useState<RankingEntryDto[]>([]);
@@ -67,7 +314,7 @@ const RankingScreen: React.FC = () => {
     fetchRankings(true);
   }, [fetchRankings]);
 
-  const handleTipsterPress = useCallback(
+  const handleUserPress = useCallback(
     (userId: string, username: string) => {
       navigation.navigate('TipsterProfile', {
         tipsterId: userId,
@@ -77,173 +324,86 @@ const RankingScreen: React.FC = () => {
     [navigation]
   );
 
-  const getRankBadgeStyle = useCallback((rank: number) => {
-    if (rank === 1) return { backgroundColor: palette.medal.gold };
-    if (rank === 2) return { backgroundColor: palette.medal.silver };
-    if (rank === 3) return { backgroundColor: palette.medal.bronze };
-    return { backgroundColor: colors.surfaceSecondary };
-  }, [colors.surfaceSecondary]);
+  // Separate top 3 from rest
+  const top3 = rankings.filter((r) => r.rank <= 3);
+  const restRankings = rankings.filter((r) => r.rank > 3);
 
-  const getRankTextStyle = useCallback((rank: number) => {
-    if (rank <= 3) return { color: palette.black };
-    return { color: colors.textSecondary };
-  }, [colors.textSecondary]);
-
+  // Define renderItem BEFORE any conditional returns to avoid hook order issues
   const renderItem = useCallback(
-    ({ item }: { item: RankingEntryDto }) => (
-      <TouchableOpacity
-        testID="ranking-row"
-        style={styles.rankingItem}
-        onPress={() => handleTipsterPress(item.userId, item.username)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.rankBadge, getRankBadgeStyle(item.rank)]}>
-          <Text style={[styles.rankText, getRankTextStyle(item.rank)]}>
-            {item.rank}
-          </Text>
-        </View>
-
-        <View style={styles.userInfo}>
-          <Text style={styles.username} numberOfLines={1}>
-            @{item.username}
-          </Text>
-          <Text style={styles.ticketCount}>
-            {item.totalTickets} tickets • {item.winCount}V/{item.loseCount}NV
-          </Text>
-        </View>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text
-              style={[
-                styles.statValue,
-                { color: item.roi >= 0 ? colors.success : colors.danger },
-              ]}
-            >
-              {item.roi >= 0 ? '+' : ''}
-              {item.roi.toFixed(1)}%
-            </Text>
-            <Text style={styles.statLabel}>ROI</Text>
-          </View>
-
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{item.winRate.toFixed(0)}%</Text>
-            <Text style={styles.statLabel}>Taux</Text>
-          </View>
-
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{item.avgOdds.toFixed(2)}</Text>
-            <Text style={styles.statLabel}>Cote</Text>
-          </View>
-        </View>
-
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color={colors.textTertiary}
-        />
-      </TouchableOpacity>
+    ({ item, index }: { item: RankingEntryDto; index: number }) => (
+      <RankCard
+        rank={item.rank}
+        username={item.username}
+        userId={item.userId}
+        totalTickets={item.totalTickets}
+        winCount={item.winCount}
+        loseCount={item.loseCount}
+        winRate={item.winRate}
+        roi={item.roi}
+        avgOdds={item.avgOdds}
+        isCurrentUser={item.userId === currentUserId}
+        onPress={handleUserPress}
+        animationDelay={300 + index * 50}
+      />
     ),
-    [colors, styles, handleTipsterPress, getRankBadgeStyle, getRankTextStyle]
+    [currentUserId, handleUserPress]
   );
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      {/* Disclaimer */}
-      <View style={styles.disclaimerContainer}>
-        <Ionicons name="information-circle-outline" size={14} color={colors.textTertiary} />
-        <Text style={styles.disclaimerText}>
-          Les performances passées ne garantissent pas les résultats futurs.
-        </Text>
-      </View>
-
-      <View style={styles.periodSelector}>
-        {PERIODS.map((p) => (
-          <TouchableOpacity
-            key={p.key}
-            testID={`period-${p.key}${period === p.key ? '-active' : ''}`}
-            style={[
-              styles.periodButton,
-              period === p.key && styles.periodButtonActive,
-            ]}
-            onPress={() => setPeriod(p.key)}
-          >
-            <Text
-              style={[
-                styles.periodButtonText,
-                period === p.key && styles.periodButtonTextActive,
-              ]}
-            >
-              {p.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.tableHeader}>
-        <Text style={[styles.tableHeaderText, { flex: 0.15 }]}>#</Text>
-        <Text style={[styles.tableHeaderText, { flex: 0.4 }]}>Tipster</Text>
-        <Text style={[styles.tableHeaderText, { flex: 0.45, textAlign: 'right' }]}>
-          Stats
-        </Text>
-      </View>
-    </View>
-  );
-
-  const renderEmpty = () => {
-    if (loading) return null;
-    return (
-      <View style={styles.emptyContainer}>
-        <View style={styles.emptyIconWrapper}>
-          <Ionicons name="trophy-outline" size={40} color={colors.primary} />
-        </View>
-        <Text style={styles.emptyTitle}>Aucun classement disponible</Text>
-        <Text style={styles.emptyHint}>
-          Les classements apparaîtront une fois que des tickets seront validés
-        </Text>
-      </View>
-    );
-  };
+  // ─────────────────────────────────────────────────────────────
+  // RENDER STATES
+  // ─────────────────────────────────────────────────────────────
 
   if (loading && rankings.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Chargement...</Text>
+      <View style={styles.container}>
+        <LoadingState />
       </View>
     );
   }
 
   if (error && rankings.length === 0) {
     return (
-      <View style={styles.errorContainer}>
-        <View style={styles.errorIconWrapper}>
-          <Ionicons name="alert-circle-outline" size={40} color={colors.danger} />
-        </View>
-        <Text style={styles.errorTitle}>Erreur</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => fetchRankings()}>
-          <Text style={styles.retryButtonText}>Réessayer</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <ErrorState onRetry={() => fetchRankings()} />
       </View>
     );
   }
 
+  const renderHeader = () => (
+    <View>
+      {/* Disclaimer */}
+      <View style={styles.disclaimerContainer}>
+        <Ionicons name="information-circle-outline" size={14} color={DS.colors.textSecondary} />
+        <Text style={styles.disclaimerText}>
+          Les performances passées ne garantissent pas les résultats futurs.
+        </Text>
+      </View>
+
+      {/* Period Filter */}
+      <PeriodFilter period={period} onPeriodChange={setPeriod} />
+
+      {/* Podium Section */}
+      <PodiumSection top3={top3} onUserPress={handleUserPress} />
+
+      {/* Separator */}
+      {restRankings.length > 0 && <RankingSeparator />}
+    </View>
+  );
+
   return (
-    <View testID="ranking-screen" style={styles.container}>
+    <View style={styles.container}>
       <FlatList
-        testID="ranking-list"
-        data={rankings}
+        data={restRankings}
         keyExtractor={(item) => item.userId}
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={rankings.length === 0 ? styles.emptyList : undefined}
+        ListEmptyComponent={top3.length === 0 ? <EmptyState /> : null}
+        contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary}
+            tintColor={DS.colors.green}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -252,253 +412,281 @@ const RankingScreen: React.FC = () => {
   );
 };
 
-const useStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-        // Loading state
-        loadingContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-          gap: spacing.md,
-        },
-        loadingText: {
-          ...typography.body,
-          color: colors.textSecondary,
-        },
-        // Error state
-        errorContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-          padding: spacing.lg,
-        },
-        errorIconWrapper: {
-          width: size.avatar['2xl'],
-          height: size.avatar['2xl'],
-          borderRadius: radius.full,
-          backgroundColor: colors.dangerBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: spacing.md,
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.danger,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        errorTitle: {
-          ...typography.h4,
-          color: colors.text,
-          marginBottom: spacing.xs,
-        },
-        errorText: {
-          ...typography.body,
-          color: colors.textSecondary,
-          textAlign: 'center',
-          marginBottom: spacing.lg,
-        },
-        retryButton: {
-          backgroundColor: colors.primary,
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.sm,
-          borderRadius: radius.md,
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        retryButtonText: {
-          ...typography.body,
-          fontWeight: '600',
-          color: colors.textOnPrimary,
-        },
-        header: {
-          paddingHorizontal: spacing.md,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.xs,
-        },
-        disclaimerContainer: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.surfaceSecondary,
-          borderRadius: radius.md,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: spacing.sm,
-          marginBottom: spacing.sm,
-          gap: spacing.xs,
-        },
-        disclaimerText: {
-          flex: 1,
-          ...typography.caption,
-          color: colors.textTertiary,
-          lineHeight: 15,
-        },
-        periodSelector: {
-          flexDirection: 'row',
-          backgroundColor: colors.surface,
-          borderRadius: radius.lg,
-          padding: spacing.xxs,
-          marginBottom: spacing.md,
-        },
-        periodButton: {
-          flex: 1,
-          paddingVertical: spacing.sm,
-          alignItems: 'center',
-          borderRadius: radius.md,
-        },
-        periodButtonActive: {
-          backgroundColor: colors.primary,
-        },
-        periodButtonText: {
-          ...typography.body,
-          fontWeight: '600',
-          color: colors.textSecondary,
-        },
-        periodButtonTextActive: {
-          color: colors.textOnPrimary,
-        },
-        tableHeader: {
-          flexDirection: 'row',
-          paddingHorizontal: spacing.sm,
-          paddingVertical: spacing.xs,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        },
-        tableHeaderText: {
-          ...typography.caption,
-          fontWeight: '600',
-          color: colors.textTertiary,
-          textTransform: 'uppercase',
-        },
-        rankingItem: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.surface,
-          marginHorizontal: spacing.md,
-          marginVertical: spacing.xxs,
-          padding: spacing.sm,
-          borderRadius: radius.lg,
-          borderWidth: 1,
-          borderColor: colors.border,
-          ...Platform.select({
-            ios: {
-              shadowColor: palette.black,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: palette.opacity[8],
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 2,
-            },
-          }),
-        },
-        rankBadge: {
-          width: size.badge.rank,
-          height: size.badge.rank,
-          borderRadius: radius.full,
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginRight: spacing.sm,
-        },
-        rankText: {
-          ...typography.body,
-          fontWeight: '700',
-        },
-        userInfo: {
-          flex: 1,
-          marginRight: spacing.sm,
-        },
-        username: {
-          ...typography.bodyLarge,
-          fontWeight: '600',
-          color: colors.text,
-        },
-        ticketCount: {
-          ...typography.caption,
-          color: colors.textSecondary,
-          marginTop: spacing.xxs,
-        },
-        statsContainer: {
-          flexDirection: 'row',
-          gap: spacing.md,
-          marginRight: spacing.xs,
-        },
-        statItem: {
-          alignItems: 'center',
-        },
-        statValue: {
-          ...typography.body,
-          fontWeight: '700',
-          color: colors.text,
-        },
-        statLabel: {
-          ...typography.badge,
-          color: colors.textTertiary,
-          marginTop: spacing.xxs,
-        },
-        // Empty state
-        emptyContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: spacing.xl,
-        },
-        emptyList: {
-          flex: 1,
-        },
-        emptyIconWrapper: {
-          width: size.avatar['2xl'],
-          height: size.avatar['2xl'],
-          borderRadius: radius.full,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: spacing.md,
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        emptyTitle: {
-          ...typography.h4,
-          color: colors.text,
-          marginBottom: spacing.xs,
-        },
-        emptyHint: {
-          ...typography.body,
-          color: colors.textSecondary,
-          textAlign: 'center',
-        },
-      }),
-    [colors]
-  );
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: DS.colors.background,
+  },
+  listContent: {
+    paddingBottom: 120,
+  },
+
+  // Disclaimer
+  disclaimerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginTop: 12,
+    gap: 8,
+  },
+  disclaimerText: {
+    flex: 1,
+    fontSize: 11,
+    color: DS.colors.textSecondary,
+    lineHeight: 15,
+  },
+
+  // Period Filter
+  periodContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  periodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1C2B21',
+    gap: 6,
+  },
+  periodChipActive: {
+    backgroundColor: DS.colors.green,
+    borderColor: DS.colors.green,
+  },
+  periodChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: DS.colors.textSecondary,
+  },
+  periodChipTextActive: {
+    color: DS.colors.white,
+  },
+
+  // Podium
+  podiumContainer: {
+    position: 'relative',
+    marginTop: 16,
+    paddingTop: 24,
+    paddingBottom: 24,
+    marginBottom: 8,
+  },
+  podiumGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  podiumCards: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    gap: 12,
+    paddingHorizontal: 16,
+  },
+  podiumBase: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    marginTop: 12,
+    gap: 4,
+  },
+  podiumStep: {
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+  },
+  podiumStep1: {
+    width: 60,
+    height: 24,
+    backgroundColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  podiumStep2: {
+    width: 50,
+    height: 16,
+    backgroundColor: 'rgba(192, 192, 192, 0.3)',
+  },
+  podiumStep3: {
+    width: 50,
+    height: 12,
+    backgroundColor: 'rgba(205, 127, 50, 0.3)',
+  },
+
+  // Empty Podium Slot
+  emptySlot: {
+    alignItems: 'center',
+    width: 110,
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    borderStyle: 'dashed',
+    backgroundColor: DS.colors.cardBg,
+  },
+  emptySlotChampion: {
+    width: 130,
+    marginTop: -20,
+  },
+  emptySlotIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  emptySlotText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: DS.colors.textSecondary,
+  },
+  emptySlotHint: {
+    fontSize: 10,
+    color: DS.colors.textSecondary,
+    marginTop: 2,
+  },
+
+  // Separator
+  separatorContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  separatorGradient: {
+    height: 2,
+    borderRadius: 1,
+    marginBottom: 12,
+  },
+  separatorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: DS.colors.cardBorder,
+  },
+  separatorText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: DS.colors.textSecondary,
+    letterSpacing: 0.5,
+  },
+
+  // Loading
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: DS.colors.background,
+    padding: 24,
+  },
+  loadingIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: DS.colors.white,
+    marginTop: 20,
+  },
+  loadingSubtitle: {
+    fontSize: 14,
+    color: DS.colors.textSecondary,
+    marginTop: 8,
+  },
+
+  // Empty
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+  },
+  emptyIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: DS.colors.cardBg,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: DS.colors.white,
+    marginTop: 20,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: DS.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
+  },
+
+  // Error
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: DS.colors.background,
+    padding: 24,
+  },
+  errorIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: DS.colors.white,
+    marginTop: 20,
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: DS.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  retryButton: {
+    backgroundColor: DS.colors.green,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: DS.colors.white,
+  },
+});
 
 export default RankingScreen;

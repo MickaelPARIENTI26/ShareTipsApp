@@ -363,15 +363,6 @@ const TicketDetailScreen: React.FC = () => {
           </View>
           <View style={styles.summaryRow}>
             <View style={styles.summaryLabelRow}>
-              <Ionicons name="shield-checkmark" size={14} color={colors.textSecondary} />
-              <Text style={styles.summaryLabel}>Confiance</Text>
-            </View>
-            <Text style={styles.summaryValue}>
-              {ticket.confidenceIndex}/10
-            </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryLabelRow}>
               <Ionicons name="list" size={14} color={colors.textSecondary} />
               <Text style={styles.summaryLabel}>Sélections</Text>
             </View>

@@ -8,3 +8,7 @@ export type {
   FilterPanelProps,
   FilterPanelVariant,
 } from './FilterPanel';
+
+// New marketplace components
+export { TicketCard } from './TicketCard';
+export { MatchPreview } from './MatchPreview';

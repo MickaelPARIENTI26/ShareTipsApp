@@ -820,7 +820,6 @@ const TicketPreviewScreen: React.FC = () => {
           draft.visibility === 'PRIVATE' && draft.priceEur != null
             ? draft.priceEur
             : 0,
-        confidenceIndex: draft.confidenceIndex,
         selections: draft.selections.map((s) => ({
           matchId: s.matchId,
           sport: s.sportCode,
@@ -921,11 +920,6 @@ const TicketPreviewScreen: React.FC = () => {
                 colors={colors}
               />
               <SummaryRow
-                label="Indice de confiance"
-                value={`${draft.confidenceIndex}/10`}
-                colors={colors}
-              />
-              <SummaryRow
                 label="Visibilité"
                 value={draft.visibility === 'PUBLIC' ? 'Public' : 'Privé'}
                 icon={draft.visibility === 'PUBLIC' ? 'earth' : 'lock-closed'}
@@ -960,11 +954,6 @@ const TicketPreviewScreen: React.FC = () => {
                 label="Cote totale"
                 value={draft.totalOdds.toFixed(2)}
                 highlight
-                colors={colors}
-              />
-              <SummaryRow
-                label="Indice de confiance"
-                value={`${draft.confidenceIndex}/10`}
                 colors={colors}
               />
               <SummaryRow

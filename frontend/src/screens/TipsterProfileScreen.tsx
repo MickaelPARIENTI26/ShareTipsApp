@@ -116,10 +116,6 @@ const TipsterTicketCard: React.FC<{
           </Text>
         </View>
         <View style={styles.metaItem}>
-          <Text style={styles.metaLabel}>Confiance</Text>
-          <Text style={styles.metaValue}>{ticket.confidenceIndex}/10</Text>
-        </View>
-        <View style={styles.metaItem}>
           <Text style={styles.metaLabel}>Sélections</Text>
           <Text style={styles.metaValue}>{count}</Text>
         </View>

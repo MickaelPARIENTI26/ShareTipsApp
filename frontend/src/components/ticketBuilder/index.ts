@@ -23,21 +23,6 @@ export type {
   VisibilitySelectorVariant,
   VisibilitySelectorSize,
 } from './VisibilitySelector';
-export { default as ConfidenceSelector } from './ConfidenceSelector';
-export {
-  DefaultConfidenceSelector,
-  CardConfidenceSelector,
-  GlassConfidenceSelector,
-  MinimalConfidenceSelector,
-  DetailedConfidenceSelector,
-  ControlledConfidenceSelector,
-} from './ConfidenceSelector';
-export type {
-  ConfidenceSelectorProps,
-  ConfidenceSelectorVariant,
-  ConfidenceSelectorSize,
-  ConfidenceLevel,
-} from './ConfidenceSelector';
 export { default as TicketBuilderHeader } from './TicketBuilderHeader';
 export {
   DefaultTicketBuilderHeader,

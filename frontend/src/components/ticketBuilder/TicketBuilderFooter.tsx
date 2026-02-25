@@ -1,7 +1,7 @@
 /**
  * TicketBuilderFooter — Pied de page du constructeur de ticket
  *
- * Affiche le récapitulatif du ticket (sélections, cote, confiance, visibilité)
+ * Affiche le récapitulatif du ticket (sélections, cote, visibilité)
  * et les boutons d'action (créer, vider).
  *
  * @example
@@ -9,7 +9,6 @@
  * <TicketBuilderFooter
  *   totalOdds={4.25}
  *   count={3}
- *   confidenceIndex={7}
  *   visibility="PUBLIC"
  *   priceEur={null}
  *   onClear={handleClear}
@@ -21,7 +20,6 @@
  * <GlassTicketBuilderFooter
  *   totalOdds={4.25}
  *   count={3}
- *   confidenceIndex={7}
  *   visibility="PRIVATE"
  *   priceEur={50}
  *   onClear={handleClear}
@@ -71,8 +69,6 @@ export interface TicketBuilderFooterProps {
   totalOdds: number;
   /** Nombre de sélections */
   count: number;
-  /** Indice de confiance (1-10) */
-  confidenceIndex: number | null;
   /** Visibilité du ticket */
   visibility: TicketVisibility;
   /** Prix en euros (pour tickets privés) */
@@ -153,25 +149,14 @@ const SIZE_CONFIG = {
 /** Valide si le ticket peut être créé */
 function isValid(
   count: number,
-  confidenceIndex: number | null,
   visibility: TicketVisibility,
   priceEur: number | null
 ): boolean {
   if (count === 0) return false;
-  if (confidenceIndex == null || confidenceIndex < 1 || confidenceIndex > 10)
-    return false;
   if (visibility === 'PRIVATE' && (priceEur == null || priceEur < 1))
     return false;
   return true;
 }
-
-/** Récupère la couleur de confiance */
-const getConfidenceColor = (value: number | null, colors: ThemeColors): string => {
-  if (value === null) return colors.textTertiary;
-  if (value <= 3) return colors.danger;
-  if (value <= 6) return colors.accent;
-  return colors.primary;
-};
 
 // ═══════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
@@ -180,7 +165,6 @@ const getConfidenceColor = (value: number | null, colors: ThemeColors): string =
 const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
   totalOdds,
   count,
-  confidenceIndex,
   visibility,
   priceEur,
   onClear,
@@ -198,8 +182,7 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
   const styles = useStyles(colors, variant, size, glassBorder);
   const config = SIZE_CONFIG[size];
 
-  const valid = isValid(count, confidenceIndex, visibility, priceEur);
-  const confidenceColor = getConfidenceColor(confidenceIndex, colors);
+  const valid = isValid(count, visibility, priceEur);
   const isDisabled = !valid || loading;
 
   // ── Animations ─────────────────────────────────────────────────
@@ -283,21 +266,6 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
             <Text style={styles.detailLabel}>Sélections</Text>
             <View style={styles.detailValueContainer}>
               <Text style={styles.detailValue}>{count}</Text>
-            </View>
-          </View>
-
-          {/* Confiance */}
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Confiance</Text>
-            <View
-              style={[
-                styles.confidenceBadge,
-                { backgroundColor: confidenceColor + '20' },
-              ]}
-            >
-              <Text style={[styles.confidenceText, { color: confidenceColor }]}>
-                {confidenceIndex != null ? `${confidenceIndex}/10` : '–'}
-              </Text>
             </View>
           </View>
 
@@ -533,10 +501,11 @@ const useStyles = (
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: config.gap,
+        justifyContent: 'center',
       },
       detailItem: {
         flex: 1,
-        minWidth: '45%',
+        minWidth: '30%',
         alignItems: 'center',
         gap: spacing.xxs,
       },
@@ -573,15 +542,6 @@ const useStyles = (
         fontSize: config.labelSize,
         color: colors.textSecondary,
         fontWeight: '500',
-      },
-      confidenceBadge: {
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: radius.full,
-      },
-      confidenceText: {
-        fontSize: config.badgeSize,
-        fontWeight: '700',
       },
       visibilityBadge: {
         flexDirection: 'row',

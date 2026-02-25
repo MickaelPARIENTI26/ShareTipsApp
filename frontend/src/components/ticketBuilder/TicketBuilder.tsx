@@ -47,7 +47,6 @@ import { useTicketBuilderStore } from '../../store/ticketBuilder.store';
 import { navigationRef } from '../../navigation/navigationRef';
 import TicketBuilderHeader from './TicketBuilderHeader';
 import SelectionItem from './SelectionItem';
-import ConfidenceSelector from './ConfidenceSelector';
 import VisibilitySelector, { PRICE_INPUT_ACCESSORY_ID } from './VisibilitySelector';
 import TicketBuilderFooter from './TicketBuilderFooter';
 import type { TicketDraft } from '../../types';
@@ -110,10 +109,8 @@ const TicketBuilder: React.FC<TicketBuilderProps> = ({
   const closeTicketBuilder = useTicketBuilderStore((s) => s.closeTicketBuilder);
   const clear = useTicketBuilderStore((s) => s.clear);
   const totalOdds = useTicketBuilderStore((s) => s.totalOdds);
-  const confidenceIndex = useTicketBuilderStore((s) => s.confidenceIndex);
   const visibility = useTicketBuilderStore((s) => s.visibility);
   const priceEur = useTicketBuilderStore((s) => s.priceEur);
-  const setConfidenceIndex = useTicketBuilderStore((s) => s.setConfidenceIndex);
   const setVisibility = useTicketBuilderStore((s) => s.setVisibility);
   const setPriceEur = useTicketBuilderStore((s) => s.setPriceEur);
 
@@ -157,11 +154,10 @@ const TicketBuilder: React.FC<TicketBuilderProps> = ({
 
   const handleSubmit = useCallback(() => {
     Keyboard.dismiss();
-    if (confidenceIndex == null) return;
+    if (selections.length === 0) return;
     const draft: TicketDraft = {
       selections,
       totalOdds: totalOdds(),
-      confidenceIndex,
       visibility,
       priceEur: visibility === 'PRIVATE' ? priceEur : null,
     };
@@ -170,7 +166,6 @@ const TicketBuilder: React.FC<TicketBuilderProps> = ({
       navigationRef.navigate('TicketPreview', { draft });
     }
   }, [
-    confidenceIndex,
     selections,
     totalOdds,
     visibility,
@@ -255,16 +250,6 @@ const TicketBuilder: React.FC<TicketBuilderProps> = ({
         {/* Selections list */}
         {renderSelections()}
 
-        {/* Confidence index */}
-        <View style={styles.section}>
-          <ConfidenceSelector
-            value={confidenceIndex}
-            onChange={setConfidenceIndex}
-            variant={childVariant}
-            animated={animated}
-          />
-        </View>
-
         {/* Visibility */}
         <View style={styles.section}>
           <VisibilitySelector
@@ -281,7 +266,6 @@ const TicketBuilder: React.FC<TicketBuilderProps> = ({
       <TicketBuilderFooter
         totalOdds={totalOdds()}
         count={selections.length}
-        confidenceIndex={confidenceIndex}
         visibility={visibility}
         priceEur={priceEur}
         onClear={handleClear}

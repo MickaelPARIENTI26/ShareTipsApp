@@ -95,7 +95,6 @@ export interface TicketSelection {
 export interface TicketDraft {
   selections: TicketSelection[];
   totalOdds: number;
-  confidenceIndex: number;
   visibility: 'PUBLIC' | 'PRIVATE';
   priceEur: number | null;
 }

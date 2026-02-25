@@ -43,8 +43,8 @@ public record CreateTicketDto(
     [Required, StringLength(200, MinimumLength = 3)] string Title,
     bool IsPublic,
     [Range(0, 10000)] decimal PriceEur,
-    [Range(1, 10)] int ConfidenceIndex,
-    [Required, MinLength(1)] List<CreateTicketSelectionDto> Selections
+    [Required, MinLength(1)] List<CreateTicketSelectionDto> Selections,
+    int ConfidenceIndex = 5 // Default value, field is deprecated
 );
 
 public record CreateTicketSelectionDto(

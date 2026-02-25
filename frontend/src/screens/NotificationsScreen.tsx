@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -17,7 +18,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { notificationApi } from '../api/notification.api';
 import { useNotificationStore } from '../store/notification.store';
 import type { NotificationDto, NotificationData, RootStackParamList } from '../types';
-import { useTheme, type ThemeColors, spacing, radius, typography, palette } from '../theme';
+import { DS } from '../theme/designSystem';
+
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
 
 const NOTIFICATION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   NewTicket: 'receipt-outline',
@@ -28,14 +33,18 @@ const NOTIFICATION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   FollowNewTicket: 'person-add-outline',
 };
 
-const NOTIFICATION_COLORS: Record<string, (colors: ThemeColors) => string> = {
-  NewTicket: (colors) => colors.primary,
-  MatchStart: (colors) => colors.warning,
-  TicketWon: (colors) => colors.success,
-  TicketLost: (colors) => colors.danger,
-  SubscriptionExpire: (colors) => colors.warning,
-  FollowNewTicket: (colors) => colors.primary,
+const NOTIFICATION_COLORS: Record<string, string> = {
+  NewTicket: DS.colors.green,
+  MatchStart: '#FBBF24',
+  TicketWon: DS.colors.greenLight,
+  TicketLost: '#EF4444',
+  SubscriptionExpire: '#FBBF24',
+  FollowNewTicket: DS.colors.green,
 };
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -65,24 +74,45 @@ function parseDataJson(dataJson: string | null): NotificationData | null {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// NOTIFICATION ITEM COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
 interface NotificationItemProps {
   item: NotificationDto;
   onPress: (item: NotificationDto) => void;
   onDelete: (id: string) => void;
-  colors: ThemeColors;
-  styles: ReturnType<typeof useStyles>;
+  index: number;
 }
 
-// Memoized for FlatList performance
 const NotificationItem = React.memo<NotificationItemProps>(function NotificationItem({
   item,
   onPress,
   onDelete,
-  colors,
-  styles,
+  index,
 }) {
   const iconName = NOTIFICATION_ICONS[item.type] ?? 'notifications-outline';
-  const iconColor = NOTIFICATION_COLORS[item.type]?.(colors) ?? colors.primary;
+  const iconColor = NOTIFICATION_COLORS[item.type] ?? DS.colors.green;
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 30,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        delay: index * 30,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [index]);
 
   const handleDelete = () => {
     Alert.alert(
@@ -96,32 +126,41 @@ const NotificationItem = React.memo<NotificationItemProps>(function Notification
   };
 
   return (
-    <TouchableOpacity
-      style={[styles.notificationItem, !item.isRead && styles.notificationItemUnread]}
-      onPress={() => onPress(item)}
-      onLongPress={handleDelete}
-      activeOpacity={0.7}
+    <Animated.View
+      style={{
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }],
+      }}
     >
-      <View style={[styles.iconContainer, { backgroundColor: iconColor + '20' }]}>
-        <Ionicons name={iconName} size={22} color={iconColor} />
-      </View>
-      <View style={styles.notificationContent}>
-        <Text style={[styles.notificationTitle, !item.isRead && styles.notificationTitleUnread]}>
-          {item.title}
-        </Text>
-        <Text style={styles.notificationMessage} numberOfLines={2}>
-          {item.message}
-        </Text>
-        <Text style={styles.notificationDate}>{formatDate(item.createdAt)}</Text>
-      </View>
-      {!item.isRead && <View style={styles.unreadDot} />}
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.notificationItem, !item.isRead && styles.notificationItemUnread]}
+        onPress={() => onPress(item)}
+        onLongPress={handleDelete}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
+          <Ionicons name={iconName} size={22} color={iconColor} />
+        </View>
+        <View style={styles.notificationContent}>
+          <Text style={[styles.notificationTitle, !item.isRead && styles.notificationTitleUnread]}>
+            {item.title}
+          </Text>
+          <Text style={styles.notificationMessage} numberOfLines={2}>
+            {item.message}
+          </Text>
+          <Text style={styles.notificationDate}>{formatDate(item.createdAt)}</Text>
+        </View>
+        {!item.isRead && <View style={styles.unreadDot} />}
+      </TouchableOpacity>
+    </Animated.View>
   );
 });
 
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
 const NotificationsScreen: React.FC = () => {
-  const { colors } = useTheme();
-  const styles = useStyles(colors);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { decrementUnreadCount, resetUnreadCount, fetchUnreadCount } = useNotificationStore();
 
@@ -242,7 +281,7 @@ const NotificationsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={DS.colors.green} />
         <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
@@ -254,14 +293,14 @@ const NotificationsScreen: React.FC = () => {
       <View style={styles.headerActions}>
         {notifications.length > 0 && unreadCount > 0 ? (
           <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllRead}>
-            <Ionicons name="checkmark-done" size={18} color={colors.primary} />
+            <Ionicons name="checkmark-done" size={18} color={DS.colors.green} />
             <Text style={styles.markAllText}>Tout marquer comme lu</Text>
           </TouchableOpacity>
         ) : (
           <View />
         )}
         <TouchableOpacity style={styles.settingsBtn} onPress={goToPreferences}>
-          <Ionicons name="settings-outline" size={22} color={colors.text} />
+          <Ionicons name="settings-outline" size={22} color={DS.colors.white} />
         </TouchableOpacity>
       </View>
 
@@ -270,28 +309,31 @@ const NotificationsScreen: React.FC = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={DS.colors.green}
+            colors={[DS.colors.green]}
+          />
         }
         onEndReached={loadMore}
         onEndReachedThreshold={0.3}
-        // Performance optimizations
         initialNumToRender={10}
         maxToRenderPerBatch={8}
         windowSize={7}
         removeClippedSubviews
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <NotificationItem
             item={item}
             onPress={handleNotificationPress}
             onDelete={handleDelete}
-            colors={colors}
-            styles={styles}
+            index={index}
           />
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconWrapper}>
-              <Ionicons name="notifications-off-outline" size={40} color={colors.primary} />
+              <Ionicons name="notifications-off-outline" size={40} color={DS.colors.green} />
             </View>
             <Text style={styles.emptyTitle}>Aucune notification</Text>
             <Text style={styles.emptyHint}>
@@ -304,154 +346,153 @@ const NotificationsScreen: React.FC = () => {
   );
 };
 
-const useStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-        // Loading state
-        loadingContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-          gap: spacing.md,
-        },
-        loadingText: {
-          ...typography.body,
-          color: colors.textSecondary,
-        },
-        headerActions: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingHorizontal: spacing.md,
-          paddingVertical: spacing.sm,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.border,
-          backgroundColor: colors.surface,
-        },
-        markAllBtn: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-        },
-        markAllText: {
-          ...typography.body,
-          fontWeight: '600',
-          color: colors.primary,
-        },
-        settingsBtn: {
-          padding: spacing.xxs,
-        },
-        list: {
-          padding: spacing.sm,
-          paddingBottom: spacing.lg,
-        },
-        notificationItem: {
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          backgroundColor: colors.surface,
-          borderRadius: radius.lg,
-          padding: spacing.md,
-          marginBottom: spacing.xs,
-          borderWidth: 1,
-          borderColor: colors.border,
-          ...Platform.select({
-            ios: {
-              shadowColor: palette.black,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 2,
-            },
-          }),
-        },
-        notificationItemUnread: {
-          backgroundColor: colors.primaryBg,
-          borderColor: colors.primary + '30',
-        },
-        iconContainer: {
-          width: 44,
-          height: 44,
-          borderRadius: radius.full,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: spacing.sm,
-        },
-        notificationContent: {
-          flex: 1,
-        },
-        notificationTitle: {
-          ...typography.bodyLarge,
-          fontWeight: '600',
-          color: colors.text,
-          marginBottom: spacing.xxs,
-        },
-        notificationTitleUnread: {
-          fontWeight: '700',
-        },
-        notificationMessage: {
-          ...typography.body,
-          color: colors.textSecondary,
-          lineHeight: 18,
-          marginBottom: spacing.xs,
-        },
-        notificationDate: {
-          ...typography.caption,
-          color: colors.textTertiary,
-        },
-        unreadDot: {
-          width: 10,
-          height: 10,
-          borderRadius: radius.full,
-          backgroundColor: colors.primary,
-          marginLeft: spacing.xs,
-          marginTop: spacing.xxs,
-        },
-        // Empty state
-        emptyContainer: {
-          alignItems: 'center',
-          paddingTop: spacing.xxl,
-          paddingHorizontal: spacing.lg,
-        },
-        emptyIconWrapper: {
-          width: 80,
-          height: 80,
-          borderRadius: radius.full,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: spacing.md,
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        emptyTitle: {
-          ...typography.h4,
-          color: colors.text,
-          marginBottom: spacing.xs,
-        },
-        emptyHint: {
-          ...typography.body,
-          color: colors.textSecondary,
-          textAlign: 'center',
-        },
-      }),
-    [colors]
-  );
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: DS.colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: DS.colors.background,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 15,
+    color: DS.colors.textSecondary,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: DS.colors.cardBorder,
+    backgroundColor: DS.colors.cardBg,
+  },
+  markAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  markAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: DS.colors.green,
+  },
+  settingsBtn: {
+    padding: 4,
+  },
+  list: {
+    padding: 12,
+    paddingBottom: 120,
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  notificationItemUnread: {
+    backgroundColor: DS.colors.greenBgSubtle,
+    borderColor: 'rgba(45, 140, 78, 0.3)',
+  },
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: DS.colors.white,
+    marginBottom: 4,
+  },
+  notificationTitleUnread: {
+    fontWeight: '700',
+  },
+  notificationMessage: {
+    fontSize: 13,
+    color: DS.colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  notificationDate: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+  },
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: DS.colors.green,
+    marginLeft: 8,
+    marginTop: 4,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+  },
+  emptyIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: DS.colors.greenBgSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: DS.colors.white,
+    marginBottom: 8,
+  },
+  emptyHint: {
+    fontSize: 14,
+    color: DS.colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+});
 
 export default NotificationsScreen;

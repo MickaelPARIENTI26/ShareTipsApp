@@ -15,7 +15,6 @@ export interface CreateTicketPayload {
   title: string;
   isPublic: boolean;
   priceEur: number;
-  confidenceIndex: number;
   selections: CreateTicketSelectionPayload[];
 }
 

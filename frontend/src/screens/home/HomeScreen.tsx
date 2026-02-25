@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,32 +13,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 
 import { useAuthStore } from '../../store/auth.store';
 import { useWalletStore } from '../../store/wallet.store';
 import type { RootStackParamList } from '../../types';
-import {
-  useTheme,
-  type ThemeColors,
-  spacing,
-  radius,
-  typography,
-  effectGradients,
-  effectGlass,
-  effectShadows,
-  springConfigs,
-} from '../../theme';
-import { useDashboardEntranceAnimation } from '../../hooks/useEntranceAnimation';
+import { DS } from '../../theme/designSystem';
 import { PrimaryRefreshControl } from '../../components/common';
+
+// ═══════════════════════════════════════════════════════════════
+// COMPONENT
+// ═══════════════════════════════════════════════════════════════
 
 const HomeScreen: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const rootNavigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  const { colors } = useTheme();
-  const styles = useStyles(colors);
 
   // Global wallet store
   const wallet = useWalletStore((s) => s.wallet);
@@ -49,12 +38,11 @@ const HomeScreen: React.FC = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  // Entrance animations for dashboard sections (5 sections: user, wallet, howItWorks, actions, disclaimer)
-  const { animatedStyles: entranceStyles, triggerEntrance, reset: resetEntrance } = useDashboardEntranceAnimation(5);
-
   // Animations
   const walletScaleAnim = useRef(new Animated.Value(1)).current;
   const settingsScaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useFocusEffect(
     useCallback(() => {
@@ -62,19 +50,34 @@ const HomeScreen: React.FC = () => {
     }, [hydrateWallet])
   );
 
+  // Entrance animation
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    resetEntrance();
     await refreshWallet();
     setRefreshing(false);
-    triggerEntrance();
-  }, [refreshWallet, resetEntrance, triggerEntrance]);
+  }, [refreshWallet]);
 
   // Press handlers with animations
   const handleWalletPressIn = useCallback(() => {
     Animated.spring(walletScaleAnim, {
       toValue: 0.98,
-      ...springConfigs.bouncy,
+      friction: 8,
       useNativeDriver: true,
     }).start();
   }, [walletScaleAnim]);
@@ -82,7 +85,7 @@ const HomeScreen: React.FC = () => {
   const handleWalletPressOut = useCallback(() => {
     Animated.spring(walletScaleAnim, {
       toValue: 1,
-      ...springConfigs.bouncy,
+      friction: 8,
       useNativeDriver: true,
     }).start();
   }, [walletScaleAnim]);
@@ -90,7 +93,7 @@ const HomeScreen: React.FC = () => {
   const handleSettingsPressIn = useCallback(() => {
     Animated.spring(settingsScaleAnim, {
       toValue: 0.9,
-      ...springConfigs.bouncy,
+      friction: 8,
       useNativeDriver: true,
     }).start();
   }, [settingsScaleAnim]);
@@ -98,7 +101,7 @@ const HomeScreen: React.FC = () => {
   const handleSettingsPressOut = useCallback(() => {
     Animated.spring(settingsScaleAnim, {
       toValue: 1,
-      ...springConfigs.bouncy,
+      friction: 8,
       useNativeDriver: true,
     }).start();
   }, [settingsScaleAnim]);
@@ -116,76 +119,53 @@ const HomeScreen: React.FC = () => {
         />
       }
     >
-      {/* User info card with glassmorphism */}
-      <Animated.View style={[styles.userCardWrapper, entranceStyles[0]]}>
-        {Platform.OS === 'ios' ? (
-          <BlurView intensity={40} tint="dark" style={styles.userCardBlur}>
-            <View style={styles.userCardContent}>
-              <View style={styles.avatar}>
-                <LinearGradient
-                  colors={effectGradients.primary.colors}
-                  start={effectGradients.primary.start}
-                  end={effectGradients.primary.end}
-                  style={styles.avatarGradient}
-                >
-                  <Ionicons name="person" size={28} color={colors.textOnPrimary} />
-                </LinearGradient>
-              </View>
-              <View style={styles.userInfo}>
-                <Text style={styles.welcomeText}>Bienvenue</Text>
-                <Text style={styles.username}>{user?.username ?? '—'}</Text>
-              </View>
-              <Animated.View style={{ transform: [{ scale: settingsScaleAnim }] }}>
-                <TouchableOpacity
-                  style={styles.settingsBtn}
-                  onPress={() => rootNavigation.navigate('MainTabs', { screen: 'Profile' })}
-                  onPressIn={handleSettingsPressIn}
-                  onPressOut={handleSettingsPressOut}
-                  activeOpacity={0.9}
-                >
-                  <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </Animated.View>
-            </View>
-          </BlurView>
-        ) : (
-          <LinearGradient
-            colors={effectGradients.cardGlass.colors}
-            start={effectGradients.cardGlass.start}
-            end={effectGradients.cardGlass.end}
-            style={styles.userCard}
-          >
-            <View style={styles.avatar}>
-              <LinearGradient
-                colors={effectGradients.primary.colors}
-                start={effectGradients.primary.start}
-                end={effectGradients.primary.end}
-                style={styles.avatarGradient}
-              >
-                <Ionicons name="person" size={28} color={colors.textOnPrimary} />
-              </LinearGradient>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.welcomeText}>Bienvenue</Text>
-              <Text style={styles.username}>{user?.username ?? '—'}</Text>
-            </View>
-            <Animated.View style={{ transform: [{ scale: settingsScaleAnim }] }}>
-              <TouchableOpacity
-                style={styles.settingsBtn}
-                onPress={() => rootNavigation.navigate('MainTabs', { screen: 'Profile' })}
-                onPressIn={handleSettingsPressIn}
-                onPressOut={handleSettingsPressOut}
-                activeOpacity={0.9}
-              >
-                <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </Animated.View>
-          </LinearGradient>
-        )}
+      {/* User info card */}
+      <Animated.View
+        style={[
+          styles.userCardWrapper,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
+        <View style={styles.userCard}>
+          <View style={styles.avatar}>
+            <LinearGradient
+              colors={[DS.colors.green, '#1E5C34']}
+              style={styles.avatarGradient}
+            >
+              <Ionicons name="person" size={28} color={DS.colors.white} />
+            </LinearGradient>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.welcomeText}>Bienvenue</Text>
+            <Text style={styles.username}>{user?.username ?? '—'}</Text>
+          </View>
+          <Animated.View style={{ transform: [{ scale: settingsScaleAnim }] }}>
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => rootNavigation.navigate('MainTabs', { screen: 'Profile' })}
+              onPressIn={handleSettingsPressIn}
+              onPressOut={handleSettingsPressOut}
+              activeOpacity={0.9}
+            >
+              <Ionicons name="settings-outline" size={22} color={DS.colors.textSecondary} />
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
       </Animated.View>
 
-      {/* Wallet card — premium gradient with glow */}
-      <Animated.View style={[styles.walletCardWrapper, entranceStyles[1], { transform: [{ scale: walletScaleAnim }] }]}>
+      {/* Wallet card */}
+      <Animated.View
+        style={[
+          styles.walletCardWrapper,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: walletScaleAnim }, { translateY: slideAnim }],
+          },
+        ]}
+      >
         <TouchableOpacity
           style={styles.walletCardOuter}
           onPress={() => rootNavigation.navigate('Wallet')}
@@ -194,9 +174,9 @@ const HomeScreen: React.FC = () => {
           activeOpacity={0.95}
         >
           <LinearGradient
-            colors={effectGradients.primary.colors}
-            start={effectGradients.primary.start}
-            end={effectGradients.primary.end}
+            colors={[DS.colors.green, '#1E5C34']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={styles.walletCard}
           >
             {/* Decorative pattern overlay */}
@@ -206,23 +186,23 @@ const HomeScreen: React.FC = () => {
             </View>
 
             <View style={styles.walletIconContainer}>
-              <Ionicons name="wallet" size={26} color={colors.textOnPrimary} />
+              <Ionicons name="wallet" size={26} color={DS.colors.white} />
             </View>
             <View style={styles.walletContent}>
               <View style={styles.walletHeader}>
                 <Text style={styles.walletLabel}>Solde disponible</Text>
                 <View style={styles.walletChevron}>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textOnPrimary} />
+                  <Ionicons name="chevron-forward" size={18} color={DS.colors.white} />
                 </View>
               </View>
               {loading ? (
                 <View style={styles.walletLoadingContainer}>
-                  <ActivityIndicator size="small" color={colors.textOnPrimary} />
+                  <ActivityIndicator size="small" color={DS.colors.white} />
                   <Text style={styles.walletLoadingText}>Chargement...</Text>
                 </View>
               ) : error ? (
                 <View style={styles.walletErrorContainer}>
-                  <Ionicons name="alert-circle-outline" size={20} color={colors.textOnPrimary} />
+                  <Ionicons name="alert-circle-outline" size={20} color={DS.colors.white} />
                   <Text style={styles.errorText}>{error}</Text>
                   <Text style={styles.retryText}>Appuyez pour réessayer</Text>
                 </View>
@@ -236,7 +216,7 @@ const HomeScreen: React.FC = () => {
               )}
               {wallet && !loading && !error && wallet.pendingPayout > 0 && (
                 <View style={styles.pendingBadge}>
-                  <Ionicons name="time-outline" size={12} color={colors.accent} />
+                  <Ionicons name="time-outline" size={12} color="#FBBF24" />
                   <Text style={styles.walletLocked}>
                     {wallet.pendingPayout.toFixed(2)} EUR en virement
                   </Text>
@@ -247,46 +227,53 @@ const HomeScreen: React.FC = () => {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* How it works banner — accent gradient */}
-      <Animated.View style={entranceStyles[2]}>
+      {/* How it works banner */}
+      <Animated.View
+        style={[
+          styles.howItWorksBanner,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={styles.howItWorksBanner}
+          style={styles.howItWorksContent}
           onPress={() => rootNavigation.navigate('HowItWorks')}
           activeOpacity={0.8}
         >
-          <LinearGradient
-            colors={['rgba(251, 191, 36, 0.15)', 'rgba(251, 191, 36, 0.05)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.howItWorksGradient}
-          >
-            <View style={styles.howItWorksIcon}>
-              <LinearGradient
-                colors={effectGradients.accent.colors}
-                start={effectGradients.accent.start}
-                end={effectGradients.accent.end}
-                style={styles.howItWorksIconGradient}
-              >
-                <Ionicons name="bulb" size={20} color="#FFFFFF" />
-              </LinearGradient>
-            </View>
-            <View style={styles.howItWorksContent}>
-              <Text style={styles.howItWorksTitle}>Comment ça marche ?</Text>
-              <Text style={styles.howItWorksSubtitle}>Découvrez ShareTips en quelques étapes</Text>
-            </View>
-            <View style={styles.howItWorksArrow}>
-              <Ionicons name="chevron-forward" size={20} color={colors.accent} />
-            </View>
-          </LinearGradient>
+          <View style={styles.howItWorksIcon}>
+            <LinearGradient
+              colors={['#FBBF24', '#F59E0B']}
+              style={styles.howItWorksIconGradient}
+            >
+              <Ionicons name="bulb" size={20} color="#FFFFFF" />
+            </LinearGradient>
+          </View>
+          <View style={styles.howItWorksTextContainer}>
+            <Text style={styles.howItWorksTitle}>Comment ça marche ?</Text>
+            <Text style={styles.howItWorksSubtitle}>Découvrez ShareTips en quelques étapes</Text>
+          </View>
+          <View style={styles.howItWorksArrow}>
+            <Ionicons name="chevron-forward" size={20} color="#FBBF24" />
+          </View>
         </TouchableOpacity>
       </Animated.View>
 
       {/* Actions Section */}
-      <Animated.View style={[styles.actionsSection, entranceStyles[3]]}>
+      <Animated.View
+        style={[
+          styles.actionsSection,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleContainer}>
             <View style={styles.sectionIcon}>
-              <Ionicons name="flash" size={14} color={colors.primary} />
+              <Ionicons name="flash" size={14} color={DS.colors.green} />
             </View>
             <Text style={styles.sectionTitle}>Raccourcis</Text>
           </View>
@@ -297,16 +284,22 @@ const HomeScreen: React.FC = () => {
             label="Mes tickets"
             subtitle="Voir mes pronostics"
             onPress={() => rootNavigation.navigate('MyTickets')}
-            colors={colors}
-            styles={styles}
           />
         </View>
       </Animated.View>
 
       {/* Disclaimer */}
-      <Animated.View style={[styles.disclaimer, entranceStyles[4]]}>
+      <Animated.View
+        style={[
+          styles.disclaimer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         <View style={styles.disclaimerIconContainer}>
-          <Ionicons name="information-circle" size={18} color={colors.textTertiary} />
+          <Ionicons name="information-circle" size={18} color={DS.colors.textSecondary} />
         </View>
         <View style={styles.disclaimerContent}>
           <Text style={styles.disclaimerText}>
@@ -343,22 +336,24 @@ const HomeScreen: React.FC = () => {
   );
 };
 
+// ═══════════════════════════════════════════════════════════════
+// ACTION BUTTON COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
 interface ActionButtonProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   subtitle?: string;
   onPress: () => void;
-  colors: ThemeColors;
-  styles: ReturnType<typeof useStyles>;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, subtitle, onPress, colors, styles }) => {
+const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, subtitle, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 0.98,
-      ...springConfigs.bouncy,
+      friction: 8,
       useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
@@ -366,7 +361,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, subtitle, onPr
   const handlePressOut = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 1,
-      ...springConfigs.bouncy,
+      friction: 8,
       useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
@@ -381,459 +376,442 @@ const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, subtitle, onPr
         activeOpacity={0.9}
       >
         <View style={styles.actionIconContainer}>
-          <LinearGradient
-            colors={[`${colors.primary}20`, `${colors.primary}10`]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.actionIconGradient}
-          >
-            <Ionicons name={icon} size={24} color={colors.primary} />
-          </LinearGradient>
+          <View style={styles.actionIconGradient}>
+            <Ionicons name={icon} size={24} color={DS.colors.green} />
+          </View>
         </View>
         <View style={styles.actionContent}>
           <Text style={styles.actionLabel}>{label}</Text>
           {subtitle && <Text style={styles.actionSubtitle}>{subtitle}</Text>}
         </View>
         <View style={styles.actionChevron}>
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          <Ionicons name="chevron-forward" size={20} color={DS.colors.textSecondary} />
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-const useStyles = (colors: ThemeColors) =>
-  useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-        content: {
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.xs,
-          paddingBottom: spacing.xxl + 80, // Extra padding for tab bar
-        },
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 
-        // User Card
-        userCardWrapper: {
-          marginBottom: spacing.lg,
-          borderRadius: radius.xl,
-          overflow: 'hidden',
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 6,
-            },
-          }),
-        },
-        userCardBlur: {
-          borderRadius: radius.xl,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: effectGlass.card.borderColor,
-        },
-        userCardContent: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: spacing.lg,
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
-        },
-        userCard: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderRadius: radius.xl,
-          padding: spacing.lg,
-          borderWidth: 1,
-          borderColor: effectGlass.card.borderColor,
-        },
-        avatar: {
-          marginRight: spacing.md,
-        },
-        avatarGradient: {
-          width: 56,
-          height: 56,
-          borderRadius: radius.full,
-          alignItems: 'center',
-          justifyContent: 'center',
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        userInfo: {
-          flex: 1,
-        },
-        welcomeText: {
-          ...typography.caption,
-          color: colors.textSecondary,
-          letterSpacing: 0.5,
-        },
-        username: {
-          ...typography.h3,
-          color: colors.text,
-          marginTop: spacing.xxs,
-          fontWeight: '700',
-        },
-        settingsBtn: {
-          width: 44,
-          height: 44,
-          borderRadius: radius.lg,
-          backgroundColor: colors.surfaceElevated,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: DS.colors.background,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 120,
+  },
 
-        // Wallet Card
-        walletCardWrapper: {
-          marginBottom: spacing.lg,
-        },
-        walletCardOuter: {
-          borderRadius: radius.xl,
-          overflow: 'hidden',
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.4,
-              shadowRadius: 16,
-            },
-            android: {
-              elevation: 10,
-            },
-          }),
-        },
-        walletCard: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderRadius: radius.xl,
-          padding: spacing.xl,
-          position: 'relative',
-          overflow: 'hidden',
-        },
-        walletPattern: {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        },
-        walletPatternCircle1: {
-          position: 'absolute',
-          top: -40,
-          right: -40,
-          width: 120,
-          height: 120,
-          borderRadius: 60,
-          backgroundColor: 'rgba(255, 255, 255, 0.08)',
-        },
-        walletPatternCircle2: {
-          position: 'absolute',
-          bottom: -30,
-          left: -30,
-          width: 80,
-          height: 80,
-          borderRadius: 40,
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        },
-        walletIconContainer: {
-          width: 56,
-          height: 56,
-          borderRadius: radius.lg,
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: spacing.lg,
-          borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.15)',
-        },
-        walletContent: {
-          flex: 1,
-        },
-        walletHeader: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: spacing.sm,
-        },
-        walletLabel: {
-          ...typography.caption,
-          color: 'rgba(255, 255, 255, 0.8)',
-          letterSpacing: 0.5,
-          textTransform: 'uppercase',
-        },
-        walletChevron: {
-          width: 28,
-          height: 28,
-          borderRadius: radius.full,
-          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        walletAmountRow: {
-          flexDirection: 'row',
-          alignItems: 'baseline',
-          gap: spacing.sm,
-        },
-        walletAmount: {
-          fontSize: 36,
-          fontWeight: '800',
-          color: colors.textOnPrimary,
-          letterSpacing: -1,
-        },
-        walletUnit: {
-          ...typography.body,
-          fontWeight: '600',
-          color: 'rgba(255, 255, 255, 0.7)',
-        },
-        walletLocked: {
-          ...typography.caption,
-          color: colors.accent,
-          fontWeight: '600',
-        },
-        pendingBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-          backgroundColor: colors.accentBg,
-          paddingHorizontal: spacing.md,
-          paddingVertical: spacing.xs,
-          borderRadius: radius.full,
-          alignSelf: 'flex-start',
-          marginTop: spacing.md,
-        },
-        walletLoadingContainer: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-        },
-        walletLoadingText: {
-          ...typography.body,
-          color: 'rgba(255, 255, 255, 0.8)',
-        },
-        walletErrorContainer: {
-          gap: spacing.xs,
-        },
-        errorText: {
-          ...typography.bodySmall,
-          color: colors.textOnPrimary,
-          opacity: 0.9,
-        },
-        retryText: {
-          ...typography.caption,
-          color: colors.textOnPrimary,
-          opacity: 0.7,
-          textDecorationLine: 'underline',
-        },
+  // User Card
+  userCardWrapper: {
+    marginBottom: 16,
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    padding: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  avatar: {
+    marginRight: 12,
+  },
+  avatarGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  userInfo: {
+    flex: 1,
+  },
+  welcomeText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: DS.colors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  username: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: DS.colors.white,
+    marginTop: 2,
+  },
+  settingsBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: DS.colors.buttonBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: DS.colors.buttonBorder,
+  },
 
-        // How it works banner
-        howItWorksBanner: {
-          marginBottom: spacing.xl,
-          borderRadius: radius.xl,
-          overflow: 'hidden',
-          borderWidth: 1,
-          borderColor: `${colors.accent}25`,
-          ...Platform.select({
-            ios: {
-              shadowColor: colors.accent,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 4,
-            },
-          }),
-        },
-        howItWorksGradient: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: spacing.lg,
-        },
-        howItWorksIcon: {
-          marginRight: spacing.md,
-        },
-        howItWorksIconGradient: {
-          width: 48,
-          height: 48,
-          borderRadius: radius.lg,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        howItWorksContent: {
-          flex: 1,
-        },
-        howItWorksTitle: {
-          ...typography.body,
-          fontWeight: '700',
-          color: colors.text,
-        },
-        howItWorksSubtitle: {
-          ...typography.caption,
-          color: colors.textSecondary,
-          marginTop: spacing.xxs,
-        },
-        howItWorksArrow: {
-          width: 36,
-          height: 36,
-          borderRadius: radius.full,
-          backgroundColor: `${colors.accent}15`,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
+  // Wallet Card
+  walletCardWrapper: {
+    marginBottom: 16,
+  },
+  walletCardOuter: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  walletCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  walletPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  walletPatternCircle1: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  walletPatternCircle2: {
+    position: 'absolute',
+    bottom: -30,
+    left: -30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  walletIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  walletContent: {
+    flex: 1,
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  walletLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  walletChevron: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  walletAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  walletAmount: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: DS.colors.white,
+    letterSpacing: -1,
+  },
+  walletUnit: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  walletLocked: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FBBF24',
+  },
+  pendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginTop: 12,
+  },
+  walletLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  walletLoadingText: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  walletErrorContainer: {
+    gap: 4,
+  },
+  errorText: {
+    fontSize: 14,
+    color: DS.colors.white,
+    opacity: 0.9,
+  },
+  retryText: {
+    fontSize: 12,
+    color: DS.colors.white,
+    opacity: 0.7,
+    textDecorationLine: 'underline',
+  },
 
-        // Actions Section
-        actionsSection: {
-          marginBottom: spacing.xl,
-        },
-        sectionHeader: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: spacing.md,
-        },
-        sectionTitleContainer: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-        },
-        sectionIcon: {
-          width: 24,
-          height: 24,
-          borderRadius: radius.sm,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        sectionTitle: {
-          ...typography.label,
-          color: colors.textSecondary,
-          textTransform: 'uppercase',
-          letterSpacing: 1,
-        },
-        actions: {
-          gap: spacing.md,
-        },
-        actionBtn: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.surface,
-          borderRadius: radius.xl,
-          padding: spacing.lg,
-          borderWidth: 1,
-          borderColor: colors.border,
-          ...Platform.select({
-            ios: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-            },
-            android: {
-              elevation: 2,
-            },
-          }),
-        },
-        actionIconContainer: {
-          marginRight: spacing.md,
-        },
-        actionIconGradient: {
-          width: 48,
-          height: 48,
-          borderRadius: radius.lg,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: `${colors.primary}15`,
-        },
-        actionContent: {
-          flex: 1,
-        },
-        actionLabel: {
-          ...typography.body,
-          fontWeight: '700',
-          color: colors.text,
-        },
-        actionSubtitle: {
-          ...typography.caption,
-          color: colors.textSecondary,
-          marginTop: spacing.xxs,
-        },
-        actionChevron: {
-          width: 32,
-          height: 32,
-          borderRadius: radius.full,
-          backgroundColor: colors.surfaceElevated,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
+  // How it works banner
+  howItWorksBanner: {
+    marginBottom: 20,
+    backgroundColor: 'rgba(251, 191, 36, 0.08)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.2)',
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FBBF24',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  howItWorksContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  howItWorksIcon: {
+    marginRight: 12,
+  },
+  howItWorksIconGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  howItWorksTextContainer: {
+    flex: 1,
+  },
+  howItWorksTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: DS.colors.white,
+  },
+  howItWorksSubtitle: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+    marginTop: 2,
+  },
+  howItWorksArrow: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
-        // Disclaimer
-        disclaimer: {
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          gap: spacing.md,
-          padding: spacing.lg,
-          backgroundColor: colors.surface,
-          borderRadius: radius.xl,
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
-        disclaimerIconContainer: {
-          width: 32,
-          height: 32,
-          borderRadius: radius.md,
-          backgroundColor: colors.surfaceElevated,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        disclaimerContent: {
-          flex: 1,
-        },
-        disclaimerText: {
-          ...typography.caption,
-          fontSize: 12,
-          color: colors.textTertiary,
-          lineHeight: 18,
-        },
-        legalLinks: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: spacing.sm,
-          marginTop: spacing.md,
-        },
-        legalLinkBtn: {
-          paddingVertical: spacing.xxs,
-        },
-        legalLink: {
-          ...typography.caption,
-          fontSize: 12,
-          color: colors.primary,
-          fontWeight: '600',
-        },
-        legalSeparator: {
-          ...typography.caption,
-          fontSize: 12,
-          color: colors.textTertiary,
-        },
-      }),
-    [colors]
-  );
+  // Actions Section
+  actionsSection: {
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: DS.colors.greenBgSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: DS.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  actions: {
+    gap: 12,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  actionIconContainer: {
+    marginRight: 12,
+  },
+  actionIconGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: DS.colors.greenBgSubtle,
+    borderWidth: 1,
+    borderColor: 'rgba(45, 140, 78, 0.2)',
+  },
+  actionContent: {
+    flex: 1,
+  },
+  actionLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: DS.colors.white,
+  },
+  actionSubtitle: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+    marginTop: 2,
+  },
+  actionChevron: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: DS.colors.buttonBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Disclaimer
+  disclaimer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: 16,
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+  },
+  disclaimerIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: DS.colors.buttonBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disclaimerContent: {
+    flex: 1,
+  },
+  disclaimerText: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+    lineHeight: 18,
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  legalLinkBtn: {
+    paddingVertical: 2,
+  },
+  legalLink: {
+    fontSize: 12,
+    color: DS.colors.green,
+    fontWeight: '600',
+  },
+  legalSeparator: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+  },
+});
 
 export default HomeScreen;

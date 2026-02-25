@@ -1,141 +1,203 @@
-import React, { useRef } from 'react';
+/**
+ * FloatingTabBar — Barre de navigation premium
+ *
+ * Design épuré avec bouton central surélevé et glow effect.
+ */
+
+import React, { useRef, useMemo, useCallback } from 'react';
 import {
   View,
   TouchableOpacity,
   StyleSheet,
   Animated,
-  Dimensions,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Path } from 'react-native-svg';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-import { useTheme } from '../../theme';
+import { haptics } from '../../utils/haptics';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const TAB_BAR_HEIGHT = 66;
-const FAB_SIZE = 56;
-const NOTCH_WIDTH = 38;
-const NOTCH_DEPTH = 22;
+// ═══════════════════════════════════════════════════════════════
+// COULEURS EXACTES DU DESIGN
+// ═══════════════════════════════════════════════════════════════
 
-export const FLOATING_TAB_BAR_HEIGHT = TAB_BAR_HEIGHT + NOTCH_DEPTH;
+const COLORS = {
+  background: '#0A0F0C',      // Noir très foncé avec teinte verte subtile
+  borderTop: '#1A2420',       // Bordure haut très subtile vert foncé
+  active: '#2D8C4E',          // Vert actif
+  inactive: '#5A6A5E',        // Gris-vert foncé
+  white: '#FFFFFF',
+  fabGlow: 'rgba(45, 140, 78, 0.4)', // Glow du FAB
+};
 
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+
+const TAB_BAR_HEIGHT = 52;
+const FAB_SIZE = 50;
+const FAB_OUTER_SIZE = 58;
+const ICON_SIZE = 26;
+const FAB_ICON_SIZE = 26;
+
+/** Hauteur totale exportée pour le layout */
+export const FLOATING_TAB_BAR_HEIGHT = TAB_BAR_HEIGHT;
+
+/** Configuration des icônes pour chaque route */
 const TAB_CONFIG: Record<
   string,
-  { icon: keyof typeof Ionicons.glyphMap; iconFocused: keyof typeof Ionicons.glyphMap }
+  { icon: keyof typeof Ionicons.glyphMap; iconFocused: keyof typeof Ionicons.glyphMap; label: string }
 > = {
-  Home: { icon: 'home-outline', iconFocused: 'home' },
-  Matches: { icon: 'football-outline', iconFocused: 'football' },
-  Marketplace: { icon: 'storefront-outline', iconFocused: 'storefront' },
-  Ranking: { icon: 'trophy-outline', iconFocused: 'trophy' },
-  Profile: { icon: 'person-outline', iconFocused: 'person' },
+  Home: { icon: 'home-outline', iconFocused: 'home', label: 'Accueil' },
+  Matches: { icon: 'football-outline', iconFocused: 'football', label: 'Matchs' },
+  Marketplace: { icon: 'storefront-outline', iconFocused: 'storefront', label: 'Boutique' },
+  Ranking: { icon: 'trophy-outline', iconFocused: 'trophy', label: 'Compétitions' },
+  Profile: { icon: 'person-outline', iconFocused: 'person', label: 'Profil' },
 };
 
-const TabBarBackground: React.FC<{ color: string; width: number }> = ({ color, width }) => {
-  const centerX = width / 2;
-  const curveStart = centerX - NOTCH_WIDTH - 10;
-  const curveEnd = centerX + NOTCH_WIDTH + 10;
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
 
-  const d = `
-    M 0 ${NOTCH_DEPTH}
-    L ${curveStart} ${NOTCH_DEPTH}
-    Q ${centerX - NOTCH_WIDTH} ${NOTCH_DEPTH} ${centerX - NOTCH_WIDTH + 6} 2
-    Q ${centerX} 0 ${centerX} 0
-    Q ${centerX} 0 ${centerX + NOTCH_WIDTH - 6} 2
-    Q ${centerX + NOTCH_WIDTH} ${NOTCH_DEPTH} ${curveEnd} ${NOTCH_DEPTH}
-    L ${width} ${NOTCH_DEPTH}
-    L ${width} ${TAB_BAR_HEIGHT + NOTCH_DEPTH}
-    L 0 ${TAB_BAR_HEIGHT + NOTCH_DEPTH}
-    Z
-  `;
+export type FloatingTabBarVariant = 'default' | 'glass' | 'minimal';
 
-  return (
-    <Svg
-      width={width}
-      height={TAB_BAR_HEIGHT + NOTCH_DEPTH}
-      style={styles.svgBackground}
-    >
-      <Path d={d} fill={color} />
-    </Svg>
-  );
-};
+export interface FloatingTabBarProps extends BottomTabBarProps {
+  variant?: FloatingTabBarVariant;
+  animated?: boolean;
+  showFabGlow?: boolean;
+}
 
-const CenterButton: React.FC<{
+// ═══════════════════════════════════════════════════════════════
+// BOUTON FAB CENTRAL
+// ═══════════════════════════════════════════════════════════════
+
+interface CenterButtonProps {
   onPress: () => void;
   isFocused: boolean;
-  colors: ReturnType<typeof useTheme>['colors'];
-}> = ({ onPress, isFocused, colors }) => {
+}
+
+const CenterButton: React.FC<CenterButtonProps> = React.memo(({ onPress, isFocused }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.94,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Animated.View
-      style={[
-        styles.centerButtonWrapper,
-        {
-          transform: [{ scale: scaleAnim }],
-          backgroundColor: colors.primary,
-        },
-      ]}
-    >
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={styles.centerButtonTouchable}
-        accessibilityRole="button"
-        accessibilityLabel="Marché"
-        accessibilityState={{ selected: isFocused }}
-      >
-        <Ionicons
-          name={isFocused ? 'storefront' : 'storefront-outline'}
-          size={28}
-          color="#FFFFFF"
-        />
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
-const TabButton: React.FC<{
-  routeName: string;
-  isFocused: boolean;
-  onPress: () => void;
-  onLongPress: () => void;
-  colors: ReturnType<typeof useTheme>['colors'];
-}> = ({ routeName, isFocused, onPress, onLongPress, colors }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
+  const handlePressIn = useCallback(() => {
+    haptics.selection();
     Animated.spring(scaleAnim, {
       toValue: 0.9,
       useNativeDriver: true,
     }).start();
-  };
+  }, [scaleAnim]);
 
-  const handlePressOut = () => {
+  const handlePressOut = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 1,
-      friction: 5,
       useNativeDriver: true,
     }).start();
-  };
+  }, [scaleAnim]);
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+      style={fabStyles.touchable}
+      accessibilityRole="button"
+      accessibilityLabel="Boutique"
+      accessibilityState={{ selected: isFocused }}
+    >
+      <Animated.View style={[fabStyles.wrapper, { transform: [{ scale: scaleAnim }] }]}>
+        {/* Outer glow ring */}
+        <View style={fabStyles.glowRing}>
+          {/* Inner FAB button */}
+          <View style={fabStyles.innerCircle}>
+            <Ionicons
+              name={isFocused ? 'storefront' : 'storefront-outline'}
+              size={FAB_ICON_SIZE}
+              color={COLORS.white}
+            />
+          </View>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+});
+
+const fabStyles = StyleSheet.create({
+  touchable: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -18,
+  },
+  wrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  glowRing: {
+    width: FAB_OUTER_SIZE,
+    height: FAB_OUTER_SIZE,
+    borderRadius: FAB_OUTER_SIZE / 2,
+    borderWidth: 2,
+    borderColor: 'rgba(45, 140, 78, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    // Strong glow shadow
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2D8C4E',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 15,
+      },
+    }),
+  },
+  innerCircle: {
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
+    backgroundColor: COLORS.active,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════
+// BOUTON D'ONGLET
+// ═══════════════════════════════════════════════════════════════
+
+interface TabButtonProps {
+  routeName: string;
+  isFocused: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
+}
+
+const TabButton: React.FC<TabButtonProps> = React.memo(({
+  routeName,
+  isFocused,
+  onPress,
+  onLongPress,
+}) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    haptics.selection();
+    Animated.spring(scaleAnim, {
+      toValue: 0.85,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
 
   const config = TAB_CONFIG[routeName];
   const iconName = isFocused ? config?.iconFocused : config?.icon;
@@ -143,201 +205,187 @@ const TabButton: React.FC<{
   return (
     <TouchableOpacity
       accessibilityRole="button"
+      accessibilityLabel={config?.label ?? routeName}
       accessibilityState={{ selected: isFocused }}
       onPress={onPress}
       onLongPress={onLongPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={styles.tabButton}
+      style={tabStyles.container}
+      activeOpacity={0.8}
     >
-      <Animated.View
-        style={[
-          styles.tabIconContainer,
-          { transform: [{ scale: scaleAnim }] },
-        ]}
-      >
+      <Animated.View style={[tabStyles.iconWrapper, { transform: [{ scale: scaleAnim }] }]}>
         <Ionicons
           name={iconName ?? 'ellipse'}
-          size={26}
-          color={isFocused ? colors.tabActive : colors.tabInactive}
+          size={ICON_SIZE}
+          color={isFocused ? COLORS.active : COLORS.inactive}
         />
-        {isFocused && (
-          <View style={[styles.activeIndicator, { backgroundColor: colors.primary }]} />
-        )}
       </Animated.View>
     </TouchableOpacity>
   );
-};
+});
 
-const FloatingTabBar: React.FC<BottomTabBarProps> = ({
-  state,
-  descriptors,
-  navigation,
-}) => {
-  const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
-
-  const orderedRouteNames = ['Home', 'Matches', 'Marketplace', 'Ranking', 'Profile'];
-  const orderedRoutes = orderedRouteNames
-    .map((name) => state.routes.find((r) => r.name === name))
-    .filter((r): r is typeof state.routes[number] => r !== undefined);
-
-  const leftRoutes = orderedRoutes.slice(0, 2);
-  const centerRoute = orderedRoutes[2];
-  const rightRoutes = orderedRoutes.slice(3);
-
-  const getIsFocused = (route: typeof state.routes[number]) => {
-    return state.index === state.routes.findIndex((r) => r.key === route.key);
-  };
-
-  const handlePress = (route: typeof state.routes[number]) => {
-    const isFocused = getIsFocused(route);
-    const event = navigation.emit({
-      type: 'tabPress',
-      target: route.key,
-      canPreventDefault: true,
-    });
-
-    if (!isFocused && !event.defaultPrevented) {
-      navigation.navigate(route.name, route.params);
-    }
-  };
-
-  const handleLongPress = (route: typeof state.routes[number]) => {
-    navigation.emit({
-      type: 'tabLongPress',
-      target: route.key,
-    });
-  };
-
-  return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <TabBarBackground color={colors.tabBarBackground} width={SCREEN_WIDTH} />
-
-      {/* Icons row - positioned inside white area */}
-      <View style={styles.iconsRow}>
-        <View style={styles.leftSection}>
-          {leftRoutes.map((route) => (
-            <TabButton
-              key={route.key}
-              routeName={route.name}
-              isFocused={getIsFocused(route)}
-              onPress={() => handlePress(route)}
-              onLongPress={() => handleLongPress(route)}
-              colors={colors}
-            />
-          ))}
-        </View>
-
-        <View style={styles.centerSection} />
-
-        <View style={styles.rightSection}>
-          {rightRoutes.map((route) => (
-            <TabButton
-              key={route.key}
-              routeName={route.name}
-              isFocused={getIsFocused(route)}
-              onPress={() => handlePress(route)}
-              onLongPress={() => handleLongPress(route)}
-              colors={colors}
-            />
-          ))}
-        </View>
-      </View>
-
-      {/* Center FAB - in the notch */}
-      {centerRoute && (
-        <View style={styles.fabPositioner}>
-          <CenterButton
-            onPress={() => handlePress(centerRoute)}
-            isFocused={getIsFocused(centerRoute)}
-            colors={colors}
-          />
-        </View>
-      )}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
+const tabStyles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  svgBackground: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-  },
-  // Icons positioned INSIDE the white area (starts at NOTCH_DEPTH, height TAB_BAR_HEIGHT)
-  iconsRow: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: TAB_BAR_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  leftSection: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    height: '100%',
-  },
-  centerSection: {
-    width: FAB_SIZE + 24,
-  },
-  rightSection: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    height: '100%',
-  },
-  tabButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
-  tabIconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: -8,
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-  },
-  // FAB positioned at the notch
-  fabPositioner: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  centerButtonWrapper: {
-    width: FAB_SIZE,
-    height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
-    marginTop: -FAB_SIZE / 2 - 10,
-  },
-  centerButtonTouchable: {
-    width: '100%',
-    height: '100%',
+  iconWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
 });
 
-export default FloatingTabBar;
+// ═══════════════════════════════════════════════════════════════
+// COMPOSANT PRINCIPAL
+// ═══════════════════════════════════════════════════════════════
+
+const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
+  state,
+  navigation,
+}) => {
+  const insets = useSafeAreaInsets();
+
+  // ── Calcul des routes ordonnées ──────────────────────────────
+  const { leftRoutes, centerRoute, rightRoutes } = useMemo(() => {
+    const orderedRouteNames = ['Home', 'Matches', 'Marketplace', 'Ranking', 'Profile'];
+    const orderedRoutes = orderedRouteNames
+      .map((name) => state.routes.find((r) => r.name === name))
+      .filter((r): r is typeof state.routes[number] => r !== undefined);
+
+    return {
+      leftRoutes: orderedRoutes.slice(0, 2),
+      centerRoute: orderedRoutes[2],
+      rightRoutes: orderedRoutes.slice(3),
+    };
+  }, [state.routes]);
+
+  // ── Handlers ─────────────────────────────────────────────────
+  const getIsFocused = useCallback(
+    (route: typeof state.routes[number]) => {
+      return state.index === state.routes.findIndex((r) => r.key === route.key);
+    },
+    [state.index, state.routes]
+  );
+
+  const handlePress = useCallback(
+    (route: typeof state.routes[number]) => {
+      const isFocused = getIsFocused(route);
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: route.key,
+        canPreventDefault: true,
+      });
+
+      if (!isFocused && !event.defaultPrevented) {
+        navigation.navigate(route.name, route.params);
+      }
+    },
+    [getIsFocused, navigation]
+  );
+
+  const handleLongPress = useCallback(
+    (route: typeof state.routes[number]) => {
+      navigation.emit({
+        type: 'tabLongPress',
+        target: route.key,
+      });
+    },
+    [navigation]
+  );
+
+  // ── Render des tabs ──────────────────────────────────────────
+  const renderTab = useCallback(
+    (route: typeof state.routes[number]) => (
+      <TabButton
+        key={route.key}
+        routeName={route.name}
+        isFocused={getIsFocused(route)}
+        onPress={() => handlePress(route)}
+        onLongPress={() => handleLongPress(route)}
+      />
+    ),
+    [getIsFocused, handlePress, handleLongPress]
+  );
+
+  return (
+    <View
+      style={[styles.container, { paddingBottom: insets.bottom }]}
+      accessibilityRole="tablist"
+      accessibilityLabel="Navigation principale"
+    >
+      {/* Barre de fond */}
+      <View style={styles.tabBar}>
+        {/* Section gauche (Home, Matches) */}
+        <View style={styles.section}>
+          {leftRoutes.map(renderTab)}
+        </View>
+
+        {/* Bouton central (Marketplace) */}
+        {centerRoute && (
+          <CenterButton
+            onPress={() => handlePress(centerRoute)}
+            isFocused={getIsFocused(centerRoute)}
+          />
+        )}
+
+        {/* Section droite (Ranking, Profile) */}
+        <View style={styles.section}>
+          {rightRoutes.map(renderTab)}
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: COLORS.background,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: TAB_BAR_HEIGHT,
+    backgroundColor: COLORS.background,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderTop,
+    paddingHorizontal: 10,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+  section: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════
+// PRESETS — Pour compatibilité
+// ═══════════════════════════════════════════════════════════════
+
+export const DefaultFloatingTabBar: React.FC<FloatingTabBarProps> = (props) => (
+  <FloatingTabBar {...props} />
+);
+
+export const GlassFloatingTabBar: React.FC<FloatingTabBarProps> = (props) => (
+  <FloatingTabBar {...props} />
+);
+
+export const MinimalFloatingTabBar: React.FC<FloatingTabBarProps> = (props) => (
+  <FloatingTabBar {...props} />
+);
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════════
+
+export default React.memo(FloatingTabBar);

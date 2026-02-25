@@ -10,7 +10,29 @@ import {
   Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme, type ThemeColors } from '../theme';
+import {
+  useTheme,
+  type ThemeColors,
+  spacing,
+  radius,
+  typography,
+  size,
+  // Shared component styles
+  cardStyle,
+  loadingContainer as sharedLoadingContainer,
+  loadingText as sharedLoadingText,
+  chip as sharedChip,
+  chipActive as sharedChipActive,
+  chipText as sharedChipText,
+  chipTextActive as sharedChipTextActive,
+  modalOverlay as sharedModalOverlay,
+  modalContent as sharedModalContent,
+  buttonPrimary,
+  buttonPrimaryText,
+  rowCenterGap,
+  centered,
+  dividerVertical,
+} from '../theme';
 import { gamificationApi } from '../api/gamification.api';
 import type { BadgeDto, UserBadgeDto } from '../types/gamification.types';
 
@@ -221,6 +243,7 @@ const MyBadgesScreen: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -435,78 +458,57 @@ const getStyles = (colors: ThemeColors) =>
       backgroundColor: colors.background,
     },
     content: {
-      padding: 16,
+      padding: spacing.md,
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-    },
+    // Loading state — using shared styles
+    loadingContainer: sharedLoadingContainer(colors),
+    loadingText: sharedLoadingText(colors),
+    // Stats card — using shared card style
     statsCard: {
+      ...cardStyle(colors),
       flexDirection: 'row',
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderRadius: radius.xl,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
     },
     statItem: {
       flex: 1,
       alignItems: 'center',
     },
     statValue: {
-      fontSize: 24,
-      fontWeight: '700',
+      ...typography.h2,
       color: colors.text,
     },
     statLabel: {
-      fontSize: 12,
+      ...typography.caption,
       color: colors.textSecondary,
-      marginTop: 4,
+      marginTop: spacing.xxs,
     },
-    statDivider: {
-      width: 1,
-      backgroundColor: colors.border,
-    },
+    statDivider: dividerVertical(colors),
     categoryScroll: {
-      marginBottom: 16,
+      marginBottom: spacing.md,
     },
+    // Category chips — using shared chip styles
     categoryChip: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 20,
-      backgroundColor: colors.cardBackground,
-      marginRight: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
+      ...sharedChip(colors),
+      marginRight: spacing.xs,
+      paddingVertical: spacing.xs,
     },
-    categoryChipActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    categoryChipText: {
-      fontSize: 13,
-      color: colors.textSecondary,
-      fontWeight: '500',
-    },
-    categoryChipTextActive: {
-      color: colors.textOnPrimary,
-    },
+    categoryChipActive: sharedChipActive(colors),
+    categoryChipText: sharedChipText(colors),
+    categoryChipTextActive: sharedChipTextActive(colors),
     categorySection: {
-      marginBottom: 24,
+      marginBottom: spacing.lg,
     },
     categoryTitle: {
-      fontSize: 16,
-      fontWeight: '700',
+      ...typography.h4,
       color: colors.text,
-      marginBottom: 12,
+      marginBottom: spacing.sm,
     },
     badgeGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: spacing.sm,
     },
     badgeItem: {
       width: '22%',
@@ -516,23 +518,22 @@ const getStyles = (colors: ThemeColors) =>
       opacity: 0.5,
     },
     badgeIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 6,
+      width: size.badge.iconSm,
+      height: size.badge.iconSm,
+      borderRadius: radius.full,
+      ...centered,
+      marginBottom: spacing.xs,
       position: 'relative',
     },
     checkmark: {
       position: 'absolute',
       bottom: -2,
       right: -2,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 10,
+      backgroundColor: colors.surface,
+      borderRadius: radius.full,
     },
     badgeName: {
-      fontSize: 11,
+      ...typography.caption,
       color: colors.text,
       textAlign: 'center',
       fontWeight: '500',
@@ -541,119 +542,92 @@ const getStyles = (colors: ThemeColors) =>
       color: colors.textSecondary,
     },
     badgeXp: {
-      fontSize: 10,
+      ...typography.badge,
       color: colors.primary,
-      marginTop: 2,
+      marginTop: spacing.xxs,
       fontWeight: '600',
     },
-    // Modal styles
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 24,
-    },
+    // Modal styles — using shared modal styles
+    modalOverlay: sharedModalOverlay(colors),
     modalContent: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 20,
-      padding: 24,
-      width: '100%',
-      maxWidth: 340,
+      ...sharedModalContent(colors),
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 8,
     },
     modalBadgeIcon: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 16,
+      width: size.badge.iconLg,
+      height: size.badge.iconLg,
+      borderRadius: radius.full,
+      ...centered,
+      marginBottom: spacing.md,
     },
     modalBadgeName: {
-      fontSize: 20,
-      fontWeight: '700',
+      ...typography.h3,
       color: colors.text,
       textAlign: 'center',
-      marginBottom: 8,
+      marginBottom: spacing.xs,
     },
     statusBadge: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
-      gap: 6,
-      marginBottom: 8,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      gap: spacing.xs,
+      marginBottom: spacing.xs,
     },
     statusText: {
-      fontSize: 13,
+      ...typography.body,
       fontWeight: '600',
     },
     earnedDate: {
-      fontSize: 12,
+      ...typography.caption,
       color: colors.textSecondary,
-      marginBottom: 12,
+      marginBottom: spacing.sm,
     },
     modalDescription: {
-      fontSize: 14,
+      ...typography.body,
       color: colors.textSecondary,
       textAlign: 'center',
-      marginBottom: 16,
+      marginBottom: spacing.md,
       lineHeight: 20,
     },
     requirementSection: {
       backgroundColor: colors.background,
-      borderRadius: 12,
-      padding: 16,
+      borderRadius: radius.lg,
+      padding: spacing.md,
       width: '100%',
-      marginBottom: 16,
+      marginBottom: spacing.md,
     },
     requirementHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginBottom: 8,
+      ...rowCenterGap(spacing.xs),
+      marginBottom: spacing.xs,
     },
     requirementTitle: {
-      fontSize: 14,
+      ...typography.body,
       fontWeight: '600',
       color: colors.text,
     },
     requirementText: {
-      fontSize: 14,
+      ...typography.body,
       color: colors.textSecondary,
       lineHeight: 20,
     },
     xpRewardSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginBottom: 20,
+      ...rowCenterGap(spacing.xs),
+      marginBottom: spacing.lg,
     },
     xpRewardText: {
-      fontSize: 15,
+      ...typography.bodyLarge,
       fontWeight: '600',
       color: colors.primary,
     },
+    // Close button — using shared button styles
     closeButton: {
-      backgroundColor: colors.primary,
-      paddingVertical: 12,
-      paddingHorizontal: 32,
-      borderRadius: 12,
+      ...buttonPrimary(colors),
+      paddingVertical: spacing.sm,
       width: '100%',
-      alignItems: 'center',
     },
-    closeButtonText: {
-      color: colors.textOnPrimary,
-      fontSize: 15,
-      fontWeight: '600',
-    },
+    closeButtonText: buttonPrimaryText(colors),
   });
 
 export default MyBadgesScreen;

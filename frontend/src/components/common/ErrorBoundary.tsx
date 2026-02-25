@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { palette, spacing, radius, typography } from '../../theme';
 
 interface Props {
   children: ReactNode;
@@ -44,13 +45,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <View style={styles.container}>
-          <Ionicons name="warning-outline" size={64} color="#E53935" />
+          <Ionicons name="warning-outline" size={64} color={palette.red[500]} />
           <Text style={styles.title}>Oups, une erreur est survenue</Text>
           <Text style={styles.message}>
             {"L'application a rencontré un problème inattendu."}
           </Text>
           <TouchableOpacity style={styles.button} onPress={this.handleRetry}>
-            <Ionicons name="refresh" size={20} color="#FFFFFF" />
+            <Ionicons name="refresh" size={20} color={palette.neutral[950]} />
             <Text style={styles.buttonText}>Réessayer</Text>
           </TouchableOpacity>
         </View>
@@ -61,41 +62,40 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+// Static styles using palette directly (class component can't use hooks)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#121212',
+    padding: spacing.xl,
+    backgroundColor: palette.neutral[950],
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginTop: 16,
-    marginBottom: 8,
+    ...typography.h4,
+    color: palette.neutral[100],
+    marginTop: spacing.base,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   message: {
-    fontSize: 14,
-    color: '#9E9E9E',
+    ...typography.body,
+    color: palette.neutral[400],
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00E676',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 8,
+    backgroundColor: palette.green[500],
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    gap: spacing.sm,
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    ...typography.button,
+    color: palette.neutral[950],
   },
 });
 

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,7 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { favoriteApi } from '../api/favorite.api';
 import { useFavoriteStore } from '../store/favorite.store';
 import type { RootStackParamList, FavoriteTicketDto } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, palette, size } from '../theme';
 
 const PAGE_SIZE = 15;
 
@@ -180,8 +181,9 @@ const MesFavorisScreen: React.FC = () => {
 
   if (loading && favorites.length === 0) {
     return (
-      <View style={styles.center}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -214,9 +216,11 @@ const MesFavorisScreen: React.FC = () => {
         ) : null
       }
       ListEmptyComponent={
-        <View style={styles.empty}>
-          <Ionicons name="heart-outline" size={48} color={colors.textTertiary} />
-          <Text style={styles.emptyText}>Aucun favori</Text>
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconWrapper}>
+            <Ionicons name="heart-outline" size={40} color={colors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>Aucun favori</Text>
           <Text style={styles.emptyHint}>
             Ajoutez des tickets en favoris depuis le marché
           </Text>
@@ -230,69 +234,88 @@ const useStyles = (colors: ThemeColors) =>
   useMemo(
     () =>
       StyleSheet.create({
-        center: {
+        // Loading state
+        loadingContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          gap: spacing.md,
+        },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
         },
         list: {
-          padding: 12,
-          paddingBottom: 80,
+          padding: spacing.sm,
+          paddingBottom: size.listPaddingBottom.sm,
           backgroundColor: colors.background,
         },
         loadingMore: {
-          paddingVertical: 16,
+          paddingVertical: spacing.md,
           alignItems: 'center',
         },
 
         // Card
         card: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         cardHeader: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 8,
+          marginBottom: spacing.xs,
         },
         creatorName: {
-          fontSize: 13,
+          ...typography.caption,
           fontWeight: '700',
           color: colors.primary,
         },
         cardTitle: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '700',
           color: colors.text,
-          marginBottom: 10,
+          marginBottom: spacing.sm,
         },
         cardMeta: {
           flexDirection: 'row',
           backgroundColor: colors.surfaceSecondary,
-          borderRadius: 8,
-          padding: 10,
-          marginBottom: 10,
+          borderRadius: radius.md,
+          padding: spacing.sm,
+          marginBottom: spacing.sm,
         },
         metaItem: {
           flex: 1,
           alignItems: 'center',
         },
         metaLabel: {
-          fontSize: 11,
+          ...typography.caption,
           color: colors.textSecondary,
           marginBottom: 2,
         },
         metaValue: {
-          fontSize: 13,
+          ...typography.caption,
           fontWeight: '700',
           color: colors.text,
         },
         metaValueBlue: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '800',
           color: colors.primary,
         },
@@ -303,39 +326,59 @@ const useStyles = (colors: ThemeColors) =>
         },
         sportRow: {
           flexDirection: 'row',
-          gap: 6,
+          gap: spacing.xs,
         },
         sportBadge: {
           backgroundColor: colors.background,
-          borderRadius: 6,
-          paddingHorizontal: 8,
+          borderRadius: radius.sm,
+          paddingHorizontal: spacing.xs,
           paddingVertical: 3,
         },
         sportBadgeText: {
-          fontSize: 11,
+          ...typography.caption,
           fontWeight: '600',
           color: colors.textSecondary,
         },
         dateText: {
-          fontSize: 11,
+          ...typography.caption,
           color: colors.textTertiary,
         },
 
-        // Empty
-        empty: {
+        // Empty state
+        emptyContainer: {
           alignItems: 'center',
-          paddingTop: 60,
+          paddingTop: spacing.xxl,
+          paddingHorizontal: spacing.lg,
         },
-        emptyText: {
-          fontSize: 17,
-          fontWeight: '600',
-          color: colors.textSecondary,
-          marginTop: 12,
+        emptyIconWrapper: {
+          width: 80,
+          height: 80,
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
+        },
+        emptyTitle: {
+          ...typography.h4,
+          color: colors.text,
+          marginBottom: spacing.xs,
         },
         emptyHint: {
-          fontSize: 14,
-          color: colors.textTertiary,
-          marginTop: 4,
+          ...typography.body,
+          color: colors.textSecondary,
+          textAlign: 'center',
         },
       }),
     [colors]

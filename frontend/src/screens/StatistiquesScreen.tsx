@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/auth.store';
 import { userApi } from '../api/user.api';
 import type { TipsterStatsDto } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, palette, spacing, radius, typography } from '../theme';
 
 const StatistiquesScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -204,22 +204,22 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.background,
         },
         content: {
-          padding: 16,
-          paddingBottom: 32,
+          padding: spacing.base,
+          paddingBottom: spacing['2xl'],
         },
         disclaimerContainer: {
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.surfaceSecondary,
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          marginBottom: 16,
-          gap: 8,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing['sm+'],
+          marginBottom: spacing.base,
+          gap: spacing.sm,
         },
         disclaimerText: {
           flex: 1,
-          fontSize: 11,
+          ...typography.mini,
           color: colors.textTertiary,
           lineHeight: 15,
         },
@@ -230,24 +230,24 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.background,
         },
         section: {
-          marginBottom: 20,
+          marginBottom: spacing.lg,
         },
         sectionHeader: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 8,
-          marginBottom: 12,
+          gap: spacing.sm,
+          marginBottom: spacing.md,
         },
         sectionTitle: {
-          fontSize: 18,
+          ...typography.h5,
           fontWeight: '700',
           color: colors.text,
         },
         card: {
           backgroundColor: colors.surface,
-          borderRadius: 16,
-          padding: 16,
-          shadowColor: '#000',
+          borderRadius: radius.lg,
+          padding: spacing.base,
+          shadowColor: palette.black,
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.08,
           shadowRadius: 4,
@@ -257,19 +257,19 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingVertical: 12,
+          paddingVertical: spacing.md,
         },
         statRowLeft: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 12,
+          gap: spacing.md,
         },
         statRowLabel: {
           fontSize: 15,
           color: colors.text,
         },
         statRowValue: {
-          fontSize: 16,
+          ...typography.body,
           fontWeight: '600',
           color: colors.text,
         },

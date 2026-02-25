@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/auth.store';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, darkColors, type ThemeColors, spacing, radius, typography, fontWeight, palette, size } from '../theme';
 import type { AuthStackParamList } from '../types';
 import { validateEmail, validateLoginPassword, isFormValid } from '../utils/validation';
 import { SportyBackground, SportyInput, SportyButton } from '../components/auth';
@@ -25,7 +25,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { loading, error, login, clearError } = useAuthStore();
-  const { colors, isDark } = useTheme();
+  const theme = useTheme();
+  // Fallback to darkColors if theme context fails to load
+  const colors = theme?.colors ?? darkColors;
+  const isDark = theme?.isDark ?? true;
   const styles = useStyles(colors);
 
   // Ref for password input focus navigation
@@ -239,135 +242,134 @@ const useStyles = (colors: ThemeColors) =>
         },
         container: {
           flexGrow: 1,
-          padding: 24,
-          paddingTop: 50,
+          padding: spacing.xl,
+          paddingTop: size.auth.paddingTop,
         },
         backButton: {
-          width: 40,
-          height: 40,
-          borderRadius: 12,
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          width: size.auth.backButtonSize,
+          height: size.auth.backButtonSize,
+          borderRadius: radius.base,
+          backgroundColor: palette.white + '1A',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 16,
+          marginBottom: spacing.base,
         },
         logoContainer: {
           alignItems: 'center',
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         logo: {
-          width: 160,
-          height: 55,
+          width: size.auth.logoWidth,
+          height: size.auth.logoHeight,
         },
         headerContainer: {
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         title: {
-          fontSize: 28,
-          fontWeight: '700',
-          color: '#FFFFFF',
+          ...typography.h1,
+          color: palette.white,
           textAlign: 'center',
-          marginBottom: 8,
+          marginBottom: spacing.sm,
         },
         subtitle: {
-          fontSize: 15,
-          color: 'rgba(255, 255, 255, 0.7)',
+          ...typography.body,
+          color: palette.white + 'B3',
           textAlign: 'center',
           lineHeight: 22,
         },
         errorBox: {
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          backgroundColor: colors.dangerBg,
           borderWidth: 1,
           borderColor: colors.danger,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 20,
-          gap: 10,
+          borderRadius: radius.base,
+          padding: spacing['md+'],
+          marginBottom: spacing.lg,
+          gap: spacing['sm+'],
         },
         errorText: {
           flex: 1,
           color: colors.danger,
-          fontSize: 14,
+          ...typography.bodySmall,
         },
         formContainer: {
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         forgotPasswordContainer: {
           alignSelf: 'flex-end',
-          marginBottom: 24,
-          marginTop: -8,
+          marginBottom: spacing.xl,
+          marginTop: -spacing.sm,
         },
         forgotPasswordText: {
           color: colors.primary,
-          fontSize: 14,
-          fontWeight: '500',
+          ...typography.bodySmall,
+          fontWeight: fontWeight.medium,
         },
         buttonContainer: {
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         divider: {
           flexDirection: 'row',
           alignItems: 'center',
-          marginBottom: 20,
+          marginBottom: spacing.lg,
         },
         dividerLine: {
           flex: 1,
           height: 1,
-          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          backgroundColor: palette.white + '26',
         },
         dividerText: {
           color: colors.textSecondary,
-          fontSize: 13,
-          marginHorizontal: 16,
+          ...typography.caption,
+          marginHorizontal: spacing.base,
         },
         socialButton: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          borderRadius: 16,
-          paddingVertical: 16,
-          gap: 10,
+          backgroundColor: palette.white + '14',
+          borderRadius: radius.lg,
+          paddingVertical: spacing.base,
+          gap: spacing['sm+'],
           opacity: 0.5,
         },
         socialButtonText: {
           color: colors.textSecondary,
-          fontSize: 15,
-          fontWeight: '500',
+          ...typography.body,
+          fontWeight: fontWeight.medium,
         },
         registerContainer: {
           flexDirection: 'row',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 6,
+          gap: spacing['2xs'],
           marginTop: 'auto',
-          paddingTop: 16,
+          paddingTop: spacing.base,
         },
         registerText: {
           color: colors.textSecondary,
-          fontSize: 14,
+          ...typography.bodySmall,
         },
         registerLink: {
           color: colors.primary,
-          fontSize: 14,
-          fontWeight: '600',
+          ...typography.bodySmall,
+          fontWeight: fontWeight.semibold,
         },
         trustIndicators: {
           flexDirection: 'row',
           justifyContent: 'center',
-          marginTop: 16,
-          paddingBottom: 8,
+          marginTop: spacing.base,
+          paddingBottom: spacing.sm,
         },
         trustItem: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
+          gap: spacing['2xs'],
         },
         trustText: {
           color: colors.textSecondary,
-          fontSize: 12,
+          ...typography.caption,
         },
       }),
     [colors]

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +17,7 @@ import { followApi, type FollowerDto } from '../api/follow.api';
 import { useAuthStore } from '../store/auth.store';
 import { useFollowStore } from '../store/follow.store';
 import type { RootStackParamList } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, palette } from '../theme';
 
 const MesAbonnesScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -113,8 +114,9 @@ const MesAbonnesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -129,10 +131,12 @@ const MesAbonnesScreen: React.FC = () => {
           followers.length === 0 ? styles.emptyContainer : styles.listContent
         }
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={48} color={colors.textTertiary} />
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconWrapper}>
+              <Ionicons name="people-outline" size={40} color={colors.primary} />
+            </View>
             <Text style={styles.emptyTitle}>Aucun abonné</Text>
-            <Text style={styles.emptyText}>
+            <Text style={styles.emptyHint}>
               Partagez vos tickets pour attirer des abonnés et développer votre
               communauté.
             </Text>
@@ -151,29 +155,42 @@ const useStyles = (colors: ThemeColors) =>
           flex: 1,
           backgroundColor: colors.background,
         },
-        center: {
+        // Loading state
+        loadingContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          gap: spacing.md,
+        },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
         },
         listContent: {
-          padding: 16,
-          paddingBottom: 32,
-        },
-        emptyContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 16,
+          padding: spacing.md,
+          paddingBottom: spacing.xl,
         },
 
         // Card
         card: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         cardContent: {
           flexDirection: 'row',
@@ -182,38 +199,38 @@ const useStyles = (colors: ThemeColors) =>
         avatar: {
           width: 40,
           height: 40,
-          borderRadius: 20,
-          backgroundColor: colors.primaryLight ?? `${colors.primary}15`,
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 12,
+          marginRight: spacing.sm,
         },
         info: {
           flex: 1,
         },
         username: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '700',
           color: colors.primary,
           marginBottom: 2,
         },
         dates: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textSecondary,
         },
         followBtn: {
-          marginTop: 10,
+          marginTop: spacing.sm,
           alignSelf: 'flex-end',
           backgroundColor: colors.primary,
-          borderRadius: 8,
-          paddingHorizontal: 16,
-          paddingVertical: 8,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.xs,
         },
         followingBtn: {
-          backgroundColor: colors.primaryLight ?? `${colors.primary}15`,
+          backgroundColor: colors.primaryBg,
         },
         followText: {
-          fontSize: 13,
+          ...typography.body,
           fontWeight: '600',
           color: colors.textOnPrimary,
         },
@@ -222,20 +239,41 @@ const useStyles = (colors: ThemeColors) =>
         },
 
         // Empty state
-        emptyState: {
+        emptyContainer: {
+          flex: 1,
+          justifyContent: 'center',
           alignItems: 'center',
-          gap: 8,
+          paddingHorizontal: spacing.lg,
+        },
+        emptyIconWrapper: {
+          width: 80,
+          height: 80,
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
         },
         emptyTitle: {
-          fontSize: 17,
-          fontWeight: '700',
+          ...typography.h4,
           color: colors.text,
+          marginBottom: spacing.xs,
         },
-        emptyText: {
-          fontSize: 14,
+        emptyHint: {
+          ...typography.body,
           color: colors.textSecondary,
           textAlign: 'center',
-          lineHeight: 20,
           maxWidth: 280,
         },
       }),

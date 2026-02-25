@@ -8,6 +8,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { notificationApi } from '../api/notification.api';
 import { useNotificationStore } from '../store/notification.store';
 import type { NotificationDto, NotificationData, RootStackParamList } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, palette } from '../theme';
 
 const NOTIFICATION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   NewTicket: 'receipt-outline',
@@ -240,8 +241,9 @@ const NotificationsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -287,9 +289,11 @@ const NotificationsScreen: React.FC = () => {
           />
         )}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="notifications-off-outline" size={48} color={colors.textTertiary} />
-            <Text style={styles.emptyText}>Aucune notification</Text>
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconWrapper}>
+              <Ionicons name="notifications-off-outline" size={40} color={colors.primary} />
+            </View>
+            <Text style={styles.emptyTitle}>Aucune notification</Text>
             <Text style={styles.emptyHint}>
               Vous recevrez des notifications sur vos tickets et abonnements
             </Text>
@@ -308,18 +312,24 @@ const useStyles = (colors: ThemeColors) =>
           flex: 1,
           backgroundColor: colors.background,
         },
-        center: {
+        // Loading state
+        loadingContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          gap: spacing.md,
+        },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
         },
         headerActions: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
           borderBottomWidth: StyleSheet.hairlineWidth,
           borderBottomColor: colors.border,
           backgroundColor: colors.surface,
@@ -327,87 +337,118 @@ const useStyles = (colors: ThemeColors) =>
         markAllBtn: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
+          gap: spacing.xs,
         },
         markAllText: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '600',
           color: colors.primary,
         },
         settingsBtn: {
-          padding: 4,
+          padding: spacing.xxs,
         },
         list: {
-          padding: 12,
-          paddingBottom: 24,
+          padding: spacing.sm,
+          paddingBottom: spacing.lg,
         },
         notificationItem: {
           flexDirection: 'row',
           alignItems: 'flex-start',
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 8,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.xs,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         notificationItemUnread: {
-          backgroundColor: colors.primary + '08',
-          borderWidth: 1,
-          borderColor: colors.primary + '20',
+          backgroundColor: colors.primaryBg,
+          borderColor: colors.primary + '30',
         },
         iconContainer: {
           width: 44,
           height: 44,
-          borderRadius: 22,
+          borderRadius: radius.full,
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 12,
+          marginRight: spacing.sm,
         },
         notificationContent: {
           flex: 1,
         },
         notificationTitle: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '600',
           color: colors.text,
-          marginBottom: 4,
+          marginBottom: spacing.xxs,
         },
         notificationTitleUnread: {
           fontWeight: '700',
         },
         notificationMessage: {
-          fontSize: 13,
+          ...typography.body,
           color: colors.textSecondary,
           lineHeight: 18,
-          marginBottom: 6,
+          marginBottom: spacing.xs,
         },
         notificationDate: {
-          fontSize: 11,
+          ...typography.caption,
           color: colors.textTertiary,
         },
         unreadDot: {
           width: 10,
           height: 10,
-          borderRadius: 5,
+          borderRadius: radius.full,
           backgroundColor: colors.primary,
-          marginLeft: 8,
-          marginTop: 4,
+          marginLeft: spacing.xs,
+          marginTop: spacing.xxs,
         },
-        empty: {
+        // Empty state
+        emptyContainer: {
           alignItems: 'center',
-          paddingTop: 60,
+          paddingTop: spacing.xxl,
+          paddingHorizontal: spacing.lg,
         },
-        emptyText: {
-          fontSize: 17,
-          fontWeight: '600',
-          color: colors.textSecondary,
-          marginTop: 12,
+        emptyIconWrapper: {
+          width: 80,
+          height: 80,
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
+        },
+        emptyTitle: {
+          ...typography.h4,
+          color: colors.text,
+          marginBottom: spacing.xs,
         },
         emptyHint: {
-          fontSize: 14,
-          color: colors.textTertiary,
-          marginTop: 4,
+          ...typography.body,
+          color: colors.textSecondary,
           textAlign: 'center',
-          paddingHorizontal: 32,
         },
       }),
     [colors]

@@ -380,21 +380,20 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Seed database
+// Apply migrations and seed database
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await context.Database.MigrateAsync();
     await DbSeeder.SeedAsync(context);
 
-    // Seed test data in development only - completely excluded from Release builds
-#if DEBUG
+    // Seed test data in development only
     if (app.Environment.IsDevelopment())
     {
         await TestDataSeeder.SeedTestDataAsync(context);
         // Seed comprehensive mock data for demo/investor presentations
         await MockMatchDataSeeder.SeedMockDataAsync(context);
     }
-#endif
 }
 
 // Sentry tracing (must be early for performance monitoring) - only if Sentry is configured

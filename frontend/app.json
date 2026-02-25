@@ -11,7 +11,7 @@
     "extra": {
       "sentryDsn": "",
       "eas": {
-        "projectId": ""
+        "projectId": "5654d236-138d-4457-ae2b-e7ad95de2f44"
       }
     },
     "ios": {
@@ -19,7 +19,8 @@
       "bundleIdentifier": "com.sharetips.app",
       "infoPlist": {
         "NSCameraUsageDescription": "ShareTips needs camera access to take profile photos",
-        "NSPhotoLibraryUsageDescription": "ShareTips needs photo library access to select profile photos"
+        "NSPhotoLibraryUsageDescription": "ShareTips needs photo library access to select profile photos",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -34,6 +35,8 @@
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ]
@@ -67,6 +70,13 @@
     ],
     "experiments": {
       "reactCompiler": true
+    },
+    "owner": "mickytorres",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5654d236-138d-4457-ae2b-e7ad95de2f44"
     }
   }
 }

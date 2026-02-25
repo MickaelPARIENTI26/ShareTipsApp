@@ -1,4 +1,3 @@
-#if DEBUG
 using Microsoft.EntityFrameworkCore;
 using ShareTipsBackend.Domain.Entities;
 using ShareTipsBackend.Domain.Enums;
@@ -600,4 +599,3 @@ public static class TestDataSeeder
         await context.SaveChangesAsync();
     }
 }
-#endif

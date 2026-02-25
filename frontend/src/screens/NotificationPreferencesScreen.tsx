@@ -14,7 +14,7 @@ import {
   notificationPreferencesApi,
   type NotificationPreferencesDto,
 } from '../api/notificationPreferences.api';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, fontWeight } from '../theme';
 
 interface PreferenceRowProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -184,7 +184,7 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.background,
         },
         contentContainer: {
-          padding: 16,
+          padding: spacing.base,
         },
         center: {
           flex: 1,
@@ -193,44 +193,44 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.background,
         },
         sectionTitle: {
-          fontSize: 24,
-          fontWeight: 'bold',
+          ...typography.h3,
+          fontWeight: fontWeight.bold,
           color: colors.text,
-          marginBottom: 8,
+          marginBottom: spacing.sm,
         },
         sectionSubtitle: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
-          marginBottom: 20,
+          marginBottom: spacing.lg,
         },
         card: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
+          borderRadius: radius.base,
           overflow: 'hidden',
         },
         preferenceRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          padding: 16,
+          padding: spacing.base,
         },
         preferenceIconContainer: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: spacing['3xl'],
+          height: spacing['3xl'],
+          borderRadius: radius.xl,
           backgroundColor: colors.primary + '15',
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 12,
+          marginRight: spacing.md,
         },
         preferenceContent: {
           flex: 1,
-          marginRight: 12,
+          marginRight: spacing.md,
         },
         preferenceTitle: {
-          fontSize: 16,
-          fontWeight: '600',
+          ...typography.body,
+          fontWeight: fontWeight.semibold,
           color: colors.text,
-          marginBottom: 2,
+          marginBottom: spacing.xxs,
         },
         preferenceDescription: {
           fontSize: 13,
@@ -246,11 +246,11 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: 16,
-          gap: 8,
+          marginTop: spacing.base,
+          gap: spacing.sm,
         },
         savingText: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
         },
       }),

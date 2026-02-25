@@ -10,7 +10,7 @@ import { gamificationApi } from '../api/gamification.api';
 import { GamificationCard } from '../components/gamification';
 import type { RootStackParamList } from '../types';
 import type { UserGamificationDto } from '../types/gamification.types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, palette } from '../theme';
 
 const ProfileScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -296,7 +296,7 @@ const useStyles = (colors: ThemeColors) =>
           borderBottomLeftRadius: 24,
           borderBottomRightRadius: 24,
           marginBottom: 16,
-          shadowColor: '#000',
+          shadowColor: palette.black,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.1,
           shadowRadius: 8,
@@ -399,7 +399,7 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.surface,
           borderRadius: 16,
           overflow: 'hidden',
-          shadowColor: '#000',
+          shadowColor: palette.black,
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.08,
           shadowRadius: 4,

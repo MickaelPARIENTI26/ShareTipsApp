@@ -8,13 +8,14 @@ import * as Linking from 'expo-linking';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 
-import { ThemeProvider, useTheme } from './src/theme';
+import { ThemeProvider, useTheme, darkColors } from './src/theme';
 import { useAuthStore } from './src/store/auth.store';
 import AppNavigator from './src/navigation/AppNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import TicketBuilder from './src/components/ticketBuilder/TicketBuilder';
 import { navigationRef } from './src/navigation/navigationRef';
 import { ErrorBoundary } from './src/components/common';
+import { ToastProvider } from './src/components/common/Toast';
 import { StripeProvider } from './src/providers/StripeProvider';
 import type { RootStackParamList } from './src/types';
 
@@ -84,7 +85,10 @@ const linking: LinkingOptions<RootStackParamList> = {
 
 function AppContent() {
   const { isAuthenticated, hydrated, hydrate } = useAuthStore();
-  const { colors, isDark } = useTheme();
+  const theme = useTheme();
+  // Fallback to darkColors if theme context fails to load
+  const colors = theme?.colors ?? darkColors;
+  const isDark = theme?.isDark ?? true;
 
   useEffect(() => {
     hydrate();
@@ -105,6 +109,7 @@ function AppContent() {
       </NavigationContainer>
       {isAuthenticated && <TicketBuilder />}
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      <ToastProvider />
     </SafeAreaProvider>
   );
 }

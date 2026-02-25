@@ -14,7 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { matchApi } from '../../api/match.api';
 import type { HomeStackParamList } from '../../types';
-import { useTheme, type ThemeColors } from '../../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, fontWeight, palette } from '../../theme';
 
 type Nav = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -168,69 +168,69 @@ const useStyles = (colors: ThemeColors) =>
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
-          padding: 24,
+          padding: spacing.xl,
         },
         list: {
           flexGrow: 1,
           backgroundColor: colors.background,
-          paddingBottom: 24,
+          paddingBottom: spacing.xl,
         },
         voirToutRow: {
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.primary,
-          paddingVertical: 16,
-          paddingHorizontal: 16,
-          marginBottom: 8,
+          paddingVertical: spacing.base,
+          paddingHorizontal: spacing.base,
+          marginBottom: spacing.sm,
         },
         iconContainer: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: 'rgba(255,255,255,0.2)',
+          width: spacing['3xl'],
+          height: spacing['3xl'],
+          borderRadius: spacing.lg,
+          backgroundColor: palette.white + '33',
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 14,
+          marginRight: spacing['md+'],
         },
         leagueIconContainer: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: spacing['3xl'],
+          height: spacing['3xl'],
+          borderRadius: spacing.lg,
           backgroundColor: colors.primary + '15',
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 14,
+          marginRight: spacing['md+'],
         },
         rowContent: {
           flex: 1,
         },
         voirToutLabel: {
-          fontSize: 16,
-          fontWeight: '700',
+          ...typography.body,
+          fontWeight: fontWeight.bold,
           color: colors.textOnPrimary,
         },
         row: {
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.surface,
-          paddingVertical: 14,
-          paddingHorizontal: 16,
+          paddingVertical: spacing['md+'],
+          paddingHorizontal: spacing.base,
         },
         rowLabel: {
           fontSize: 15,
-          fontWeight: '600',
+          fontWeight: fontWeight.semibold,
           color: colors.text,
         },
         matchCount: {
           fontSize: 13,
           color: colors.textOnPrimary,
           opacity: 0.8,
-          marginTop: 2,
+          marginTop: spacing.xxs,
         },
         matchCountSecondary: {
           fontSize: 13,
           color: colors.textSecondary,
-          marginTop: 2,
+          marginTop: spacing.xxs,
         },
         separator: {
           height: 1,
@@ -241,25 +241,25 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.danger,
           fontSize: 15,
           textAlign: 'center',
-          marginTop: 12,
+          marginTop: spacing.md,
         },
         emptyText: {
           color: colors.textSecondary,
           fontSize: 15,
           textAlign: 'center',
-          marginTop: 12,
+          marginTop: spacing.md,
         },
         retryBtn: {
-          marginTop: 16,
+          marginTop: spacing.base,
           backgroundColor: colors.primary,
-          borderRadius: 8,
-          paddingHorizontal: 24,
-          paddingVertical: 10,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.xl,
+          paddingVertical: spacing['sm+'],
         },
         retryBtnText: {
           color: colors.textOnPrimary,
           fontSize: 15,
-          fontWeight: '600',
+          fontWeight: fontWeight.semibold,
         },
       }),
     [colors]

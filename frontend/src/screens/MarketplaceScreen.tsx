@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,13 @@ import {
   RefreshControl,
   TouchableOpacity,
   ScrollView,
+  Platform,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import {
@@ -22,13 +26,29 @@ import { useFavoriteStore } from '../store/favorite.store';
 import { useFollowStore } from '../store/follow.store';
 import FilterModal from '../components/marketplace/FilterPanel';
 import { ErrorBanner } from '../components/common';
+import { MarketRefreshControl } from '../components/common/PremiumRefreshControl';
 import { parseError, type AppError } from '../utils/errors';
 import type {
   RootStackParamList,
   TicketDto,
   TicketFilterMetaDto,
 } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import {
+  useTheme,
+  type ThemeColors,
+  spacing,
+  radius,
+  typography,
+  palette,
+  effectGlass,
+  effectShadows,
+  createGlow,
+  springConfigs,
+} from '../theme';
+
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
 
 const SPORT_LABELS: Record<string, string> = {
   FOOTBALL: 'Football',
@@ -36,6 +56,17 @@ const SPORT_LABELS: Record<string, string> = {
   TENNIS: 'Tennis',
   ESPORT: 'Esport',
 };
+
+const SPORT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  FOOTBALL: 'football',
+  BASKETBALL: 'basketball',
+  TENNIS: 'tennisball',
+  ESPORT: 'game-controller',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -81,78 +112,212 @@ function countActiveFilters(filters: MarketplaceFilters): number {
   return count;
 }
 
-// --- Filter bar ---
+// ═══════════════════════════════════════════════════════════════
+// SUB-COMPONENTS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Chip de filtre avec animation
+ */
+const FilterChip: React.FC<{
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  isActive: boolean;
+  activeColor: string;
+  onPress: () => void;
+  badge?: number;
+  colors: ThemeColors;
+}> = React.memo(({ label, icon, isActive, activeColor, onPress, badge, colors }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      ...springConfigs.responsive,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      ...springConfigs.bouncy,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        style={[
+          filterChipStyles.container,
+          {
+            backgroundColor: isActive ? activeColor : colors.surface,
+            borderColor: isActive ? activeColor : colors.border,
+          },
+          isActive && Platform.select({
+            ios: createGlow(activeColor, 0.3),
+            android: { elevation: 4 },
+          }),
+        ]}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.9}
+      >
+        <View
+          style={[
+            filterChipStyles.iconWrapper,
+            {
+              backgroundColor: isActive
+                ? `${colors.textOnPrimary}30`
+                : colors.surfaceElevated,
+            },
+          ]}
+        >
+          <Ionicons
+            name={icon}
+            size={14}
+            color={isActive ? colors.textOnPrimary : activeColor}
+          />
+        </View>
+        <Text
+          style={[
+            typography.label,
+            { color: isActive ? colors.textOnPrimary : colors.textSecondary },
+          ]}
+        >
+          {label}
+        </Text>
+        {badge !== undefined && badge > 0 && (
+          <View style={[filterChipStyles.badge, { backgroundColor: colors.textOnPrimary }]}>
+            <Text style={[typography.badge, { color: activeColor, fontSize: 10 }]}>
+              {badge}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
+FilterChip.displayName = 'FilterChip';
+
+const filterChipStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    gap: spacing.sm,
+  },
+  iconWrapper: {
+    width: 26,
+    height: 26,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    borderRadius: radius.full,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+});
+
+/**
+ * Barre de filtres avec glassmorphism
+ */
 const FilterBar: React.FC<{
   filters: MarketplaceFilters;
   onFilterChange: (filters: MarketplaceFilters) => void;
   onOpenFilterModal: () => void;
   activeFilterCount: number;
   colors: ThemeColors;
-  styles: ReturnType<typeof useStyles>;
-}> = ({ filters, onFilterChange, onOpenFilterModal, activeFilterCount, colors, styles }) => {
-  return (
+}> = React.memo(({ filters, onFilterChange, onOpenFilterModal, activeFilterCount, colors }) => {
+  const filterBarContent = (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.filterBar}
-      style={styles.filterBarScroll}
+      contentContainerStyle={filterBarStyles.content}
     >
-      {/* Followed only */}
-      <TouchableOpacity
-        testID="followed-filter-chip"
-        style={[
-          styles.chip,
-          filters.followedOnly && styles.chipActiveOrange,
-        ]}
+      <FilterChip
+        label="Suivis"
+        icon="people"
+        isActive={!!filters.followedOnly}
+        activeColor={colors.accent}
         onPress={() =>
           onFilterChange({
             ...filters,
             followedOnly: !filters.followedOnly || undefined,
           })
         }
-      >
-        <Ionicons
-          name="people"
-          size={13}
-          color={filters.followedOnly ? colors.textOnPrimary : colors.textSecondary}
-          style={{ marginRight: 4 }}
-        />
-        <Text
-          style={[
-            styles.chipText,
-            filters.followedOnly && styles.chipTextActive,
-          ]}
-        >
-          Suivis
-        </Text>
-      </TouchableOpacity>
-
-      {/* Filter modal trigger */}
-      <TouchableOpacity
-        testID="filters-button"
-        style={[styles.chip, activeFilterCount > 0 && styles.chipActive]}
+        colors={colors}
+      />
+      <FilterChip
+        label="Filtres"
+        icon="options"
+        isActive={activeFilterCount > 0}
+        activeColor={colors.primary}
         onPress={onOpenFilterModal}
-      >
-        <Ionicons
-          name="options"
-          size={13}
-          color={activeFilterCount > 0 ? colors.textOnPrimary : colors.textSecondary}
-          style={{ marginRight: 4 }}
-        />
-        <Text
-          style={[
-            styles.chipText,
-            activeFilterCount > 0 && styles.chipTextActive,
-          ]}
-        >
-          Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-        </Text>
-      </TouchableOpacity>
+        badge={activeFilterCount}
+        colors={colors}
+      />
     </ScrollView>
   );
-};
 
-// --- Ticket card (memoized for FlatList performance) ---
+  return Platform.OS === 'ios' ? (
+    <BlurView
+      intensity={effectGlass.light.intensity}
+      tint="light"
+      style={[
+        filterBarStyles.container,
+        {
+          backgroundColor: `${colors.background}90`,
+          borderBottomColor: colors.border,
+        },
+      ]}
+    >
+      {filterBarContent}
+    </BlurView>
+  ) : (
+    <View
+      style={[
+        filterBarStyles.container,
+        {
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border,
+        },
+      ]}
+    >
+      {filterBarContent}
+    </View>
+  );
+});
+
+FilterBar.displayName = 'FilterBar';
+
+const filterBarStyles = StyleSheet.create({
+  container: {
+    borderBottomWidth: 1,
+    overflow: 'hidden',
+  },
+  content: {
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+    flexDirection: 'row',
+  },
+});
+
+/**
+ * Carte de ticket marketplace avec design premium
+ */
 const MarketplaceTicketCard = React.memo<{
   ticket: TicketDto;
   isFavorited: boolean;
@@ -164,8 +329,22 @@ const MarketplaceTicketCard = React.memo<{
   onCardPress: (ticketId: string) => void;
   onFollowCreator: (creatorId: string) => void;
   colors: ThemeColors;
-  styles: ReturnType<typeof useStyles>;
-}>(function MarketplaceTicketCard({ ticket, isFavorited, isFollowingCreator, isOwnTicket, onToggleFavorite, onBuy, onTipsterPress, onCardPress, onFollowCreator, colors, styles }) {
+}>(function MarketplaceTicketCard({
+  ticket,
+  isFavorited,
+  isFollowingCreator,
+  isOwnTicket,
+  onToggleFavorite,
+  onBuy,
+  onTipsterPress,
+  onCardPress,
+  onFollowCreator,
+  colors,
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const heartAnim = useRef(new Animated.Value(1)).current;
+  const followAnim = useRef(new Animated.Value(1)).current;
+
   const count = ticket.selectionCount ?? ticket.selections?.length ?? 0;
   const matchWord = count === 1 ? 'match' : 'matchs';
   const autoTitle = `${ticket.creatorUsername} – ${count} ${matchWord}`;
@@ -176,84 +355,172 @@ const MarketplaceTicketCard = React.memo<{
     ? `Payant – ${count} ${selWord}`
     : `${count} ${selWord}`;
 
-  return (
-    <TouchableOpacity
-      testID={`ticket-card-${ticket.id}`}
-      style={styles.card}
-      activeOpacity={0.7}
-      onPress={() => onCardPress(ticket.id)}
-    >
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      ...springConfigs.responsive,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      ...springConfigs.bouncy,
+      useNativeDriver: true,
+    }).start();
+  }, [scaleAnim]);
+
+  const handleFavoritePress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(heartAnim, { toValue: 1.3, duration: 100, useNativeDriver: true }),
+      Animated.spring(heartAnim, { toValue: 1, ...springConfigs.bouncy, useNativeDriver: true }),
+    ]).start();
+    onToggleFavorite(ticket.id);
+  }, [heartAnim, onToggleFavorite, ticket.id]);
+
+  const handleFollowPress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(followAnim, { toValue: 0.9, duration: 100, useNativeDriver: true }),
+      Animated.spring(followAnim, { toValue: 1, ...springConfigs.bouncy, useNativeDriver: true }),
+    ]).start();
+    onFollowCreator(ticket.creatorId);
+  }, [followAnim, onFollowCreator, ticket.creatorId]);
+
+  const cardContent = (
+    <>
       {/* Header */}
-      <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderLeft}>
+      <View style={cardStyles.header}>
+        <View style={cardStyles.headerLeft}>
           <TouchableOpacity
             onPress={() => onTipsterPress(ticket.creatorId, ticket.creatorUsername)}
           >
-            <Text style={styles.creatorName}>@{ticket.creatorUsername}</Text>
+            <LinearGradient
+              colors={[`${colors.primary}30`, `${colors.primary}10`]}
+              style={[cardStyles.creatorAvatar, { borderColor: colors.primary }]}
+            >
+              <Ionicons name="person" size={16} color={colors.primary} />
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onTipsterPress(ticket.creatorId, ticket.creatorUsername)}
+          >
+            <Text style={[typography.label, { color: colors.primary }]}>
+              @{ticket.creatorUsername}
+            </Text>
           </TouchableOpacity>
           {!isOwnTicket && (
-            <TouchableOpacity
-              style={[
-                styles.followChip,
-                isFollowingCreator && styles.followChipActive,
-              ]}
-              onPress={() => onFollowCreator(ticket.creatorId)}
-            >
-              <Text
+            <Animated.View style={{ transform: [{ scale: followAnim }] }}>
+              <TouchableOpacity
                 style={[
-                  styles.followChipText,
-                  isFollowingCreator && styles.followChipTextActive,
+                  cardStyles.followChip,
+                  {
+                    backgroundColor: isFollowingCreator ? colors.primary : colors.primaryBg,
+                    borderColor: isFollowingCreator ? colors.primary : `${colors.primary}30`,
+                  },
                 ]}
+                onPress={handleFollowPress}
+                activeOpacity={0.8}
               >
-                {isFollowingCreator ? 'Suivi' : 'Suivre'}
-              </Text>
-            </TouchableOpacity>
+                <Ionicons
+                  name={isFollowingCreator ? 'checkmark' : 'add'}
+                  size={12}
+                  color={isFollowingCreator ? colors.textOnPrimary : colors.primary}
+                />
+                <Text
+                  style={[
+                    typography.badge,
+                    { color: isFollowingCreator ? colors.textOnPrimary : colors.primary },
+                  ]}
+                >
+                  {isFollowingCreator ? 'Suivi' : 'Suivre'}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           )}
         </View>
-        <TouchableOpacity onPress={() => onToggleFavorite(ticket.id)}>
-          <Ionicons
-            name={isFavorited ? 'heart' : 'heart-outline'}
-            size={22}
-            color={isFavorited ? colors.danger : colors.textTertiary}
-          />
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: heartAnim }] }}>
+          <TouchableOpacity
+            style={[
+              cardStyles.favoriteBtn,
+              {
+                backgroundColor: isFavorited ? colors.dangerBg : colors.surfaceElevated,
+              },
+            ]}
+            onPress={handleFavoritePress}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={isFavorited ? 'heart' : 'heart-outline'}
+              size={20}
+              color={isFavorited ? colors.danger : colors.textTertiary}
+            />
+          </TouchableOpacity>
+        </Animated.View>
       </View>
 
-      {/* Title (auto-generated) */}
-      <Text style={styles.cardTitle} numberOfLines={2}>
+      {/* Title */}
+      <Text style={[typography.body, cardStyles.title, { color: colors.text }]} numberOfLines={2}>
         {autoTitle}
       </Text>
-      <Text style={styles.cardSubtitle}>{subtitle}</Text>
+      <Text style={[typography.caption, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
+        {subtitle}
+      </Text>
 
-      {/* Date range */}
-      <View style={styles.dateRangeRow}>
-        <Ionicons name="calendar-outline" size={13} color={colors.textSecondary} />
-        <Text style={styles.dateRangeText}>
+      {/* Date Range */}
+      <View style={[cardStyles.dateRange, { backgroundColor: colors.surfaceElevated }]}>
+        <Ionicons name="calendar-outline" size={14} color={colors.primary} />
+        <Text style={[typography.caption, { color: colors.text, fontWeight: '500' }]}>
           {formatDateRange(ticket.firstMatchTime, ticket.lastMatchTime, count)}
         </Text>
       </View>
 
-      {/* Meta */}
-      <View style={styles.cardMeta}>
-        <View style={styles.metaItem}>
-          <Text style={styles.metaLabel}>Cote moy.</Text>
-          <Text style={styles.metaValueBlue}>{ticket.avgOdds.toFixed(2)}</Text>
+      {/* Meta Stats */}
+      <View style={[cardStyles.metaContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        <View style={cardStyles.metaItem}>
+          <Text style={[typography.caption, cardStyles.metaLabel, { color: colors.textTertiary }]}>
+            COTE MOY.
+          </Text>
+          <Text style={[typography.odds, { color: colors.accent }]}>
+            {ticket.avgOdds.toFixed(2)}
+          </Text>
         </View>
-        <View style={styles.metaItem}>
-          <Text style={styles.metaLabel}>Confiance</Text>
-          <Text style={styles.metaValue}>{ticket.confidenceIndex}/10</Text>
+        <View style={[cardStyles.metaDivider, { backgroundColor: colors.border }]} />
+        <View style={cardStyles.metaItem}>
+          <Text style={[typography.caption, cardStyles.metaLabel, { color: colors.textTertiary }]}>
+            CONFIANCE
+          </Text>
+          <View style={cardStyles.confidenceRow}>
+            <Text style={[typography.body, { color: colors.text, fontWeight: '700' }]}>
+              {ticket.confidenceIndex}
+            </Text>
+            <Text style={[typography.caption, { color: colors.textTertiary }]}>/10</Text>
+          </View>
         </View>
-        <View style={styles.metaItem}>
-          <Text style={styles.metaLabel}>Sélections</Text>
-          <Text style={styles.metaValue}>{count}</Text>
+        <View style={[cardStyles.metaDivider, { backgroundColor: colors.border }]} />
+        <View style={cardStyles.metaItem}>
+          <Text style={[typography.caption, cardStyles.metaLabel, { color: colors.textTertiary }]}>
+            SÉLECTIONS
+          </Text>
+          <Text style={[typography.body, { color: colors.text, fontWeight: '700' }]}>
+            {count}
+          </Text>
         </View>
       </View>
 
-      {/* Sports badges */}
-      <View style={styles.sportRow}>
+      {/* Sports Badges */}
+      <View style={cardStyles.sportRow}>
         {ticket.sports.map((s) => (
-          <View key={s} style={styles.sportBadge}>
-            <Text style={styles.sportBadgeText}>
+          <View
+            key={s}
+            style={[cardStyles.sportBadge, { backgroundColor: colors.primaryBg }]}
+          >
+            <Ionicons
+              name={SPORT_ICONS[s] || 'trophy'}
+              size={12}
+              color={colors.primary}
+            />
+            <Text style={[typography.badge, { color: colors.primary }]}>
               {SPORT_LABELS[s] ?? s}
             </Text>
           </View>
@@ -261,47 +528,451 @@ const MarketplaceTicketCard = React.memo<{
       </View>
 
       {/* Footer */}
-      <View style={styles.cardFooter}>
-        <Text style={styles.dateText}>{formatDate(ticket.createdAt)}</Text>
-        {isPrivateLocked ? (
-          <View style={styles.payantBadge}>
-            <Ionicons name="lock-closed" size={12} color={colors.warning} />
-            <Text style={styles.payantBadgeText}>
-              Payant · {ticket.priceEur.toFixed(2)} €
-            </Text>
-          </View>
-        ) : !ticket.isPublic && ticket.isSubscribedToCreator ? (
-          <View style={styles.abonneBadge}>
-            <Ionicons name="star" size={12} color={colors.warning} />
-            <Text style={styles.abonneBadgeText}>Abonné</Text>
-          </View>
-        ) : !ticket.isPublic && ticket.isPurchasedByCurrentUser ? (
-          <View style={styles.purchasedBadge}>
-            <Ionicons name="checkmark-circle" size={14} color={colors.textOnPrimary} />
-            <Text style={styles.purchasedBadgeText}>Acheté</Text>
-          </View>
-        ) : ticket.priceEur > 0 ? (
-          <TouchableOpacity
-            style={styles.buyBtn}
-            onPress={() => onBuy(ticket)}
-            activeOpacity={0.7}
+      <View style={[cardStyles.footer, { borderTopColor: colors.border }]}>
+        <View style={cardStyles.footerLeft}>
+          <Ionicons name="time-outline" size={12} color={colors.textTertiary} />
+          <Text style={[typography.caption, { color: colors.textTertiary }]}>
+            {formatDate(ticket.createdAt)}
+          </Text>
+        </View>
+        {renderPriceBadge(ticket, isPrivateLocked, hasAccess, onBuy, colors)}
+      </View>
+    </>
+  );
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        testID={`ticket-card-${ticket.id}`}
+        activeOpacity={0.95}
+        onPress={() => onCardPress(ticket.id)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            intensity={effectGlass.light.intensity}
+            tint="light"
+            style={[
+              cardStyles.container,
+              {
+                backgroundColor: `${colors.surface}90`,
+                borderColor: colors.border,
+              },
+            ]}
           >
-            <Ionicons name="cart" size={14} color={colors.textOnPrimary} />
-            <Text style={styles.buyBtnText}>
-              {ticket.priceEur.toFixed(2)} €
-            </Text>
-          </TouchableOpacity>
+            {cardContent}
+          </BlurView>
         ) : (
-          <View style={styles.freeBadge}>
-            <Text style={styles.freeBadgeText}>Gratuit</Text>
+          <View
+            style={[
+              cardStyles.container,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                elevation: 3,
+              },
+            ]}
+          >
+            {cardContent}
           </View>
         )}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 });
 
-// --- Main screen ---
+/**
+ * Render le badge de prix selon l'état du ticket
+ */
+function renderPriceBadge(
+  ticket: TicketDto,
+  isPrivateLocked: boolean,
+  hasAccess: boolean,
+  onBuy: (ticket: TicketDto) => void,
+  colors: ThemeColors
+) {
+  if (isPrivateLocked) {
+    return (
+      <View style={[cardStyles.priceBadge, { backgroundColor: colors.accentBg }]}>
+        <Ionicons name="lock-closed" size={12} color={colors.warning} />
+        <Text style={[typography.badge, { color: colors.accent }]}>
+          {ticket.priceEur.toFixed(2)} €
+        </Text>
+      </View>
+    );
+  }
+
+  if (!ticket.isPublic && ticket.isSubscribedToCreator) {
+    return (
+      <LinearGradient
+        colors={[colors.accent, `${colors.accent}CC`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={cardStyles.subscribedBadge}
+      >
+        <Ionicons name="star" size={12} color="#FFFFFF" />
+        <Text style={[typography.badge, { color: '#FFFFFF' }]}>Abonné</Text>
+      </LinearGradient>
+    );
+  }
+
+  if (!ticket.isPublic && ticket.isPurchasedByCurrentUser) {
+    return (
+      <LinearGradient
+        colors={[colors.primary, colors.primaryLight || colors.primary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={cardStyles.purchasedBadge}
+      >
+        <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
+        <Text style={[typography.badge, { color: '#FFFFFF' }]}>Acheté</Text>
+      </LinearGradient>
+    );
+  }
+
+  if (ticket.priceEur > 0) {
+    return (
+      <TouchableOpacity onPress={() => onBuy(ticket)} activeOpacity={0.8}>
+        <LinearGradient
+          colors={[colors.primary, colors.primaryLight || colors.primary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[
+            cardStyles.buyBtn,
+            Platform.select({
+              ios: createGlow(colors.primary, 0.3),
+              android: { elevation: 4 },
+            }),
+          ]}
+        >
+          <Ionicons name="cart" size={14} color="#FFFFFF" />
+          <Text style={[typography.button, { color: '#FFFFFF' }]}>
+            {ticket.priceEur.toFixed(2)} €
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={[cardStyles.freeBadge, { backgroundColor: colors.successBg }]}>
+      <Ionicons name="gift" size={12} color={colors.success} />
+      <Text style={[typography.badge, { color: colors.success }]}>Gratuit</Text>
+    </View>
+  );
+}
+
+const cardStyles = StyleSheet.create({
+  container: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
+  creatorAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+  },
+  followChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderWidth: 1,
+  },
+  favoriteBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontWeight: '700',
+    marginBottom: spacing.xxs,
+  },
+  dateRange: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    marginBottom: spacing.lg,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+  },
+  metaItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  metaDivider: {
+    width: 1,
+    marginHorizontal: spacing.sm,
+  },
+  metaLabel: {
+    fontSize: 10,
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  confidenceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  sportRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  sportBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+  },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  priceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  subscribedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  purchasedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  buyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  freeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+});
+
+/**
+ * État de chargement avec animation
+ */
+const LoadingState: React.FC<{ colors: ThemeColors }> = React.memo(({ colors }) => {
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.8, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [rotateAnim, pulseAnim]);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={[loadingStyles.container, { backgroundColor: colors.background }]}>
+      <Animated.View
+        style={[
+          loadingStyles.iconWrapper,
+          {
+            backgroundColor: colors.primaryBg,
+            transform: [{ rotate: spin }, { scale: pulseAnim }],
+          },
+        ]}
+      >
+        <Ionicons name="storefront" size={40} color={colors.primary} />
+      </Animated.View>
+      <Text style={[typography.h4, { color: colors.text, marginTop: spacing.lg }]}>
+        Chargement du marketplace
+      </Text>
+      <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>
+        Récupération des tickets...
+      </Text>
+      <View style={loadingStyles.dotsContainer}>
+        {[0, 1, 2].map((i) => (
+          <Animated.View
+            key={i}
+            style={[
+              loadingStyles.dot,
+              { backgroundColor: colors.primary, opacity: pulseAnim },
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+});
+
+LoadingState.displayName = 'LoadingState';
+
+const loadingStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  iconWrapper: {
+    width: 96,
+    height: 96,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+  },
+});
+
+/**
+ * État vide avec animation
+ */
+const EmptyState: React.FC<{ colors: ThemeColors }> = React.memo(({ colors }) => {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, { toValue: -10, duration: 1500, useNativeDriver: true }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 1500, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [floatAnim]);
+
+  return (
+    <View style={emptyStyles.container}>
+      <Animated.View style={{ transform: [{ translateY: floatAnim }] }}>
+        <LinearGradient
+          colors={[colors.surfaceElevated, colors.background]}
+          style={[emptyStyles.iconWrapper, { borderColor: colors.border }]}
+        >
+          <Ionicons name="storefront-outline" size={48} color={colors.textTertiary} />
+        </LinearGradient>
+      </Animated.View>
+      <Text style={[typography.h4, { color: colors.text, marginTop: spacing.lg }]}>
+        Aucun ticket disponible
+      </Text>
+      <Text
+        style={[
+          typography.body,
+          {
+            color: colors.textSecondary,
+            textAlign: 'center',
+            marginTop: spacing.sm,
+            maxWidth: 280,
+            lineHeight: 22,
+          },
+        ]}
+      >
+        Modifiez les filtres pour voir plus de résultats
+      </Text>
+    </View>
+  );
+});
+
+EmptyState.displayName = 'EmptyState';
+
+const emptyStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    paddingTop: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+  },
+  iconWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
 const MarketplaceScreen: React.FC = () => {
   const { colors } = useTheme();
   const styles = useStyles(colors);
@@ -459,12 +1130,12 @@ const MarketplaceScreen: React.FC = () => {
     setShowFilterModal(false);
   }, []);
 
+  // ─────────────────────────────────────────────────────────────
+  // RENDER STATES
+  // ─────────────────────────────────────────────────────────────
+
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <LoadingState colors={colors} />;
   }
 
   return (
@@ -475,7 +1146,6 @@ const MarketplaceScreen: React.FC = () => {
         onOpenFilterModal={handleOpenFilterModal}
         activeFilterCount={countActiveFilters(filters)}
         colors={colors}
-        styles={styles}
       />
       <FilterModal
         visible={showFilterModal}
@@ -497,8 +1167,12 @@ const MarketplaceScreen: React.FC = () => {
         keyExtractor={(item) => item.id}
         extraData={[favoritedIds, followedIds]}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <MarketRefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.3}
@@ -519,31 +1193,27 @@ const MarketplaceScreen: React.FC = () => {
             onCardPress={handleCardPress}
             onFollowCreator={handleFollowCreator}
             colors={colors}
-            styles={styles}
           />
         )}
-        ListEmptyComponent={
-          <View testID="empty-state" style={styles.empty}>
-            <Ionicons name="storefront-outline" size={48} color={colors.textTertiary} />
-            <Text style={styles.emptyText}>Aucun ticket disponible</Text>
-            <Text style={styles.emptyHint}>
-              Modifiez les filtres pour voir plus de résultats
-            </Text>
-          </View>
-        }
+        ListEmptyComponent={<EmptyState colors={colors} />}
         ListFooterComponent={
           loadingMore ? (
-            <ActivityIndicator
-              size="small"
-              color={colors.primary}
-              style={{ padding: 16 }}
-            />
+            <View style={styles.loadingMore}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={[typography.caption, { color: colors.textSecondary, marginTop: spacing.sm }]}>
+                Chargement...
+              </Text>
+            </View>
           ) : null
         }
       />
     </View>
   );
 };
+
+// ═══════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════
 
 const useStyles = (colors: ThemeColors) =>
   useMemo(
@@ -553,251 +1223,13 @@ const useStyles = (colors: ThemeColors) =>
           flex: 1,
           backgroundColor: colors.background,
         },
-        center: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-        },
         list: {
-          padding: 12,
-          paddingBottom: 80,
+          padding: spacing.base,
+          paddingBottom: 140,
         },
-
-        // Filter bar
-        filterBarScroll: {
-          flexGrow: 0,
-        },
-        filterBar: {
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          gap: 8,
-          flexDirection: 'row',
-        },
-        chip: {
-          flexDirection: 'row',
+        loadingMore: {
+          padding: spacing.xl,
           alignItems: 'center',
-          backgroundColor: colors.surface,
-          borderRadius: 16,
-          paddingHorizontal: 12,
-          paddingVertical: 7,
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
-        chipActive: {
-          backgroundColor: colors.primary,
-          borderColor: colors.primary,
-        },
-        chipActiveOrange: {
-          backgroundColor: colors.warning,
-          borderColor: colors.warning,
-        },
-        chipText: {
-          fontSize: 13,
-          fontWeight: '600',
-          color: colors.textSecondary,
-        },
-        chipTextActive: {
-          color: colors.textOnPrimary,
-        },
-
-        // Card
-        card: {
-          backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
-        },
-        cardHeader: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 8,
-        },
-        cardHeaderLeft: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
-          flex: 1,
-        },
-        creatorName: {
-          fontSize: 13,
-          fontWeight: '700',
-          color: colors.primary,
-        },
-        followChip: {
-          backgroundColor: colors.background,
-          borderRadius: 12,
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-        },
-        followChipActive: {
-          backgroundColor: colors.primary,
-        },
-        followChipText: {
-          fontSize: 11,
-          fontWeight: '600',
-          color: colors.primary,
-        },
-        followChipTextActive: {
-          color: colors.textOnPrimary,
-        },
-        cardTitle: {
-          fontSize: 15,
-          fontWeight: '700',
-          color: colors.text,
-          marginBottom: 2,
-        },
-        cardSubtitle: {
-          fontSize: 13,
-          color: colors.textSecondary,
-          marginBottom: 6,
-        },
-        dateRangeRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 5,
-          marginBottom: 10,
-        },
-        dateRangeText: {
-          fontSize: 12,
-          color: colors.textSecondary,
-          fontWeight: '500',
-        },
-        cardMeta: {
-          flexDirection: 'row',
-          backgroundColor: colors.surfaceSecondary,
-          borderRadius: 8,
-          padding: 10,
-          marginBottom: 10,
-        },
-        metaItem: {
-          flex: 1,
-          alignItems: 'center',
-        },
-        metaLabel: {
-          fontSize: 11,
-          color: colors.textSecondary,
-          marginBottom: 2,
-        },
-        metaValue: {
-          fontSize: 13,
-          fontWeight: '700',
-          color: colors.text,
-        },
-        metaValueBlue: {
-          fontSize: 15,
-          fontWeight: '800',
-          color: colors.primary,
-        },
-        sportRow: {
-          flexDirection: 'row',
-          gap: 6,
-          marginBottom: 10,
-        },
-        sportBadge: {
-          backgroundColor: colors.background,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 3,
-        },
-        sportBadgeText: {
-          fontSize: 11,
-          fontWeight: '600',
-          color: colors.textSecondary,
-        },
-        cardFooter: {
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        },
-        dateText: {
-          fontSize: 12,
-          color: colors.textTertiary,
-        },
-        buyBtn: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.success,
-          borderRadius: 8,
-          paddingHorizontal: 10,
-          paddingVertical: 6,
-          gap: 4,
-        },
-        buyBtnText: {
-          color: colors.textOnPrimary,
-          fontSize: 13,
-          fontWeight: '700',
-        },
-        freeBadge: {
-          backgroundColor: colors.successLight,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-        },
-        freeBadgeText: {
-          fontSize: 12,
-          fontWeight: '600',
-          color: colors.success,
-        },
-        payantBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.warningLight,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
-        },
-        payantBadgeText: {
-          fontSize: 12,
-          fontWeight: '600',
-          color: colors.warning,
-        },
-        purchasedBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.primary,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
-        },
-        purchasedBadgeText: {
-          fontSize: 12,
-          fontWeight: '600',
-          color: colors.textOnPrimary,
-        },
-        abonneBadge: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.warningLight,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
-        },
-        abonneBadgeText: {
-          fontSize: 12,
-          fontWeight: '600',
-          color: colors.warning,
-        },
-
-        // Empty
-        empty: {
-          alignItems: 'center',
-          paddingTop: 60,
-        },
-        emptyText: {
-          fontSize: 17,
-          fontWeight: '600',
-          color: colors.textSecondary,
-          marginTop: 12,
-        },
-        emptyHint: {
-          fontSize: 14,
-          color: colors.textTertiary,
-          marginTop: 4,
         },
       }),
     [colors]

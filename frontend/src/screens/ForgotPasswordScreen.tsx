@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, darkColors, type ThemeColors, spacing, radius, typography, fontWeight, size, layout } from '../theme';
 import type { AuthStackParamList } from '../types';
 import { authApi } from '../api/auth.api';
 import { validateEmail, validatePassword } from '../utils/validation';
@@ -23,7 +23,9 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 type Step = 'email' | 'emailSent' | 'newPassword';
 
 const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors } = useTheme();
+  const theme = useTheme();
+  // Fallback to darkColors if theme context fails to load
+  const colors = theme?.colors ?? darkColors;
   const styles = useStyles(colors);
 
   const [step, setStep] = useState<Step>('email');
@@ -326,68 +328,68 @@ const useStyles = (colors: ThemeColors) =>
         container: {
           flexGrow: 1,
           justifyContent: 'center',
-          padding: 24,
+          padding: spacing.xl,
         },
         backButton: {
           position: 'absolute',
-          top: 50,
-          left: 16,
-          zIndex: 10,
+          top: size.auth.paddingTop,
+          left: spacing.base,
+          zIndex: layout.zIndex.dropdown,
         },
         title: {
-          fontSize: 24,
-          fontWeight: '700',
+          ...typography.h2,
+          fontWeight: fontWeight.bold,
           color: colors.text,
           textAlign: 'center',
-          marginBottom: 8,
+          marginBottom: spacing.sm,
         },
         instruction: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
           textAlign: 'center',
-          marginBottom: 24,
+          marginBottom: spacing.xl,
           lineHeight: 20,
         },
         errorBox: {
           backgroundColor: colors.dangerLight,
           borderWidth: 1,
           borderColor: colors.dangerBorder,
-          borderRadius: 8,
-          padding: 12,
-          marginBottom: 16,
+          borderRadius: radius.md,
+          padding: spacing.md,
+          marginBottom: spacing.base,
         },
         errorText: {
           color: colors.danger,
-          fontSize: 14,
+          ...typography.bodySmall,
           textAlign: 'center',
         },
         successBox: {
           backgroundColor: colors.successLight,
           borderWidth: 1,
           borderColor: colors.success,
-          borderRadius: 12,
-          padding: 24,
-          marginBottom: 20,
+          borderRadius: radius.base,
+          padding: spacing.xl,
+          marginBottom: spacing.lg,
           alignItems: 'center',
         },
         successTitle: {
-          fontSize: 18,
-          fontWeight: '700',
+          ...typography.h4,
+          fontWeight: fontWeight.bold,
           color: colors.success,
-          marginTop: 12,
-          marginBottom: 8,
+          marginTop: spacing.md,
+          marginBottom: spacing.sm,
         },
         successText: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
           textAlign: 'center',
           lineHeight: 20,
         },
         orText: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textTertiary,
           textAlign: 'center',
-          marginVertical: 16,
+          marginVertical: spacing.base,
         },
         passwordContainer: {
           position: 'relative',
@@ -396,20 +398,20 @@ const useStyles = (colors: ThemeColors) =>
         },
         passwordInput: {
           flex: 1,
-          paddingRight: 50,
+          paddingRight: spacing['3xl'] + spacing['sm+'],
         },
         eyeButton: {
           position: 'absolute',
-          right: 14,
-          top: 14,
+          right: spacing['md+'],
+          top: spacing['md+'],
         },
         input: {
           borderWidth: 1,
           borderColor: colors.inputBorder,
-          borderRadius: 8,
-          padding: 14,
-          fontSize: 16,
-          marginBottom: 4,
+          borderRadius: radius.md,
+          padding: spacing['md+'],
+          ...typography.body,
+          marginBottom: spacing.xs,
           backgroundColor: colors.inputBackground,
           color: colors.text,
         },
@@ -418,31 +420,31 @@ const useStyles = (colors: ThemeColors) =>
         },
         fieldError: {
           color: colors.danger,
-          fontSize: 12,
-          marginBottom: 8,
-          marginLeft: 4,
+          ...typography.caption,
+          marginBottom: spacing.sm,
+          marginLeft: spacing.xs,
         },
         button: {
           backgroundColor: colors.primary,
-          padding: 16,
-          borderRadius: 8,
+          padding: spacing.base,
+          borderRadius: radius.md,
           alignItems: 'center',
-          marginTop: 12,
-          marginBottom: 16,
+          marginTop: spacing.md,
+          marginBottom: spacing.base,
         },
         buttonDisabled: {
           opacity: 0.5,
         },
         buttonText: {
           color: colors.textOnPrimary,
-          fontSize: 16,
-          fontWeight: '600',
+          ...typography.body,
+          fontWeight: fontWeight.semibold,
         },
         link: {
           textAlign: 'center',
           color: colors.primary,
-          fontSize: 14,
-          marginTop: 8,
+          ...typography.bodySmall,
+          marginTop: spacing.sm,
         },
       }),
     [colors]

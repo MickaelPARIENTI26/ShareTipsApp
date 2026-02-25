@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -14,7 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { purchaseApi } from '../api/purchase.api';
 import type { RootStackParamList, PurchaseDto } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, palette, size } from '../theme';
 
 const PAGE_SIZE = 15;
 
@@ -135,8 +136,9 @@ const MesAchatsScreen: React.FC = () => {
 
   if (loading && purchases.length === 0) {
     return (
-      <View style={styles.center}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -162,9 +164,11 @@ const MesAchatsScreen: React.FC = () => {
         ) : null
       }
       ListEmptyComponent={
-        <View style={styles.empty}>
-          <Ionicons name="cart-outline" size={48} color={colors.textTertiary} />
-          <Text style={styles.emptyText}>Aucun achat</Text>
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconWrapper}>
+            <Ionicons name="cart-outline" size={40} color={colors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>Aucun achat</Text>
           <Text style={styles.emptyHint}>
             Achetez des tickets depuis le marché
           </Text>
@@ -178,42 +182,61 @@ const useStyles = (colors: ThemeColors) =>
   useMemo(
     () =>
       StyleSheet.create({
-        center: {
+        // Loading state
+        loadingContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          gap: spacing.md,
+        },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
         },
         list: {
-          padding: 12,
-          paddingBottom: 80,
+          padding: spacing.sm,
+          paddingBottom: size.listPaddingBottom.sm,
           backgroundColor: colors.background,
         },
         loadingMore: {
-          paddingVertical: 16,
+          paddingVertical: spacing.md,
           alignItems: 'center',
         },
 
         // Card
         card: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         cardHeader: {
-          marginBottom: 10,
+          marginBottom: spacing.sm,
         },
         cardTitle: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '700',
           color: colors.text,
         },
         cardMeta: {
           backgroundColor: colors.surfaceSecondary,
-          borderRadius: 8,
-          padding: 10,
-          marginBottom: 8,
+          borderRadius: radius.md,
+          padding: spacing.sm,
+          marginBottom: spacing.xs,
         },
         metaRow: {
           flexDirection: 'row',
@@ -221,39 +244,59 @@ const useStyles = (colors: ThemeColors) =>
           paddingVertical: 3,
         },
         metaLabel: {
-          fontSize: 13,
+          ...typography.body,
           color: colors.textSecondary,
         },
         metaValue: {
-          fontSize: 13,
+          ...typography.body,
           fontWeight: '700',
           color: colors.text,
         },
         sellerLink: {
-          fontSize: 13,
+          ...typography.body,
           fontWeight: '700',
           color: colors.primary,
         },
         dateText: {
-          fontSize: 11,
+          ...typography.caption,
           color: colors.textTertiary,
         },
 
-        // Empty
-        empty: {
+        // Empty state
+        emptyContainer: {
           alignItems: 'center',
-          paddingTop: 60,
+          paddingTop: spacing.xxl,
+          paddingHorizontal: spacing.lg,
         },
-        emptyText: {
-          fontSize: 17,
-          fontWeight: '600',
-          color: colors.textSecondary,
-          marginTop: 12,
+        emptyIconWrapper: {
+          width: 80,
+          height: 80,
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
+        },
+        emptyTitle: {
+          ...typography.h4,
+          color: colors.text,
+          marginBottom: spacing.xs,
         },
         emptyHint: {
-          fontSize: 14,
-          color: colors.textTertiary,
-          marginTop: 4,
+          ...typography.body,
+          color: colors.textSecondary,
+          textAlign: 'center',
         },
       }),
     [colors]

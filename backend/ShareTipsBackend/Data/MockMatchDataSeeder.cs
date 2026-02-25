@@ -1,4 +1,3 @@
-#if DEBUG
 using ShareTipsBackend.Domain.Entities;
 using ShareTipsBackend.Domain.Enums;
 
@@ -15,7 +14,7 @@ public static class MockMatchDataSeeder
 
     public static async Task SeedMockDataAsync(ApplicationDbContext context)
     {
-        // Check if mock data already exists
+        // Skip if mock data already exists (to avoid duplicates)
         if (context.Matches.Any(m => m.ExternalId != null && m.ExternalId.StartsWith("MOCK_")))
         {
             Console.WriteLine("[MockMatchDataSeeder] Mock data already exists, skipping...");
@@ -1444,4 +1443,3 @@ public static class MockMatchDataSeeder
     }
     #endregion
 }
-#endif

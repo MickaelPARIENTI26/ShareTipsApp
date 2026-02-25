@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Alert,
   ScrollView,
   Modal,
+  Platform,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -35,7 +37,7 @@ import type {
   SubscriptionStatusDto,
   SubscriptionPlanDto,
 } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, size, fontSize } from '../theme';
 
 type TabKey = 'public' | 'private' | 'stats';
 
@@ -348,6 +350,48 @@ const TipsterProfileScreen: React.FC = () => {
   const [followLoading, setFollowLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('public');
 
+  // Smooth tab transition animation
+  const tabFadeAnim = useRef(new Animated.Value(1)).current;
+  const tabSlideAnim = useRef(new Animated.Value(0)).current;
+
+  const handleTabChange = useCallback((tab: TabKey) => {
+    if (tab === activeTab) return;
+
+    const tabIndex = { public: 0, private: 1, stats: 2 };
+    const direction = tabIndex[tab] > tabIndex[activeTab] ? 1 : -1;
+
+    // Animate out
+    Animated.parallel([
+      Animated.timing(tabFadeAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(tabSlideAnim, {
+        toValue: -10 * direction,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setActiveTab(tab);
+      tabSlideAnim.setValue(10 * direction);
+
+      // Animate in
+      Animated.parallel([
+        Animated.timing(tabFadeAnim, {
+          toValue: 1,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(tabSlideAnim, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  }, [activeTab, tabFadeAnim, tabSlideAnim]);
+
   // Pagination state
   const [publicPage, setPublicPage] = useState(1);
   const [privatePage, setPrivatePage] = useState(1);
@@ -655,8 +699,9 @@ const TipsterProfileScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -802,7 +847,7 @@ const TipsterProfileScreen: React.FC = () => {
           <TouchableOpacity
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
+            onPress={() => handleTabChange(tab.key)}
             activeOpacity={0.7}
           >
             <Text
@@ -842,60 +887,70 @@ const TipsterProfileScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={activeTab === 'stats' || showPrivateGate ? [] : activeTickets}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.list,
-          showPrivateGate && styles.listWithGate,
+      <Animated.View
+        style={[
+          styles.animatedListWrapper,
+          {
+            opacity: tabFadeAnim,
+            transform: [{ translateX: tabSlideAnim }],
+          },
         ]}
-        ListHeaderComponent={headerComponent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.3}
-        renderItem={({ item }) => (
-          <TipsterTicketCard
-            ticket={item}
-            isFavorited={isFavorited(item.id)}
-            onToggleFavorite={handleToggleFavorite}
-            onBuy={handleBuy}
-            onPress={() => navigation.navigate('TicketDetail', { ticketId: item.id })}
-            styles={styles}
-            colors={colors}
-          />
-        )}
-        ListFooterComponent={
-          showPrivateGate ? (
-            <SubscriptionGate
-              isSubscribed={false}
-              isLoading={subLoading}
-              isCreator={isOwnProfile}
-              onSubscribe={openPlansModal}
-              lockedTitle="Tickets privés réservés aux abonnés"
-              lockedMessage={`Abonnez-vous à ${tipsterUsername} pour accéder à tous ses tickets privés et analyses exclusives.`}
-              buttonText="Voir les abonnements"
-              remainingDays={subStatus?.remainingDays}
-              wasSubscribed={subStatus?.wasSubscribed}
-            >
-              <View />
-            </SubscriptionGate>
-          ) : loadingMore && activeTab !== 'stats' ? (
-            <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color={colors.primary} />
-            </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          !showPrivateGate && emptyLabel ? (
-            <View style={styles.empty}>
-              <Ionicons name="receipt-outline" size={40} color={colors.textTertiary} />
-              <Text style={styles.emptyText}>{emptyLabel}</Text>
-            </View>
-          ) : null
-        }
-      />
+      >
+        <FlatList
+          data={activeTab === 'stats' || showPrivateGate ? [] : activeTickets}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={[
+            styles.list,
+            showPrivateGate && styles.listWithGate,
+          ]}
+          ListHeaderComponent={headerComponent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.3}
+          renderItem={({ item }) => (
+            <TipsterTicketCard
+              ticket={item}
+              isFavorited={isFavorited(item.id)}
+              onToggleFavorite={handleToggleFavorite}
+              onBuy={handleBuy}
+              onPress={() => navigation.navigate('TicketDetail', { ticketId: item.id })}
+              styles={styles}
+              colors={colors}
+            />
+          )}
+          ListFooterComponent={
+            showPrivateGate ? (
+              <SubscriptionGate
+                isSubscribed={false}
+                isLoading={subLoading}
+                isCreator={isOwnProfile}
+                onSubscribe={openPlansModal}
+                lockedTitle="Tickets privés réservés aux abonnés"
+                lockedMessage={`Abonnez-vous à ${tipsterUsername} pour accéder à tous ses tickets privés et analyses exclusives.`}
+                buttonText="Voir les abonnements"
+                remainingDays={subStatus?.remainingDays}
+                wasSubscribed={subStatus?.wasSubscribed}
+              >
+                <View />
+              </SubscriptionGate>
+            ) : loadingMore && activeTab !== 'stats' ? (
+              <View style={styles.loadingMore}>
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            !showPrivateGate && emptyLabel ? (
+              <View style={styles.empty}>
+                <Ionicons name="receipt-outline" size={40} color={colors.textTertiary} />
+                <Text style={styles.emptyText}>{emptyLabel}</Text>
+              </View>
+            ) : null
+          }
+        />
+      </Animated.View>
 
       {/* Plans Modal */}
       <Modal
@@ -992,11 +1047,17 @@ const useStyles = (colors: ThemeColors) =>
   useMemo(
     () =>
       StyleSheet.create({
-        center: {
+        // Loading state
+        loadingContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          gap: spacing.md,
+        },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
         },
         list: {
           paddingBottom: 80,
@@ -1006,45 +1067,47 @@ const useStyles = (colors: ThemeColors) =>
           flexGrow: 1,
         },
         loadingMore: {
-          paddingVertical: 16,
+          paddingVertical: spacing.md,
           alignItems: 'center',
+        },
+        animatedListWrapper: {
+          flex: 1,
         },
 
         // Profile header
         profileHeader: {
           alignItems: 'center',
           backgroundColor: colors.surface,
-          paddingVertical: 20,
-          paddingHorizontal: 16,
+          paddingVertical: spacing.lg,
+          paddingHorizontal: spacing.base,
         },
         avatar: {
-          width: 64,
-          height: 64,
-          borderRadius: 32,
+          width: size.profile.avatarMd,
+          height: size.profile.avatarMd,
+          borderRadius: radius.full,
           backgroundColor: colors.primary,
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 10,
+          marginBottom: spacing['sm+'],
         },
         avatarText: {
           color: colors.textOnPrimary,
-          fontSize: 26,
+          fontSize: fontSize['3xl'],
           fontWeight: '800',
         },
         username: {
-          fontSize: 20,
-          fontWeight: '700',
+          ...typography.h4,
           color: colors.text,
-          marginBottom: 6,
+          marginBottom: spacing['2xs'],
         },
         followCountsRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
-          marginBottom: 12,
+          gap: spacing['2xs'],
+          marginBottom: spacing.md,
         },
         followCountText: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
         },
         followCountBold: {
@@ -1052,17 +1115,17 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.text,
         },
         followCountDot: {
-          fontSize: 14,
+          fontSize: fontSize.md,
           color: colors.textTertiary,
         },
         followBtn: {
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.primary,
-          borderRadius: 10,
-          paddingHorizontal: 24,
-          paddingVertical: 10,
-          gap: 6,
+          borderRadius: radius['md+'],
+          paddingHorizontal: spacing.xl,
+          paddingVertical: spacing['sm+'],
+          gap: spacing['2xs'],
         },
         followBtnActive: {
           backgroundColor: colors.surface,
@@ -1071,7 +1134,7 @@ const useStyles = (colors: ThemeColors) =>
         },
         followBtnText: {
           color: colors.textOnPrimary,
-          fontSize: 15,
+          fontSize: fontSize.base,
           fontWeight: '700',
         },
         followBtnTextActive: {
@@ -1081,40 +1144,40 @@ const useStyles = (colors: ThemeColors) =>
         // Subscription
         subscriptionSection: {
           width: '100%',
-          marginTop: 12,
-          paddingHorizontal: 16,
+          marginTop: spacing.md,
+          paddingHorizontal: spacing.base,
         },
         subscribedCard: {
           backgroundColor: colors.successLight,
-          borderRadius: 10,
-          padding: 12,
+          borderRadius: radius['md+'],
+          padding: spacing.md,
           alignItems: 'center',
-          gap: 4,
+          gap: spacing.xs,
         },
         subscribedHeader: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
+          gap: spacing['2xs'],
         },
         subscribedText: {
-          fontSize: 15,
+          fontSize: fontSize.base,
           fontWeight: '700',
           color: colors.success,
         },
         subscribedEndDate: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.successDark,
         },
         unsubscribeBtn: {
-          marginTop: 6,
-          paddingHorizontal: 16,
-          paddingVertical: 6,
-          borderRadius: 8,
+          marginTop: spacing['2xs'],
+          paddingHorizontal: spacing.base,
+          paddingVertical: spacing['2xs'],
+          borderRadius: radius.md,
           borderWidth: 1,
           borderColor: colors.danger,
         },
         unsubscribeBtnText: {
-          fontSize: 13,
+          fontSize: fontSize.md,
           fontWeight: '600',
           color: colors.danger,
         },
@@ -1123,35 +1186,35 @@ const useStyles = (colors: ThemeColors) =>
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: colors.warning,
-          borderRadius: 10,
-          paddingVertical: 10,
-          gap: 6,
+          borderRadius: radius['md+'],
+          paddingVertical: spacing['sm+'],
+          gap: spacing['2xs'],
         },
         subscribeBtnText: {
           color: colors.textOnPrimary,
-          fontSize: 15,
+          fontSize: fontSize.base,
           fontWeight: '700',
         },
         expiredCard: {
           backgroundColor: colors.warningLight,
-          borderRadius: 10,
-          padding: 12,
+          borderRadius: radius['md+'],
+          padding: spacing.md,
           alignItems: 'center',
-          gap: 4,
-          marginBottom: 8,
+          gap: spacing.xs,
+          marginBottom: spacing.sm,
         },
         expiredHeader: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
+          gap: spacing['2xs'],
         },
         expiredText: {
-          fontSize: 15,
+          fontSize: fontSize.base,
           fontWeight: '700',
           color: colors.warning,
         },
         expiredEndDate: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.warningDark,
         },
 
@@ -1165,15 +1228,15 @@ const useStyles = (colors: ThemeColors) =>
         tab: {
           flex: 1,
           alignItems: 'center',
-          paddingVertical: 12,
-          borderBottomWidth: 2,
+          paddingVertical: spacing.md,
+          borderBottomWidth: spacing.xxs,
           borderBottomColor: 'transparent',
         },
         tabActive: {
           borderBottomColor: colors.primary,
         },
         tabText: {
-          fontSize: 13,
+          fontSize: fontSize.md,
           fontWeight: '600',
           color: colors.textSecondary,
         },
@@ -1183,21 +1246,21 @@ const useStyles = (colors: ThemeColors) =>
 
         // Stats content
         statsContent: {
-          padding: 12,
+          padding: spacing.md,
         },
         statsCard: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
+          borderRadius: radius.base,
+          padding: spacing['md+'],
+          marginBottom: spacing['sm+'],
         },
         statsCardTitle: {
-          fontSize: 13,
+          fontSize: fontSize.md,
           fontWeight: '700',
           color: colors.primary,
           textTransform: 'uppercase',
           letterSpacing: 0.5,
-          marginBottom: 10,
+          marginBottom: spacing['sm+'],
         },
         statsRow: {
           flexDirection: 'row',
@@ -1208,34 +1271,34 @@ const useStyles = (colors: ThemeColors) =>
           alignItems: 'center',
         },
         statValue: {
-          fontSize: 16,
+          ...typography.body,
           fontWeight: '800',
           color: colors.text,
         },
         statLabel: {
-          fontSize: 10,
+          ...typography.captionSmall,
           color: colors.textSecondary,
-          marginTop: 2,
+          marginTop: spacing.xxs,
           textAlign: 'center',
         },
         rankingRow: {
           flexDirection: 'row',
-          gap: 8,
+          gap: spacing.sm,
           justifyContent: 'center',
         },
         rankBadge: {
           alignItems: 'center',
           backgroundColor: colors.background,
-          borderRadius: 8,
-          paddingHorizontal: 16,
-          paddingVertical: 8,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.base,
+          paddingVertical: spacing.sm,
         },
         rankLabel: {
-          fontSize: 10,
+          ...typography.captionSmall,
           color: colors.textSecondary,
         },
         rankValue: {
-          fontSize: 14,
+          ...typography.bodySmall,
           fontWeight: '800',
           color: colors.primary,
         },
@@ -1243,47 +1306,47 @@ const useStyles = (colors: ThemeColors) =>
         // Card
         card: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginHorizontal: 12,
-          marginBottom: 10,
+          borderRadius: radius.base,
+          padding: spacing['md+'],
+          marginHorizontal: spacing.md,
+          marginBottom: spacing['sm+'],
         },
         cardHeader: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 8,
+          marginBottom: spacing.sm,
         },
         cardTitle: {
-          fontSize: 15,
+          fontSize: fontSize.base,
           fontWeight: '700',
           color: colors.text,
           flex: 1,
-          marginRight: 8,
+          marginRight: spacing.sm,
         },
         cardMeta: {
           flexDirection: 'row',
           backgroundColor: colors.surfaceSecondary,
-          borderRadius: 8,
-          padding: 10,
-          marginBottom: 10,
+          borderRadius: radius.md,
+          padding: spacing['sm+'],
+          marginBottom: spacing['sm+'],
         },
         metaItem: {
           flex: 1,
           alignItems: 'center',
         },
         metaLabel: {
-          fontSize: 11,
+          ...typography.mini,
           color: colors.textSecondary,
-          marginBottom: 2,
+          marginBottom: spacing.xxs,
         },
         metaValue: {
-          fontSize: 13,
+          fontSize: fontSize.md,
           fontWeight: '700',
           color: colors.text,
         },
         metaValueBlue: {
-          fontSize: 15,
+          fontSize: fontSize.base,
           fontWeight: '800',
           color: colors.primary,
         },
@@ -1291,20 +1354,20 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 6,
+          marginBottom: spacing['2xs'],
         },
         sportRow: {
           flexDirection: 'row',
-          gap: 6,
+          gap: spacing['2xs'],
         },
         sportBadge: {
           backgroundColor: colors.background,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 3,
+          borderRadius: radius.sm,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xs,
         },
         sportBadgeText: {
-          fontSize: 11,
+          ...typography.mini,
           fontWeight: '600',
           color: colors.textSecondary,
         },
@@ -1312,13 +1375,13 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.warningLight,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
+          borderRadius: radius.sm,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xs,
+          gap: spacing.xs,
         },
         payantBadgeText: {
-          fontSize: 12,
+          ...typography.caption,
           fontWeight: '600',
           color: colors.warning,
         },
@@ -1326,46 +1389,46 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.warningLight,
-          borderRadius: 6,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
+          borderRadius: radius.sm,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xs,
+          gap: spacing.xs,
         },
         abonneBadgeText: {
-          fontSize: 12,
+          ...typography.caption,
           fontWeight: '600',
           color: colors.warning,
         },
         buyBtn: {
           backgroundColor: colors.success,
-          borderRadius: 8,
-          paddingHorizontal: 10,
-          paddingVertical: 6,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing['sm+'],
+          paddingVertical: spacing['2xs'],
         },
         buyBtnText: {
           color: colors.textOnPrimary,
-          fontSize: 13,
+          fontSize: fontSize.md,
           fontWeight: '700',
         },
         freeText: {
-          fontSize: 12,
+          ...typography.caption,
           fontWeight: '600',
           color: colors.success,
         },
         dateText: {
-          fontSize: 11,
+          ...typography.mini,
           color: colors.textTertiary,
         },
 
         // Empty
         empty: {
           alignItems: 'center',
-          paddingTop: 40,
+          paddingTop: spacing['3xl'],
         },
         emptyText: {
-          fontSize: 15,
+          fontSize: fontSize.base,
           color: colors.textSecondary,
-          marginTop: 8,
+          marginTop: spacing.sm,
         },
 
         // Container
@@ -1377,13 +1440,13 @@ const useStyles = (colors: ThemeColors) =>
         // Plans Modal
         modalOverlay: {
           flex: 1,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: colors.overlay,
           justifyContent: 'flex-end',
         },
         modalContent: {
           backgroundColor: colors.surface,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
+          borderTopLeftRadius: radius['2xl'],
+          borderTopRightRadius: radius['2xl'],
           maxHeight: '80%',
           minHeight: 300,
         },
@@ -1391,54 +1454,54 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: 20,
+          padding: spacing.lg,
           borderBottomWidth: StyleSheet.hairlineWidth,
           borderBottomColor: colors.separator,
         },
         modalTitle: {
-          fontSize: 20,
-          fontWeight: '700',
+          ...typography.h4,
           color: colors.text,
         },
         modalLoading: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          paddingVertical: 60,
+          paddingVertical: spacing['2xl'],
+          gap: spacing.md,
         },
         modalEmpty: {
           alignItems: 'center',
-          paddingVertical: 60,
-          paddingHorizontal: 32,
+          paddingVertical: spacing['2xl'],
+          paddingHorizontal: spacing.xl,
         },
         modalEmptyText: {
-          fontSize: 16,
+          ...typography.body,
           color: colors.textSecondary,
-          marginTop: 16,
+          marginTop: spacing.md,
           textAlign: 'center',
         },
         plansList: {
-          padding: 16,
+          padding: spacing.base,
         },
         disclaimer: {
-          fontSize: 11,
+          ...typography.mini,
           color: colors.textTertiary,
           textAlign: 'center',
-          marginBottom: 16,
+          marginBottom: spacing.base,
           lineHeight: 15,
         },
         consentRow: {
           flexDirection: 'row',
           alignItems: 'flex-start',
-          gap: 10,
-          marginBottom: 16,
-          paddingHorizontal: 4,
+          gap: spacing['sm+'],
+          marginBottom: spacing.base,
+          paddingHorizontal: spacing.xs,
         },
         checkbox: {
           width: 22,
           height: 22,
-          borderRadius: 4,
-          borderWidth: 2,
+          borderRadius: radius.xs,
+          borderWidth: spacing.xxs,
           borderColor: colors.border,
           alignItems: 'center',
           justifyContent: 'center',
@@ -1450,55 +1513,55 @@ const useStyles = (colors: ThemeColors) =>
         },
         consentLabel: {
           flex: 1,
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textSecondary,
           lineHeight: 18,
         },
         planCard: {
           backgroundColor: colors.background,
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 12,
+          borderRadius: radius.base,
+          padding: spacing.base,
+          marginBottom: spacing.md,
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 12,
+          gap: spacing.md,
         },
         planInfo: {
           flex: 1,
         },
         planTitle: {
-          fontSize: 16,
+          ...typography.body,
           fontWeight: '700',
           color: colors.text,
-          marginBottom: 4,
+          marginBottom: spacing.xs,
         },
         planDescription: {
-          fontSize: 13,
+          fontSize: fontSize.md,
           color: colors.textSecondary,
-          marginBottom: 8,
+          marginBottom: spacing.sm,
         },
         planDetails: {
           flexDirection: 'row',
-          gap: 16,
+          gap: spacing.base,
         },
         planDetail: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 4,
+          gap: spacing.xs,
         },
         planDetailText: {
-          fontSize: 13,
+          fontSize: fontSize.md,
           color: colors.textSecondary,
         },
         choosePlanBtn: {
           backgroundColor: colors.primary,
-          borderRadius: 10,
-          paddingHorizontal: 16,
-          paddingVertical: 10,
+          borderRadius: radius['md+'],
+          paddingHorizontal: spacing.base,
+          paddingVertical: spacing['sm+'],
         },
         choosePlanBtnText: {
           color: colors.textOnPrimary,
-          fontSize: 14,
+          ...typography.bodySmall,
           fontWeight: '700',
         },
       }),

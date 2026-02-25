@@ -15,7 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { sportsApi } from '../../api/sports.api';
 import type { SportDto } from '../../types/sport.types';
 import type { HomeStackParamList } from '../../types';
-import { useTheme, type ThemeColors } from '../../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, fontWeight } from '../../theme';
 
 type Nav = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -144,7 +144,7 @@ const useStyles = (colors: ThemeColors) =>
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
-          padding: 24,
+          padding: spacing.xl,
         },
         list: {
           flexGrow: 1,
@@ -154,22 +154,22 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.surface,
-          paddingVertical: 16,
-          paddingHorizontal: 16,
+          paddingVertical: spacing.base,
+          paddingHorizontal: spacing.base,
         },
         iconContainer: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: spacing['3xl'],
+          height: spacing['3xl'],
+          borderRadius: spacing.lg,
           backgroundColor: colors.primary + '15',
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 14,
+          marginRight: spacing['md+'],
         },
         rowLabel: {
           flex: 1,
-          fontSize: 16,
-          fontWeight: '600',
+          ...typography.body,
+          fontWeight: fontWeight.semibold,
           color: colors.text,
         },
         separator: {
@@ -181,25 +181,25 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.danger,
           fontSize: 15,
           textAlign: 'center',
-          marginTop: 12,
+          marginTop: spacing.md,
         },
         emptyText: {
           color: colors.textSecondary,
           fontSize: 15,
           textAlign: 'center',
-          marginTop: 12,
+          marginTop: spacing.md,
         },
         retryBtn: {
-          marginTop: 16,
+          marginTop: spacing.base,
           backgroundColor: colors.primary,
-          borderRadius: 8,
-          paddingHorizontal: 24,
-          paddingVertical: 10,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.xl,
+          paddingVertical: spacing['sm+'],
         },
         retryBtnText: {
           color: colors.textOnPrimary,
           fontSize: 15,
-          fontWeight: '600',
+          fontWeight: fontWeight.semibold,
         },
       }),
     [colors]

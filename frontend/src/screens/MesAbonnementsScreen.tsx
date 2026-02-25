@@ -15,7 +15,24 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { followApi, type FollowerDto } from '../api/follow.api';
 import { useAuthStore } from '../store/auth.store';
 import type { RootStackParamList } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import {
+  useTheme,
+  type ThemeColors,
+  spacing,
+  radius,
+  typography,
+  size,
+  // Shared component styles
+  cardCompactStyle,
+  iconWrapperLarge,
+  loadingContainer as sharedLoadingContainer,
+  loadingText as sharedLoadingText,
+  emptyContainer as sharedEmptyContainer,
+  emptyTitle as sharedEmptyTitle,
+  emptyHint as sharedEmptyHint,
+  listContent as sharedListContent,
+  rowCenter,
+} from '../theme';
 
 const MesAbonnementsScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -121,8 +138,9 @@ const MesAbonnementsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -139,10 +157,12 @@ const MesAbonnementsScreen: React.FC = () => {
             : styles.listContent
         }
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={48} color={colors.textTertiary} />
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconWrapper}>
+              <Ionicons name="people-outline" size={40} color={colors.primary} />
+            </View>
             <Text style={styles.emptyTitle}>Aucun abonnement</Text>
-            <Text style={styles.emptyText}>
+            <Text style={styles.emptyHint}>
               Suivez des pronostiqueurs depuis leur profil pour retrouver leurs
               tickets ici.
             </Text>
@@ -161,87 +181,63 @@ const useStyles = (colors: ThemeColors) =>
           flex: 1,
           backgroundColor: colors.background,
         },
-        center: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.background,
-        },
+        // Loading state — using shared styles
+        loadingContainer: sharedLoadingContainer(colors),
+        loadingText: sharedLoadingText(colors),
         listContent: {
-          padding: 16,
-          paddingBottom: 32,
-        },
-        emptyContainer: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 16,
+          ...sharedListContent,
         },
 
-        // Card
+        // Card — using shared card style
         card: {
-          backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
+          ...cardCompactStyle(colors),
+          marginBottom: spacing.sm,
         },
-        cardContent: {
-          flexDirection: 'row',
-          alignItems: 'center',
-        },
+        cardContent: rowCenter,
         avatar: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: '#E8F0FE',
+          width: size.avatar.md,
+          height: size.avatar.md,
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 12,
+          marginRight: spacing.sm,
         },
         info: {
           flex: 1,
         },
         username: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '700',
           color: colors.primary,
           marginBottom: 2,
         },
         dates: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textSecondary,
         },
         unsubBtn: {
-          marginTop: 10,
+          marginTop: spacing.sm,
           alignSelf: 'flex-end',
-          backgroundColor: '#FFF0F0',
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 6,
+          backgroundColor: colors.dangerBg,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xs,
         },
         unsubText: {
-          fontSize: 13,
+          ...typography.body,
           fontWeight: '600',
           color: colors.danger,
         },
 
-        // Empty state
-        emptyState: {
-          alignItems: 'center',
-          gap: 8,
+        // Empty state — using shared styles
+        emptyContainer: sharedEmptyContainer,
+        emptyIconWrapper: {
+          ...iconWrapperLarge(colors),
+          marginBottom: spacing.md,
         },
-        emptyTitle: {
-          fontSize: 17,
-          fontWeight: '700',
-          color: colors.text,
-        },
-        emptyText: {
-          fontSize: 14,
-          color: colors.textSecondary,
-          textAlign: 'center',
-          lineHeight: 20,
-          maxWidth: 280,
-        },
+        emptyTitle: sharedEmptyTitle(colors),
+        emptyHint: sharedEmptyHint(colors),
       }),
     [colors]
   );

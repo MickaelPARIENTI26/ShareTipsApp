@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, darkColors, type ThemeColors, spacing, radius, typography, fontWeight } from '../theme';
 
 const CGVScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const theme = useTheme();
+  // Fallback to darkColors if theme context fails to load
+  const colors = theme?.colors ?? darkColors;
   const styles = useStyles(colors);
   const navigation = useNavigation();
 
@@ -162,17 +164,17 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingHorizontal: spacing.base,
+          paddingVertical: spacing.md,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         },
         closeButton: {
-          padding: 4,
+          padding: spacing.xs,
         },
         headerTitle: {
           fontSize: 17,
-          fontWeight: '600',
+          fontWeight: fontWeight.semibold,
           color: colors.text,
         },
         headerSpacer: {
@@ -183,52 +185,52 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.background,
         },
         content: {
-          padding: 20,
-          paddingBottom: 40,
+          padding: spacing.lg,
+          paddingBottom: spacing['3xl'],
         },
         title: {
           fontSize: 22,
-          fontWeight: '800',
+          fontWeight: fontWeight.extrabold,
           color: colors.text,
-          marginBottom: 4,
+          marginBottom: spacing.xs,
         },
         lastUpdate: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textTertiary,
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         section: {
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         sectionTitle: {
-          fontSize: 16,
-          fontWeight: '700',
+          ...typography.body,
+          fontWeight: fontWeight.bold,
           color: colors.primary,
-          marginBottom: 10,
+          marginBottom: spacing['sm+'],
         },
         paragraph: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
           lineHeight: 22,
-          marginBottom: 10,
+          marginBottom: spacing['sm+'],
         },
         bullet: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
           lineHeight: 24,
-          paddingLeft: 8,
+          paddingLeft: spacing.sm,
         },
         example: {
           backgroundColor: colors.surface,
-          borderRadius: 8,
-          padding: 12,
-          marginTop: 8,
+          borderRadius: radius.md,
+          padding: spacing.md,
+          marginTop: spacing.sm,
         },
         exampleTitle: {
           fontSize: 13,
-          fontWeight: '600',
+          fontWeight: fontWeight.semibold,
           color: colors.text,
-          marginBottom: 6,
+          marginBottom: spacing['2xs'],
         },
         exampleText: {
           fontSize: 13,
@@ -236,15 +238,15 @@ const useStyles = (colors: ThemeColors) =>
           lineHeight: 20,
         },
         footer: {
-          marginTop: 16,
-          paddingTop: 20,
+          marginTop: spacing.base,
+          paddingTop: spacing.lg,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           alignItems: 'center',
-          gap: 6,
+          gap: spacing['2xs'],
         },
         footerText: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textTertiary,
           textAlign: 'center',
         },

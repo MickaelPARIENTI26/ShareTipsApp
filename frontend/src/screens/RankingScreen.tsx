@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, size, palette } from '../theme';
 import {
   rankingApi,
   type RankingEntryDto,
@@ -77,14 +78,14 @@ const RankingScreen: React.FC = () => {
   );
 
   const getRankBadgeStyle = useCallback((rank: number) => {
-    if (rank === 1) return { backgroundColor: '#FFD700' }; // Gold
-    if (rank === 2) return { backgroundColor: '#C0C0C0' }; // Silver
-    if (rank === 3) return { backgroundColor: '#CD7F32' }; // Bronze
+    if (rank === 1) return { backgroundColor: palette.medal.gold };
+    if (rank === 2) return { backgroundColor: palette.medal.silver };
+    if (rank === 3) return { backgroundColor: palette.medal.bronze };
     return { backgroundColor: colors.surfaceSecondary };
   }, [colors.surfaceSecondary]);
 
   const getRankTextStyle = useCallback((rank: number) => {
-    if (rank <= 3) return { color: '#000' };
+    if (rank <= 3) return { color: palette.black };
     return { color: colors.textSecondary };
   }, [colors.textSecondary]);
 
@@ -193,9 +194,11 @@ const RankingScreen: React.FC = () => {
     if (loading) return null;
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="trophy-outline" size={64} color={colors.textTertiary} />
-        <Text style={styles.emptyText}>Aucun classement disponible</Text>
-        <Text style={styles.emptySubtext}>
+        <View style={styles.emptyIconWrapper}>
+          <Ionicons name="trophy-outline" size={40} color={colors.primary} />
+        </View>
+        <Text style={styles.emptyTitle}>Aucun classement disponible</Text>
+        <Text style={styles.emptyHint}>
           Les classements apparaîtront une fois que des tickets seront validés
         </Text>
       </View>
@@ -206,6 +209,7 @@ const RankingScreen: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -213,7 +217,10 @@ const RankingScreen: React.FC = () => {
   if (error && rankings.length === 0) {
     return (
       <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={64} color={colors.danger} />
+        <View style={styles.errorIconWrapper}>
+          <Ionicons name="alert-circle-outline" size={40} color={colors.danger} />
+        </View>
+        <Text style={styles.errorTitle}>Erreur</Text>
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => fetchRankings()}>
           <Text style={styles.retryButtonText}>Réessayer</Text>
@@ -253,91 +260,133 @@ const useStyles = (colors: ThemeColors) =>
           flex: 1,
           backgroundColor: colors.background,
         },
+        // Loading state
         loadingContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          gap: spacing.md,
         },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
+        },
+        // Error state
         errorContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
-          padding: 20,
+          padding: spacing.lg,
+        },
+        errorIconWrapper: {
+          width: size.avatar['2xl'],
+          height: size.avatar['2xl'],
+          borderRadius: radius.full,
+          backgroundColor: colors.dangerBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.danger,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
+        },
+        errorTitle: {
+          ...typography.h4,
+          color: colors.text,
+          marginBottom: spacing.xs,
         },
         errorText: {
-          fontSize: 16,
-          color: colors.danger,
+          ...typography.body,
+          color: colors.textSecondary,
           textAlign: 'center',
-          marginTop: 12,
-          marginBottom: 20,
+          marginBottom: spacing.lg,
         },
         retryButton: {
           backgroundColor: colors.primary,
-          paddingHorizontal: 24,
-          paddingVertical: 12,
-          borderRadius: 8,
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.sm,
+          borderRadius: radius.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
         },
         retryButtonText: {
-          color: '#fff',
-          fontSize: 16,
+          ...typography.body,
           fontWeight: '600',
+          color: colors.textOnPrimary,
         },
         header: {
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 8,
+          paddingHorizontal: spacing.md,
+          paddingTop: spacing.md,
+          paddingBottom: spacing.xs,
         },
         disclaimerContainer: {
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.surfaceSecondary,
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          marginBottom: 12,
-          gap: 8,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.sm,
+          marginBottom: spacing.sm,
+          gap: spacing.xs,
         },
         disclaimerText: {
           flex: 1,
-          fontSize: 11,
+          ...typography.caption,
           color: colors.textTertiary,
           lineHeight: 15,
         },
         periodSelector: {
           flexDirection: 'row',
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 4,
-          marginBottom: 16,
+          borderRadius: radius.lg,
+          padding: spacing.xxs,
+          marginBottom: spacing.md,
         },
         periodButton: {
           flex: 1,
-          paddingVertical: 10,
+          paddingVertical: spacing.sm,
           alignItems: 'center',
-          borderRadius: 8,
+          borderRadius: radius.md,
         },
         periodButtonActive: {
           backgroundColor: colors.primary,
         },
         periodButtonText: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '600',
           color: colors.textSecondary,
         },
         periodButtonTextActive: {
-          color: '#fff',
+          color: colors.textOnPrimary,
         },
         tableHeader: {
           flexDirection: 'row',
-          paddingHorizontal: 12,
-          paddingVertical: 8,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xs,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         },
         tableHeaderText: {
-          fontSize: 12,
+          ...typography.caption,
           fontWeight: '600',
           color: colors.textTertiary,
           textTransform: 'uppercase',
@@ -346,75 +395,107 @@ const useStyles = (colors: ThemeColors) =>
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.surface,
-          marginHorizontal: 16,
-          marginVertical: 4,
-          padding: 12,
-          borderRadius: 12,
+          marginHorizontal: spacing.md,
+          marginVertical: spacing.xxs,
+          padding: spacing.sm,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: palette.opacity[8],
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         rankBadge: {
-          width: 32,
-          height: 32,
-          borderRadius: 16,
+          width: size.badge.rank,
+          height: size.badge.rank,
+          borderRadius: radius.full,
           justifyContent: 'center',
           alignItems: 'center',
-          marginRight: 12,
+          marginRight: spacing.sm,
         },
         rankText: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '700',
         },
         userInfo: {
           flex: 1,
-          marginRight: 12,
+          marginRight: spacing.sm,
         },
         username: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '600',
           color: colors.text,
         },
         ticketCount: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textSecondary,
-          marginTop: 2,
+          marginTop: spacing.xxs,
         },
         statsContainer: {
           flexDirection: 'row',
-          gap: 16,
-          marginRight: 8,
+          gap: spacing.md,
+          marginRight: spacing.xs,
         },
         statItem: {
           alignItems: 'center',
         },
         statValue: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '700',
           color: colors.text,
         },
         statLabel: {
-          fontSize: 10,
+          ...typography.badge,
           color: colors.textTertiary,
-          marginTop: 2,
+          marginTop: spacing.xxs,
         },
+        // Empty state
         emptyContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          padding: 40,
+          paddingHorizontal: spacing.xl,
         },
         emptyList: {
           flex: 1,
         },
-        emptyText: {
-          fontSize: 18,
-          fontWeight: '600',
-          color: colors.text,
-          marginTop: 16,
+        emptyIconWrapper: {
+          width: size.avatar['2xl'],
+          height: size.avatar['2xl'],
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
         },
-        emptySubtext: {
-          fontSize: 14,
+        emptyTitle: {
+          ...typography.h4,
+          color: colors.text,
+          marginBottom: spacing.xs,
+        },
+        emptyHint: {
+          ...typography.body,
           color: colors.textSecondary,
           textAlign: 'center',
-          marginTop: 8,
         },
       }),
     [colors]

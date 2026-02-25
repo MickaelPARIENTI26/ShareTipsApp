@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, fontWeight } from '../theme';
 
 const PrivacyPolicyScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -164,74 +164,74 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.background,
         },
         content: {
-          padding: 20,
-          paddingBottom: 40,
+          padding: spacing.lg,
+          paddingBottom: spacing['3xl'],
         },
         title: {
           fontSize: 22,
-          fontWeight: '800',
+          fontWeight: fontWeight.extrabold,
           color: colors.text,
-          marginBottom: 4,
+          marginBottom: spacing.xs,
         },
         lastUpdate: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textTertiary,
-          marginBottom: 16,
+          marginBottom: spacing.base,
         },
         intro: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
           lineHeight: 22,
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         section: {
-          marginBottom: 24,
+          marginBottom: spacing.xl,
         },
         sectionTitle: {
-          fontSize: 16,
-          fontWeight: '700',
+          ...typography.body,
+          fontWeight: fontWeight.bold,
           color: colors.primary,
-          marginBottom: 10,
+          marginBottom: spacing['sm+'],
         },
         subtitle: {
-          fontSize: 14,
-          fontWeight: '600',
+          ...typography.bodySmall,
+          fontWeight: fontWeight.semibold,
           color: colors.text,
-          marginTop: 10,
-          marginBottom: 6,
+          marginTop: spacing['sm+'],
+          marginBottom: spacing['2xs'],
         },
         paragraph: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
           lineHeight: 22,
-          marginBottom: 10,
+          marginBottom: spacing['sm+'],
         },
         bullet: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.textSecondary,
           lineHeight: 24,
-          paddingLeft: 8,
+          paddingLeft: spacing.sm,
         },
         contactBox: {
           backgroundColor: colors.surface,
-          borderRadius: 8,
-          padding: 12,
-          marginVertical: 10,
-          gap: 4,
+          borderRadius: radius.md,
+          padding: spacing.md,
+          marginVertical: spacing['sm+'],
+          gap: spacing.xs,
         },
         contactText: {
-          fontSize: 14,
+          ...typography.bodySmall,
           color: colors.text,
         },
         footer: {
-          marginTop: 16,
-          paddingTop: 20,
+          marginTop: spacing.base,
+          paddingTop: spacing.lg,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           alignItems: 'center',
         },
         footerText: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textTertiary,
           textAlign: 'center',
         },

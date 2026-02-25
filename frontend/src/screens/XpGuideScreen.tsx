@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, fontWeight, palette } from '../theme';
 
 interface XpAction {
   icon: keyof typeof Ionicons.glyphMap;
@@ -41,15 +41,15 @@ const XP_ACTIONS: XpAction[] = [
 ];
 
 const CATEGORIES = {
-  tipster: { label: 'Actions Tipster', color: '#FF9500' },
-  buyer: { label: 'Actions Acheteur', color: '#5856D6' },
-  engagement: { label: 'Engagement', color: '#34C759' },
-  bonus: { label: 'Bonus', color: '#FFD700' },
+  tipster: { label: 'Actions Tipster', color: palette.category.tipster },
+  buyer: { label: 'Actions Acheteur', color: palette.category.buyer },
+  engagement: { label: 'Engagement', color: palette.category.engagement },
+  bonus: { label: 'Bonus', color: palette.category.bonus },
 };
 
 const XpGuideScreen: React.FC = () => {
   const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const styles = useStyles(colors);
 
   const renderCategory = (category: keyof typeof CATEGORIES) => {
     const actions = XP_ACTIONS.filter(a => a.category === category);
@@ -123,125 +123,129 @@ const XpGuideScreen: React.FC = () => {
   );
 };
 
-const getStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      padding: 16,
-    },
-    infoCard: {
-      backgroundColor: colors.primary + '15',
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 16,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: colors.primary + '30',
-    },
-    infoTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.text,
-      marginTop: 12,
-      marginBottom: 8,
-    },
-    infoText: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 20,
-    },
-    levelCard: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    levelTitle: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 12,
-    },
-    levelRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    levelLabel: {
-      fontSize: 14,
-      color: colors.text,
-    },
-    levelXp: {
-      fontSize: 14,
-      color: colors.primary,
-      fontWeight: '600',
-    },
-    categorySection: {
-      marginBottom: 24,
-    },
-    categoryHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    categoryDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      marginRight: 8,
-    },
-    categoryTitle: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: colors.text,
-    },
-    actionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.cardBackground,
-      padding: 12,
-      borderRadius: 12,
-      marginBottom: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    actionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 12,
-    },
-    actionInfo: {
-      flex: 1,
-    },
-    actionLabel: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    actionDescription: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-    actionXp: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: colors.primary,
-    },
-    actionXpNegative: {
-      color: '#FF3B30',
-    },
-  });
+const useStyles = (colors: ThemeColors) =>
+  useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        content: {
+          padding: spacing.base,
+        },
+        infoCard: {
+          backgroundColor: colors.primary + '15',
+          borderRadius: radius.lg,
+          padding: spacing.lg,
+          marginBottom: spacing.base,
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: colors.primary + '30',
+        },
+        infoTitle: {
+          ...typography.h5,
+          fontWeight: fontWeight.bold,
+          color: colors.text,
+          marginTop: spacing.md,
+          marginBottom: spacing.sm,
+        },
+        infoText: {
+          ...typography.bodySmall,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          lineHeight: 20,
+        },
+        levelCard: {
+          backgroundColor: colors.cardBg,
+          borderRadius: radius.lg,
+          padding: spacing.base,
+          marginBottom: spacing.lg,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        levelTitle: {
+          ...typography.body,
+          fontWeight: fontWeight.bold,
+          color: colors.text,
+          marginBottom: spacing.md,
+        },
+        levelRow: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingVertical: spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        levelLabel: {
+          ...typography.bodySmall,
+          color: colors.text,
+        },
+        levelXp: {
+          ...typography.bodySmall,
+          color: colors.primary,
+          fontWeight: fontWeight.semibold,
+        },
+        categorySection: {
+          marginBottom: spacing.xl,
+        },
+        categoryHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: spacing.md,
+        },
+        categoryDot: {
+          width: spacing.sm,
+          height: spacing.sm,
+          borderRadius: spacing.xs,
+          marginRight: spacing.sm,
+        },
+        categoryTitle: {
+          ...typography.body,
+          fontWeight: fontWeight.bold,
+          color: colors.text,
+        },
+        actionRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.cardBg,
+          padding: spacing.md,
+          borderRadius: radius.base,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        actionIcon: {
+          width: spacing['3xl'],
+          height: spacing['3xl'],
+          borderRadius: spacing.lg,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: spacing.md,
+        },
+        actionInfo: {
+          flex: 1,
+        },
+        actionLabel: {
+          ...typography.bodySmall,
+          fontWeight: fontWeight.semibold,
+          color: colors.text,
+        },
+        actionDescription: {
+          ...typography.caption,
+          color: colors.textSecondary,
+          marginTop: spacing.xxs,
+        },
+        actionXp: {
+          ...typography.bodySmall,
+          fontWeight: fontWeight.bold,
+          color: colors.primary,
+        },
+        actionXpNegative: {
+          color: colors.danger,
+        },
+      }),
+    [colors]
+  );
 
 export default XpGuideScreen;

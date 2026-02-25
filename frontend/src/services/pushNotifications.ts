@@ -94,8 +94,8 @@ export async function registerDeviceTokenWithBackend(token: string): Promise<boo
 
     if (__DEV__) console.log('Device token registered with backend');
     return true;
-  } catch (error) {
-    if (__DEV__) console.error('Failed to register device token with backend:', error);
+  } catch {
+    // Silently fail - push notifications are optional in dev
     return false;
   }
 }

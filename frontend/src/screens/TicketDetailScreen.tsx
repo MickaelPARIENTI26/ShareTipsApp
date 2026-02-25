@@ -24,7 +24,7 @@ import { useConsentStore } from '../store/consent.store';
 import { useAuthStore } from '../store/auth.store';
 import { getErrorMessage } from '../utils/errors';
 import type { RootStackParamList, TicketDto } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, palette } from '../theme';
 
 const SPORT_LABELS: Record<string, string> = {
   FOOTBALL: 'Football',
@@ -277,7 +277,10 @@ const TicketDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Chargement...</Text>
+        </View>
       </View>
     );
   }
@@ -313,13 +316,13 @@ const TicketDetailScreen: React.FC = () => {
             <Text style={styles.title}>{displayTitle}</Text>
             {isPrivateLocked && (
               <View style={styles.payantBadge}>
-                <Ionicons name="lock-closed" size={12} color={colors.warning} />
+                <Ionicons name="lock-closed" size={12} color={colors.accent} />
                 <Text style={styles.payantBadgeText}>Payant</Text>
               </View>
             )}
             {!ticket.isPublic && ticket.isSubscribedToCreator && (
               <View style={styles.abonneBadge}>
-                <Ionicons name="star" size={12} color={colors.warning} />
+                <Ionicons name="star" size={12} color={colors.accent} />
                 <Text style={styles.abonneBadgeText}>Abonné</Text>
               </View>
             )}
@@ -348,52 +351,76 @@ const TicketDetailScreen: React.FC = () => {
         {/* Summary */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Cote moyenne</Text>
-            <Text style={styles.summaryValueBlue}>
-              {ticket.avgOdds.toFixed(2)}
-            </Text>
+            <View style={styles.summaryLabelRow}>
+              <Ionicons name="trending-up" size={14} color={colors.textSecondary} />
+              <Text style={styles.summaryLabel}>Cote moyenne</Text>
+            </View>
+            <View style={styles.oddsContainer}>
+              <Text style={styles.summaryValueBlue}>
+                {ticket.avgOdds.toFixed(2)}
+              </Text>
+            </View>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Confiance</Text>
+            <View style={styles.summaryLabelRow}>
+              <Ionicons name="shield-checkmark" size={14} color={colors.textSecondary} />
+              <Text style={styles.summaryLabel}>Confiance</Text>
+            </View>
             <Text style={styles.summaryValue}>
               {ticket.confidenceIndex}/10
             </Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Sélections</Text>
+            <View style={styles.summaryLabelRow}>
+              <Ionicons name="list" size={14} color={colors.textSecondary} />
+              <Text style={styles.summaryLabel}>Sélections</Text>
+            </View>
             <Text style={styles.summaryValue}>{count}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Statut</Text>
-            <Text
-              style={[
-                styles.summaryValue,
-                { color: STATUS_COLORS[ticket.status] ?? colors.textSecondary },
-              ]}
-            >
-              {STATUS_LABELS[ticket.status] ?? ticket.status}
-            </Text>
+            <View style={styles.summaryLabelRow}>
+              <Ionicons name="radio-button-on" size={14} color={colors.textSecondary} />
+              <Text style={styles.summaryLabel}>Statut</Text>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: (STATUS_COLORS[ticket.status] ?? colors.textSecondary) + '20' }]}>
+              <Text
+                style={[
+                  styles.statusBadgeText,
+                  { color: STATUS_COLORS[ticket.status] ?? colors.textSecondary },
+                ]}
+              >
+                {STATUS_LABELS[ticket.status] ?? ticket.status}
+              </Text>
+            </View>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Résultat</Text>
-            <Text
-              style={[
-                styles.summaryValue,
-                { color: RESULT_COLORS[ticket.result] ?? colors.textSecondary },
-              ]}
-            >
-              {RESULT_LABELS[ticket.result] ?? ticket.result}
-            </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Visibilité</Text>
-            <View style={styles.visibilityRow}>
+            <View style={styles.summaryLabelRow}>
+              <Ionicons name="trophy" size={14} color={colors.textSecondary} />
+              <Text style={styles.summaryLabel}>Résultat</Text>
+            </View>
+            <View style={[styles.resultBadge, { backgroundColor: (RESULT_COLORS[ticket.result] ?? colors.textSecondary) + '20' }]}>
               <Ionicons
-                name={ticket.isPublic ? 'earth' : 'lock-closed'}
-                size={14}
-                color={ticket.isPublic ? colors.primary : colors.warning}
+                name={ticket.result === 'Win' || ticket.result === 'Won' ? 'checkmark-circle' : ticket.result === 'Lose' || ticket.result === 'Lost' ? 'close-circle' : 'time'}
+                size={12}
+                color={RESULT_COLORS[ticket.result] ?? colors.textSecondary}
               />
-              <Text style={styles.summaryValue}>
+              <Text
+                style={[
+                  styles.resultBadgeText,
+                  { color: RESULT_COLORS[ticket.result] ?? colors.textSecondary },
+                ]}
+              >
+                {RESULT_LABELS[ticket.result] ?? ticket.result}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.summaryRow, styles.summaryRowLast]}>
+            <View style={styles.summaryLabelRow}>
+              <Ionicons name={ticket.isPublic ? 'earth' : 'lock-closed'} size={14} color={colors.textSecondary} />
+              <Text style={styles.summaryLabel}>Visibilité</Text>
+            </View>
+            <View style={[styles.visibilityBadge, ticket.isPublic ? styles.visibilityPublic : styles.visibilityPrivate]}>
+              <Text style={[styles.visibilityText, { color: ticket.isPublic ? colors.primary : colors.accent }]}>
                 {ticket.isPublic ? 'Public' : 'Privé'}
               </Text>
             </View>
@@ -403,7 +430,9 @@ const TicketDetailScreen: React.FC = () => {
         {/* Timeline */}
         <View style={styles.timelineCard}>
           <View style={styles.timelineTitleRow}>
-            <Ionicons name="time-outline" size={16} color={colors.primary} />
+            <View style={styles.timelineIconWrapper}>
+              <Ionicons name="time" size={16} color={colors.primary} />
+            </View>
             <Text style={styles.timelineTitle}>Chronologie</Text>
           </View>
           {(() => {
@@ -445,6 +474,7 @@ const TicketDetailScreen: React.FC = () => {
           <View style={styles.sportRow}>
             {ticket.sports.map((s) => (
               <View key={s} style={styles.sportBadge}>
+                <Ionicons name="trophy" size={10} color={colors.primary} />
                 <Text style={styles.sportBadgeText}>
                   {SPORT_LABELS[s] ?? s}
                 </Text>
@@ -462,9 +492,15 @@ const TicketDetailScreen: React.FC = () => {
         {/* Selections — visible only if public or purchased */}
         {showSelections && (
           <>
-            <Text style={styles.sectionTitle}>
-              Sélections ({ticket.selections.length})
-            </Text>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionBadge}>
+                <Ionicons name="list" size={14} color={colors.textOnPrimary} />
+                <Text style={styles.sectionTitle}>
+                  Sélections ({ticket.selections.length})
+                </Text>
+              </View>
+              <View style={styles.sectionLine} />
+            </View>
             {ticket.selections.map((sel, i) => {
               const matchDate = sel.matchStartTime
                 ? new Date(sel.matchStartTime).toLocaleDateString('fr-FR', {
@@ -510,14 +546,9 @@ const TicketDetailScreen: React.FC = () => {
                   ]}
                 >
                   <View style={styles.selCardHeader}>
-                    <Text
-                      style={[
-                        styles.selIndex,
-                        resultColor && { backgroundColor: resultColor },
-                      ]}
-                    >
-                      {i + 1}
-                    </Text>
+                    <View style={[styles.selIndex, resultColor && { backgroundColor: resultColor }]}>
+                      <Text style={styles.selIndexText}>{i + 1}</Text>
+                    </View>
                     <View style={styles.selCardHeaderText}>
                       <View style={styles.matchLabelRow}>
                         <Text style={styles.selMatchLabel}>
@@ -538,24 +569,35 @@ const TicketDetailScreen: React.FC = () => {
                           <Text style={styles.selMatchDate}>{matchDate}</Text>
                         )}
                         {scoreText && (
-                          <Text
-                            style={[styles.scoreText, { color: resultColor }]}
-                          >
-                            {scoreText}
-                          </Text>
+                          <View style={[styles.scoreBadge, { backgroundColor: resultColor + '20' }]}>
+                            <Text
+                              style={[styles.scoreText, { color: resultColor }]}
+                            >
+                              {scoreText}
+                            </Text>
+                          </View>
                         )}
                       </View>
                     </View>
                   </View>
                   {sel.leagueName && (
-                    <Text style={styles.selLeague}>{sel.leagueName}</Text>
+                    <View style={styles.leagueBadgeRow}>
+                      <Ionicons name="ribbon" size={12} color={colors.primary} />
+                      <Text style={styles.selLeague}>{sel.leagueName}</Text>
+                    </View>
                   )}
                   <View style={styles.selRow}>
-                    <Text style={styles.selLabel}>Marché</Text>
+                    <View style={styles.selLabelContainer}>
+                      <Ionicons name="stats-chart" size={12} color={colors.textTertiary} />
+                      <Text style={styles.selLabel}>Marché</Text>
+                    </View>
                     <Text style={styles.selValue}>{sel.marketType}</Text>
                   </View>
                   <View style={styles.selRow}>
-                    <Text style={styles.selLabel}>Sélection</Text>
+                    <View style={styles.selLabelContainer}>
+                      <Ionicons name="checkmark" size={12} color={colors.textTertiary} />
+                      <Text style={styles.selLabel}>Sélection</Text>
+                    </View>
                     <Text
                       style={[
                         styles.selValue,
@@ -566,8 +608,13 @@ const TicketDetailScreen: React.FC = () => {
                     </Text>
                   </View>
                   <View style={[styles.selRow, styles.selRowLast]}>
-                    <Text style={styles.selLabel}>Cote</Text>
-                    <Text style={styles.oddsValue}>{sel.odds.toFixed(2)}</Text>
+                    <View style={styles.selLabelContainer}>
+                      <Ionicons name="trending-up" size={12} color={colors.accent} />
+                      <Text style={styles.selLabel}>Cote</Text>
+                    </View>
+                    <View style={styles.oddsValueContainer}>
+                      <Text style={styles.oddsValue}>{sel.odds.toFixed(2)}</Text>
+                    </View>
                   </View>
                 </View>
               );
@@ -578,7 +625,9 @@ const TicketDetailScreen: React.FC = () => {
         {/* Locked content notice for private non-purchased */}
         {isPrivateLocked && (
           <View style={styles.lockedCard}>
-            <Ionicons name="lock-closed" size={32} color={isTicketLocked ? colors.textSecondary : colors.warning} />
+            <View style={styles.lockedIconWrapper}>
+              <Ionicons name="lock-closed" size={32} color={isTicketLocked ? colors.textSecondary : colors.accent} />
+            </View>
             <Text style={styles.lockedTitle}>Contenu verrouillé</Text>
             {isTicketLocked ? (
               <Text style={styles.lockedText}>
@@ -593,9 +642,12 @@ const TicketDetailScreen: React.FC = () => {
                     ? `la sélection`
                     : `les ${count} sélections`}.
                 </Text>
-                <Text style={styles.disclaimer}>
-                  Ce pronostic ne garantit aucun résultat. Vous restez seul responsable de vos décisions.
-                </Text>
+                <View style={styles.disclaimerContainer}>
+                  <Ionicons name="information-circle" size={14} color={colors.textTertiary} />
+                  <Text style={styles.disclaimer}>
+                    Ce pronostic ne garantit aucun résultat. Vous restez seul responsable de vos décisions.
+                  </Text>
+                </View>
               </>
             )}
           </View>
@@ -684,7 +736,7 @@ const TicketDetailScreen: React.FC = () => {
             </TouchableOpacity>
           ) : !ticket.isPublic && ticket.isSubscribedToCreator ? (
             <View style={styles.abonneBadgeFooter}>
-              <Ionicons name="star" size={16} color={colors.warning} />
+              <Ionicons name="star" size={16} color={colors.accent} />
               <Text style={styles.abonneFooterText}>Abonné</Text>
             </View>
           ) : !ticket.isPublic && ticket.isPurchasedByCurrentUser ? (
@@ -712,134 +764,230 @@ const useStyles = (colors: ThemeColors) =>
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          padding: spacing.xl,
+        },
+        loadingContainer: {
+          alignItems: 'center',
+          gap: spacing.md,
+        },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
         },
         scroll: {
-          padding: 16,
-          paddingBottom: 24,
+          padding: spacing.base,
+          paddingBottom: spacing.lg,
         },
         shareableContent: {
           backgroundColor: colors.background,
-          borderRadius: 12,
-          padding: 4,
+          borderRadius: radius.lg,
+          padding: spacing.xxs,
         },
 
         // Header
         headerCard: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 12,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         headerTop: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 6,
+          marginBottom: spacing.xs,
         },
         title: {
-          fontSize: 18,
-          fontWeight: '700',
+          ...typography.h4,
           color: colors.text,
           flex: 1,
         },
         creatorLink: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '700',
           color: colors.primary,
         },
         payantBadge: {
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: colors.warningLight,
-          borderRadius: 8,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
-          marginLeft: 8,
+          backgroundColor: colors.accentBg,
+          borderRadius: radius.full,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          gap: spacing.xxs,
+          marginLeft: spacing.sm,
         },
         payantBadgeText: {
-          fontSize: 12,
-          fontWeight: '700',
-          color: colors.warning,
+          ...typography.badge,
+          color: colors.accent,
         },
         acheteBadge: {
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: '#E8F0FE',
-          borderRadius: 8,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
-          marginLeft: 8,
+          backgroundColor: colors.primaryBg,
+          borderRadius: radius.full,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          gap: spacing.xxs,
+          marginLeft: spacing.sm,
         },
         acheteBadgeText: {
-          fontSize: 12,
-          fontWeight: '700',
+          ...typography.badge,
           color: colors.primary,
         },
 
         // Summary
         summaryCard: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 12,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         summaryRow: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          paddingVertical: 5,
+          paddingVertical: spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        summaryRowLast: {
+          borderBottomWidth: 0,
+        },
+        summaryLabelRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
         },
         summaryLabel: {
-          fontSize: 14,
+          ...typography.body,
           color: colors.textSecondary,
         },
         summaryValue: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '700',
           color: colors.text,
         },
-        summaryValueBlue: {
-          fontSize: 18,
-          fontWeight: '800',
-          color: colors.primary,
+        oddsContainer: {
+          backgroundColor: colors.accentBg,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.xs,
+          borderRadius: radius.full,
         },
-        visibilityRow: {
+        summaryValueBlue: {
+          ...typography.odds,
+          color: colors.accent,
+        },
+        statusBadge: {
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          borderRadius: radius.full,
+        },
+        statusBadgeText: {
+          ...typography.badge,
+        },
+        resultBadge: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 4,
+          gap: spacing.xxs,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          borderRadius: radius.full,
+        },
+        resultBadgeText: {
+          ...typography.badge,
+        },
+        visibilityBadge: {
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          borderRadius: radius.full,
+        },
+        visibilityPublic: {
+          backgroundColor: colors.primaryBg,
+        },
+        visibilityPrivate: {
+          backgroundColor: colors.accentBg,
+        },
+        visibilityText: {
+          ...typography.badge,
         },
 
         // Timeline
         timelineCard: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 12,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         timelineTitleRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
-          marginBottom: 12,
+          gap: spacing.sm,
+          marginBottom: spacing.md,
+        },
+        timelineIconWrapper: {
+          width: 28,
+          height: 28,
+          borderRadius: radius.sm,
+          backgroundColor: colors.primaryBg,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         timelineTitle: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '700',
-          color: colors.primary,
+          color: colors.text,
         },
         timelineRow: {
           flexDirection: 'row',
           alignItems: 'flex-start',
-          gap: 10,
+          gap: spacing.md,
         },
         timelineDot: {
           width: 12,
           height: 12,
-          borderRadius: 6,
+          borderRadius: radius.full,
           backgroundColor: colors.primary,
-          marginTop: 4,
+          marginTop: spacing.xxs,
         },
         timelineDotEnd: {
           backgroundColor: colors.success,
@@ -849,99 +997,156 @@ const useStyles = (colors: ThemeColors) =>
           height: 20,
           backgroundColor: colors.border,
           marginLeft: 5,
-          marginVertical: 4,
+          marginVertical: spacing.xxs,
         },
         timelineContent: {
           flex: 1,
         },
         timelineLabel: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textSecondary,
         },
         timelineValue: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '600',
           color: colors.text,
-          marginTop: 2,
+          marginTop: spacing.xxs,
         },
         durationBadge: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 4,
-          marginTop: 10,
-          paddingTop: 10,
-          borderTopWidth: StyleSheet.hairlineWidth,
+          gap: spacing.xs,
+          marginTop: spacing.md,
+          paddingTop: spacing.md,
+          borderTopWidth: 1,
           borderTopColor: colors.border,
         },
         durationText: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textSecondary,
         },
 
         // Sports
         sportRow: {
           flexDirection: 'row',
-          gap: 6,
-          marginBottom: 16,
+          flexWrap: 'wrap',
+          gap: spacing.xs,
+          marginBottom: spacing.md,
         },
         sportBadge: {
-          backgroundColor: colors.surface,
-          borderRadius: 6,
-          paddingHorizontal: 10,
-          paddingVertical: 4,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xxs,
+          backgroundColor: colors.primaryBg,
+          borderRadius: radius.full,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
         },
         sportBadgeText: {
-          fontSize: 12,
-          fontWeight: '600',
-          color: colors.textSecondary,
+          ...typography.badge,
+          color: colors.primary,
         },
         brandingRow: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 6,
-          paddingVertical: 12,
-          marginTop: 8,
+          gap: spacing.xs,
+          paddingVertical: spacing.md,
+          marginTop: spacing.sm,
         },
         brandingText: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textTertiary,
           fontWeight: '500',
         },
 
-        // Selections
-        sectionTitle: {
-          fontSize: 13,
-          fontWeight: '700',
-          color: colors.primary,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-          marginBottom: 10,
+        // Section header
+        sectionHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.md,
+          marginBottom: spacing.md,
         },
+        sectionBadge: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          backgroundColor: colors.primary,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
+          borderRadius: radius.full,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            },
+            android: {
+              elevation: 3,
+            },
+          }),
+        },
+        sectionTitle: {
+          ...typography.label,
+          color: colors.textOnPrimary,
+        },
+        sectionLine: {
+          flex: 1,
+          height: 1,
+          backgroundColor: colors.border,
+        },
+
+        // Selections
         selCard: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 8,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         selCardHeader: {
           flexDirection: 'row',
           alignItems: 'flex-start',
-          marginBottom: 6,
-          gap: 8,
+          marginBottom: spacing.sm,
+          gap: spacing.sm,
         },
         selIndex: {
-          fontSize: 12,
+          width: 28,
+          height: 28,
+          borderRadius: radius.full,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+            },
+            android: {
+              elevation: 3,
+            },
+          }),
+        },
+        selIndexText: {
+          ...typography.badge,
+          fontSize: 13,
           fontWeight: '800',
           color: colors.textOnPrimary,
-          backgroundColor: colors.primary,
-          width: 22,
-          height: 22,
-          borderRadius: 11,
-          textAlign: 'center',
-          lineHeight: 22,
-          overflow: 'hidden',
-          marginTop: 1,
         },
         selCardHeaderText: {
           flex: 1,
@@ -952,108 +1157,169 @@ const useStyles = (colors: ThemeColors) =>
           justifyContent: 'space-between',
         },
         selMatchLabel: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '600',
           color: colors.text,
           flex: 1,
         },
         resultIcon: {
-          marginLeft: 6,
+          marginLeft: spacing.xs,
         },
         matchMetaRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          marginTop: 2,
-          gap: 8,
+          marginTop: spacing.xxs,
+          gap: spacing.sm,
         },
         selMatchDate: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textSecondary,
+        },
+        scoreBadge: {
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          borderRadius: radius.full,
         },
         scoreText: {
-          fontSize: 12,
+          ...typography.badge,
           fontWeight: '700',
         },
+        leagueBadgeRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
+          marginBottom: spacing.sm,
+          marginLeft: 36,
+        },
         selLeague: {
-          fontSize: 12,
-          color: colors.textSecondary,
-          marginBottom: 8,
-          marginLeft: 30,
+          ...typography.caption,
+          color: colors.primary,
         },
         selRow: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          paddingVertical: 4,
-          borderBottomWidth: StyleSheet.hairlineWidth,
+          paddingVertical: spacing.sm,
+          borderBottomWidth: 1,
           borderBottomColor: colors.border,
         },
         selRowLast: {
           borderBottomWidth: 0,
+          paddingTop: spacing.md,
+        },
+        selLabelContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
         },
         selLabel: {
-          fontSize: 13,
+          ...typography.caption,
           color: colors.textSecondary,
         },
         selValue: {
-          fontSize: 13,
+          ...typography.bodySmall,
           fontWeight: '600',
           color: colors.text,
           flexShrink: 1,
           textAlign: 'right',
-          maxWidth: '60%',
+          maxWidth: '55%',
+        },
+        oddsValueContainer: {
+          backgroundColor: colors.accentBg,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.xs,
+          borderRadius: radius.full,
         },
         oddsValue: {
-          fontSize: 16,
-          fontWeight: '800',
-          color: colors.primary,
+          ...typography.odds,
+          color: colors.accent,
         },
 
         // Locked content
         lockedCard: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 24,
+          borderRadius: radius.lg,
+          padding: spacing.xl,
           alignItems: 'center',
-          gap: 8,
+          gap: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
+        },
+        lockedIconWrapper: {
+          width: 72,
+          height: 72,
+          borderRadius: radius.full,
+          backgroundColor: colors.accentBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.sm,
         },
         lockedTitle: {
-          fontSize: 16,
-          fontWeight: '700',
+          ...typography.h4,
           color: colors.text,
         },
         lockedText: {
-          fontSize: 14,
+          ...typography.body,
           color: colors.textSecondary,
           textAlign: 'center',
-          lineHeight: 20,
+          lineHeight: 22,
+        },
+        disclaimerContainer: {
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          gap: spacing.xs,
+          marginTop: spacing.md,
+          paddingTop: spacing.md,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
         },
         disclaimer: {
-          fontSize: 11,
+          ...typography.caption,
           color: colors.textTertiary,
-          textAlign: 'center',
-          marginTop: 12,
-          lineHeight: 15,
+          flex: 1,
+          lineHeight: 18,
         },
 
         // Footer
         footer: {
-          padding: 16,
+          padding: spacing.base,
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          gap: 12,
+          gap: spacing.sm,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 8,
+            },
+          }),
         },
         consentRow: {
           flexDirection: 'row',
           alignItems: 'flex-start',
-          gap: 10,
-          marginBottom: 4,
+          gap: spacing.md,
+          marginBottom: spacing.xs,
         },
         checkbox: {
           width: 22,
           height: 22,
-          borderRadius: 4,
+          borderRadius: radius.sm,
           borderWidth: 2,
           borderColor: colors.border,
           alignItems: 'center',
@@ -1065,29 +1331,29 @@ const useStyles = (colors: ThemeColors) =>
           borderColor: colors.primary,
         },
         consentLabel: {
+          ...typography.caption,
           flex: 1,
-          fontSize: 12,
           color: colors.textSecondary,
           lineHeight: 18,
         },
         footerButtonsRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 12,
+          gap: spacing.sm,
         },
         favoriteBtn: {
-          width: 44,
-          height: 44,
-          borderRadius: 10,
-          backgroundColor: colors.background,
+          width: 48,
+          height: 48,
+          borderRadius: radius.md,
+          backgroundColor: colors.surfaceElevated,
           alignItems: 'center',
           justifyContent: 'center',
         },
         shareBtn: {
-          width: 44,
-          height: 44,
-          borderRadius: 10,
-          backgroundColor: colors.primary + '15',
+          width: 48,
+          height: 48,
+          borderRadius: radius.md,
+          backgroundColor: colors.primaryBg,
           alignItems: 'center',
           justifyContent: 'center',
         },
@@ -1097,76 +1363,90 @@ const useStyles = (colors: ThemeColors) =>
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: colors.success,
-          borderRadius: 10,
-          paddingVertical: 12,
-          gap: 6,
+          borderRadius: radius.md,
+          paddingVertical: spacing.md,
+          gap: spacing.xs,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.success,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 6,
+            },
+          }),
         },
         buyBtnDisabled: {
           opacity: 0.6,
+          ...Platform.select({
+            ios: {
+              shadowOpacity: 0,
+            },
+            android: {
+              elevation: 0,
+            },
+          }),
         },
         buyBtnText: {
+          ...typography.button,
           color: colors.textOnPrimary,
-          fontSize: 16,
-          fontWeight: '700',
         },
         purchasedBadge: {
           flex: 1,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#E8F0FE',
-          borderRadius: 10,
-          paddingVertical: 12,
-          gap: 6,
+          backgroundColor: colors.primaryBg,
+          borderRadius: radius.md,
+          paddingVertical: spacing.md,
+          gap: spacing.xs,
         },
         purchasedText: {
-          fontSize: 15,
-          fontWeight: '600',
+          ...typography.button,
           color: colors.primary,
         },
         abonneBadge: {
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: colors.warningLight,
-          borderRadius: 8,
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          gap: 4,
-          marginLeft: 8,
+          backgroundColor: colors.accentBg,
+          borderRadius: radius.full,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          gap: spacing.xxs,
+          marginLeft: spacing.sm,
         },
         abonneBadgeText: {
-          fontSize: 12,
-          fontWeight: '700',
-          color: colors.warning,
+          ...typography.badge,
+          color: colors.accent,
         },
         abonneBadgeFooter: {
           flex: 1,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.warningLight,
-          borderRadius: 10,
-          paddingVertical: 12,
-          gap: 6,
+          backgroundColor: colors.accentBg,
+          borderRadius: radius.md,
+          paddingVertical: spacing.md,
+          gap: spacing.xs,
         },
         abonneFooterText: {
-          fontSize: 15,
-          fontWeight: '600',
-          color: colors.warning,
+          ...typography.button,
+          color: colors.accent,
         },
         lockedBadgeFooter: {
           flex: 1,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.surfaceSecondary,
-          borderRadius: 10,
-          paddingVertical: 12,
-          gap: 6,
+          backgroundColor: colors.surfaceElevated,
+          borderRadius: radius.md,
+          paddingVertical: spacing.md,
+          gap: spacing.xs,
         },
         lockedFooterText: {
-          fontSize: 15,
-          fontWeight: '600',
+          ...typography.button,
           color: colors.textSecondary,
         },
       }),

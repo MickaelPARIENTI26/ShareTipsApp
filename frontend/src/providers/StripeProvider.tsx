@@ -1,4 +1,5 @@
 import React, { ReactElement, createContext, useContext } from 'react';
+import { Platform } from 'react-native';
 
 // Stripe publishable key from environment variable
 const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
@@ -23,19 +24,22 @@ let StripeNativeProvider: React.ComponentType<{
 
 let stripeAvailable = false;
 
-try {
-  // Try to import the native Stripe provider
-  // This will throw if native modules aren't available (Expo Go)
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const stripe = require('@stripe/stripe-react-native');
-  StripeNativeProvider = stripe.StripeProvider;
-  stripeAvailable = true;
-} catch {
-  console.warn(
-    '[StripeProvider] Native Stripe module not available. ' +
-    'Payment features will be disabled. ' +
-    'Use a development build for full Stripe support.'
-  );
+// Only try to load Stripe on native platforms (not web)
+if (Platform.OS !== 'web') {
+  try {
+    // Try to import the native Stripe provider
+    // This will throw if native modules aren't available (Expo Go)
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const stripe = require('@stripe/stripe-react-native');
+    StripeNativeProvider = stripe.StripeProvider;
+    stripeAvailable = true;
+  } catch {
+    console.warn(
+      '[StripeProvider] Native Stripe module not available. ' +
+      'Payment features will be disabled. ' +
+      'Use a development build for full Stripe support.'
+    );
+  }
 }
 
 /**

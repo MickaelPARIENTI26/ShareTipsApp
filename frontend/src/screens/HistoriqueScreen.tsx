@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  Platform,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,7 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { purchaseApi } from '../api/purchase.api';
 import { subscriptionApi } from '../api/subscription.api';
 import type { RootStackParamList, PurchaseDto, SubscriptionDto } from '../types';
-import { useTheme, type ThemeColors } from '../theme';
+import { useTheme, type ThemeColors, spacing, radius, typography, palette } from '../theme';
 
 type TabType = 'achats' | 'abonnements';
 
@@ -144,6 +146,45 @@ const HistoriqueScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Smooth tab transition animation
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const handleTabChange = useCallback((tab: TabType) => {
+    if (tab === activeTab) return;
+
+    // Animate out
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: tab === 'achats' ? 10 : -10,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setActiveTab(tab);
+      slideAnim.setValue(tab === 'achats' ? -10 : 10);
+
+      // Animate in
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  }, [activeTab, fadeAnim, slideAnim]);
+
   const fetchData = useCallback(async () => {
     try {
       const [purchasesRes, subscriptionsRes] = await Promise.all([
@@ -222,8 +263,9 @@ const HistoriqueScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
@@ -234,7 +276,7 @@ const HistoriqueScreen: React.FC = () => {
       <View style={styles.tabs}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'achats' && styles.tabActive]}
-          onPress={() => setActiveTab('achats')}
+          onPress={() => handleTabChange('achats')}
           activeOpacity={0.7}
         >
           <Ionicons
@@ -258,7 +300,7 @@ const HistoriqueScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'abonnements' && styles.tabActive]}
-          onPress={() => setActiveTab('abonnements')}
+          onPress={() => handleTabChange('abonnements')}
           activeOpacity={0.7}
         >
           <Ionicons
@@ -282,18 +324,28 @@ const HistoriqueScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Info banner */}
-      <View style={styles.infoBanner}>
-        <Ionicons name="information-circle" size={16} color={colors.primary} />
-        <Text style={styles.infoText}>
-          {activeTab === 'achats'
-            ? 'Retrouvez ici les tickets auxquels vous avez accès.'
-            : 'Retrouvez ici vos abonnements aux pronostiqueurs.'}
-        </Text>
-      </View>
+      {/* Animated content wrapper */}
+      <Animated.View
+        style={[
+          styles.animatedContent,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateX: slideAnim }],
+          },
+        ]}
+      >
+        {/* Info banner */}
+        <View style={styles.infoBanner}>
+          <Ionicons name="information-circle" size={16} color={colors.primary} />
+          <Text style={styles.infoText}>
+            {activeTab === 'achats'
+              ? 'Retrouvez ici les tickets auxquels vous avez accès.'
+              : 'Retrouvez ici vos abonnements aux pronostiqueurs.'}
+          </Text>
+        </View>
 
-      {/* List */}
-      <FlatList
+        {/* List */}
+        <FlatList
         data={displayItems}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -309,16 +361,18 @@ const HistoriqueScreen: React.FC = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons
-              name={activeTab === 'achats' ? 'document-outline' : 'people-outline'}
-              size={48}
-              color={colors.textTertiary}
-            />
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconWrapper}>
+              <Ionicons
+                name={activeTab === 'achats' ? 'document-outline' : 'people-outline'}
+                size={40}
+                color={colors.primary}
+              />
+            </View>
             <Text style={styles.emptyTitle}>
               {activeTab === 'achats' ? 'Aucun achat' : 'Aucune souscription'}
             </Text>
-            <Text style={styles.emptyText}>
+            <Text style={styles.emptyHint}>
               {activeTab === 'achats'
                 ? 'Achetez des tickets pour y accéder ici.'
                 : 'Souscrivez à des pronostiqueurs pour accéder à leurs contenus premium.'}
@@ -326,6 +380,7 @@ const HistoriqueScreen: React.FC = () => {
           </View>
         }
       />
+      </Animated.View>
     </View>
   );
 };
@@ -338,36 +393,47 @@ const useStyles = (colors: ThemeColors) =>
           flex: 1,
           backgroundColor: colors.background,
         },
-        center: {
+        // Loading state
+        loadingContainer: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: colors.background,
+          gap: spacing.md,
+        },
+        loadingText: {
+          ...typography.body,
+          color: colors.textSecondary,
+        },
+
+        // Animated content wrapper
+        animatedContent: {
+          flex: 1,
         },
 
         // Tabs
         tabs: {
           flexDirection: 'row',
           backgroundColor: colors.surface,
-          marginHorizontal: 16,
-          marginTop: 16,
-          borderRadius: 12,
-          padding: 4,
+          marginHorizontal: spacing.md,
+          marginTop: spacing.md,
+          borderRadius: radius.lg,
+          padding: spacing.xxs,
         },
         tab: {
           flex: 1,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingVertical: 10,
-          borderRadius: 8,
-          gap: 6,
+          paddingVertical: spacing.sm,
+          borderRadius: radius.md,
+          gap: spacing.xs,
         },
         tabActive: {
-          backgroundColor: colors.primaryLight,
+          backgroundColor: colors.primaryBg,
         },
         tabText: {
-          fontSize: 13,
+          ...typography.caption,
           fontWeight: '600',
           color: colors.textSecondary,
         },
@@ -378,14 +444,13 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.primary,
           minWidth: 18,
           height: 18,
-          borderRadius: 9,
+          borderRadius: radius.full,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingHorizontal: 5,
+          paddingHorizontal: spacing.xxs,
         },
         tabBadgeText: {
-          fontSize: 10,
-          fontWeight: '700',
+          ...typography.badge,
           color: colors.textOnPrimary,
         },
 
@@ -393,58 +458,71 @@ const useStyles = (colors: ThemeColors) =>
         infoBanner: {
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: colors.primaryLight,
-          marginHorizontal: 16,
-          marginTop: 12,
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          gap: 8,
+          backgroundColor: colors.primaryBg,
+          marginHorizontal: spacing.md,
+          marginTop: spacing.sm,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.sm,
+          gap: spacing.xs,
         },
         infoText: {
           flex: 1,
-          fontSize: 12,
+          ...typography.caption,
           color: colors.primary,
           lineHeight: 16,
         },
 
         // List
         listContent: {
-          padding: 16,
-          paddingBottom: 32,
+          padding: spacing.md,
+          paddingBottom: spacing.xl,
         },
 
         // Card
         card: {
           backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 14,
-          marginBottom: 10,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          marginBottom: spacing.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...Platform.select({
+            ios: {
+              shadowColor: palette.black,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: palette.opacity[8],
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 2,
+            },
+          }),
         },
         cardHeader: {
           flexDirection: 'row',
           alignItems: 'flex-start',
-          marginBottom: 12,
+          marginBottom: spacing.sm,
         },
         iconContainer: {
           width: 40,
           height: 40,
-          borderRadius: 20,
+          borderRadius: radius.full,
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 12,
+          marginRight: spacing.sm,
         },
         cardInfo: {
           flex: 1,
         },
         cardTitle: {
-          fontSize: 15,
+          ...typography.bodyLarge,
           fontWeight: '700',
           color: colors.text,
           marginBottom: 2,
         },
         cardSubtitle: {
-          fontSize: 13,
+          ...typography.body,
           color: colors.textSecondary,
         },
         cardFooter: {
@@ -453,48 +531,67 @@ const useStyles = (colors: ThemeColors) =>
           alignItems: 'center',
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.separator,
-          paddingTop: 10,
+          paddingTop: spacing.sm,
         },
         cardMeta: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 8,
+          gap: spacing.xs,
         },
         dateText: {
-          fontSize: 12,
+          ...typography.caption,
           color: colors.textTertiary,
         },
         statusBadge: {
-          paddingHorizontal: 8,
+          paddingHorizontal: spacing.xs,
           paddingVertical: 3,
-          borderRadius: 6,
+          borderRadius: radius.sm,
         },
         statusText: {
-          fontSize: 11,
+          ...typography.caption,
           fontWeight: '600',
         },
         priceText: {
-          fontSize: 14,
+          ...typography.body,
           fontWeight: '700',
           color: colors.text,
         },
 
         // Empty state
-        emptyState: {
+        emptyContainer: {
           alignItems: 'center',
-          paddingTop: 60,
-          gap: 8,
+          paddingTop: spacing.xxl,
+          paddingHorizontal: spacing.lg,
+        },
+        emptyIconWrapper: {
+          width: 80,
+          height: 80,
+          borderRadius: radius.full,
+          backgroundColor: colors.primaryBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.md,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 12,
+            },
+            android: {
+              elevation: 4,
+            },
+          }),
         },
         emptyTitle: {
-          fontSize: 17,
-          fontWeight: '700',
+          ...typography.h4,
           color: colors.text,
+          marginBottom: spacing.xs,
         },
-        emptyText: {
-          fontSize: 14,
+        emptyHint: {
+          ...typography.body,
           color: colors.textSecondary,
           textAlign: 'center',
-          lineHeight: 20,
           maxWidth: 280,
         },
       }),

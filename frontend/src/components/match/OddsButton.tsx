@@ -105,25 +105,25 @@ const SIZE_CONFIG: Record<
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     labelSize: 10,
-    oddsSize: 14,
+    oddsSize: 16,
     iconSize: 10,
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     minWidth: 60,
   },
   md: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     labelSize: 11,
-    oddsSize: 16,
+    oddsSize: 20,
     iconSize: 12,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     minWidth: 72,
   },
   lg: {
     paddingVertical: spacing['md+'],
     paddingHorizontal: spacing.md,
     labelSize: 12,
-    oddsSize: 20,
+    oddsSize: 24,
     iconSize: 14,
     borderRadius: radius.lg,
     minWidth: 88,
@@ -392,9 +392,9 @@ const OddsButton: React.FC<OddsButtonProps> = ({
       >
         {isSelected && variant !== 'glass' ? (
           <LinearGradient
-            colors={effectGradients.primary.colors as unknown as string[]}
+            colors={['rgba(34, 197, 94, 0.35)', 'rgba(22, 163, 74, 0.25)']}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 0, y: 1 }}
             style={styles.button}
           >
             {renderContent()}
@@ -403,11 +403,11 @@ const OddsButton: React.FC<OddsButtonProps> = ({
           <LinearGradient
             colors={
               isSelected
-                ? (effectGradients.primary.colors as unknown as string[])
-                : ['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.03)']
+                ? ['rgba(34, 197, 94, 0.35)', 'rgba(22, 163, 74, 0.25)']
+                : ['rgba(34, 197, 94, 0.15)', 'rgba(0, 40, 30, 0.8)']
             }
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 0, y: 1 }}
             style={styles.button}
           >
             {renderContent()}
@@ -454,35 +454,37 @@ const useStyles = (
           paddingHorizontal: sizeConfig.paddingHorizontal,
           borderRadius,
           overflow: 'hidden',
-          // Background (non-selected, non-glass)
+          // Background - dark green semi-transparent
           backgroundColor:
             variant === 'glass' || isSelected
               ? 'transparent'
               : disabled
                 ? colors.surfaceElevated
-                : colors.primaryBg,
-          // Border
-          borderWidth: isSelected ? 0 : 1,
-          borderColor: disabled
-            ? 'transparent'
-            : `${colors.primary}25`,
-          // Shadow for selected
+                : 'rgba(0, 40, 30, 0.6)',
+          // Border - green subtle
+          borderWidth: isSelected ? 2 : 1.5,
+          borderColor: isSelected
+            ? '#22c55e'
+            : disabled
+              ? 'transparent'
+              : 'rgba(34, 197, 94, 0.3)',
+          // STRONG GLOW EFFECT
           ...Platform.select({
             ios: isSelected
               ? {
-                  shadowColor: colors.primary,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 8,
+                  shadowColor: '#22c55e',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.9,
+                  shadowRadius: 25,
                 }
               : {
-                  shadowColor: colors.primary,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 4,
+                  shadowColor: '#22c55e',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 18,
                 },
             android: {
-              elevation: isSelected ? 6 : 0,
+              elevation: isSelected ? 20 : 12,
             },
           }),
           // Opacity for disabled
@@ -509,13 +511,14 @@ const useStyles = (
         label: {
           fontSize: sizeConfig.labelSize,
           fontWeight: '600',
-          color: colors.textSecondary,
+          color: 'rgba(255, 255, 255, 0.6)',
           textTransform: 'uppercase',
           letterSpacing: 0.5,
           marginBottom: spacing.xxs,
         },
         selectedLabel: {
-          color: 'rgba(255, 255, 255, 0.85)',
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontWeight: '700',
         },
         oddsContainer: {
           flexDirection: 'row',
@@ -531,12 +534,19 @@ const useStyles = (
         },
         odds: {
           fontSize: sizeConfig.oddsSize,
-          fontWeight: '700',
-          color: colors.primary,
+          fontWeight: '800',
+          color: '#22c55e',
           letterSpacing: -0.5,
+          // Text glow effect
+          textShadowColor: 'rgba(34, 197, 94, 0.5)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 10,
         },
         selectedOdds: {
           color: '#FFFFFF',
+          textShadowColor: 'rgba(255, 255, 255, 0.3)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 8,
         },
         disabledText: {
           color: colors.textTertiary,

@@ -160,26 +160,20 @@ const ShineEffect: React.FC<{
   progress: number;
 }> = React.memo(({ animated, progress }) => {
   const shineAnim = useRef(new Animated.Value(0)).current;
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (animated && progress > 0.1) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(shineAnim, {
-            toValue: 1,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(shineAnim, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-          Animated.delay(2000),
-        ])
-      ).start();
+    // Only animate once on initial mount, no looping
+    if (animated && progress > 0.1 && !hasAnimated.current) {
+      hasAnimated.current = true;
+      Animated.timing(shineAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [animated, progress, shineAnim]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const translateX = shineAnim.interpolate({
     inputRange: [0, 1],
@@ -270,25 +264,27 @@ const MaxLevelBadge: React.FC<{
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const config = SIZE_CONFIG[size];
   const isGlass = variant === 'glass';
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (animated) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.05,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
+    // Only animate once on initial mount, no looping
+    if (animated && !hasAnimated.current) {
+      hasAnimated.current = true;
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
-  }, [animated, pulseAnim]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const badgeStyles = useMemo(
     () =>
@@ -371,9 +367,13 @@ export const XpProgressBar: React.FC<XpProgressBarProps> = ({
   const animatedWidth = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const hasInitialAnimated = useRef(false);
 
-  // Animation de la barre de progression
+  // Animation de la barre de progression - only on initial mount
   useEffect(() => {
+    if (hasInitialAnimated.current) return;
+    hasInitialAnimated.current = true;
+
     if (animated) {
       Animated.timing(animatedWidth, {
         toValue: progress,
@@ -381,7 +381,7 @@ export const XpProgressBar: React.FC<XpProgressBarProps> = ({
         useNativeDriver: false,
       }).start();
 
-      // Glow effect quand progression change
+      // Glow effect once on initial load
       Animated.sequence([
         Animated.timing(glowAnim, {
           toValue: 1,
@@ -397,7 +397,8 @@ export const XpProgressBar: React.FC<XpProgressBarProps> = ({
     } else {
       animatedWidth.setValue(progress);
     }
-  }, [progress, animated, animatedWidth, glowAnim]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Handlers ─────────────────────────────────────────────────
   const handlePressIn = useCallback(() => {

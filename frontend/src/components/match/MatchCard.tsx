@@ -124,6 +124,24 @@ function getTeamInitials(name: string): string {
   return name.substring(0, 2).toUpperCase();
 }
 
+function getSportIcon(sportCode: string): keyof typeof Ionicons.glyphMap {
+  const iconMap: Record<string, keyof typeof Ionicons.glyphMap> = {
+    'FOOTBALL': 'football',
+    'BASKETBALL': 'basketball',
+    'TENNIS': 'tennisball',
+    'BASEBALL': 'baseball',
+    'HOCKEY': 'snow',
+    'RUGBY': 'american-football',
+    'VOLLEYBALL': 'basketball-outline',
+    'HANDBALL': 'hand-left',
+    'GOLF': 'golf',
+    'BOXING': 'fitness',
+    'MMA': 'fitness',
+    'ESPORTS': 'game-controller',
+  };
+  return iconMap[sportCode.toUpperCase()] || 'trophy';
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES
 // ═══════════════════════════════════════════════════════════════
@@ -397,9 +415,9 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
   // ── Render content ─────────────────────────────────────────────
   const renderContent = () => (
     <>
-      {/* League badge - top left */}
+      {/* League badge - top left with sport icon */}
       <View style={styles.leagueBadge}>
-        <Ionicons name="trophy-outline" size={12} color={colors.primary} />
+        <Ionicons name={getSportIcon(match.sportCode)} size={14} color={colors.primary} />
         <Text style={styles.leagueText}>{match.leagueName}</Text>
       </View>
 
@@ -442,8 +460,8 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
           </Text>
         </View>
 
-        {/* VS divider */}
-        <View style={styles.vsContainer}>
+        {/* VS divider - circular badge */}
+        <View style={styles.vsCircle}>
           <Text style={styles.vsText}>VS</Text>
         </View>
 
@@ -692,16 +710,22 @@ const useStyles = (
           textAlign: 'center',
           lineHeight: 18,
         },
-        vsContainer: {
-          width: 44,
+        vsCircle: {
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: colors.primaryBg,
+          borderWidth: 2,
+          borderColor: colors.primary,
           alignItems: 'center',
+          justifyContent: 'center',
         },
         vsText: {
-          fontSize: 11,
-          fontWeight: '700',
+          fontSize: 12,
+          fontWeight: '900',
           fontFamily: typography.caption.fontFamily,
-          color: colors.textTertiary,
-          letterSpacing: 1.5,
+          color: colors.primary,
+          letterSpacing: 0.5,
         },
         oddsContainer: {
           flexDirection: 'row',

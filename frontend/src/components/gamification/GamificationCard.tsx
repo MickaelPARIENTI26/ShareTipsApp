@@ -42,31 +42,12 @@ export const GamificationCard: React.FC<GamificationCardProps> = ({
         />
       </TouchableOpacity>
 
-      {/* Streaks */}
-      <View style={styles.streaksContainer}>
-        <View style={styles.streakItem}>
-          <Ionicons name="flame" size={18} color={palette.category.tipster} />
-          <Text style={styles.streakValue}>{gamification.currentDailyStreak}</Text>
-          <Text style={styles.streakLabel}>jours</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.streakItem}>
-          <Ionicons name="trophy" size={18} color={palette.medal.gold} />
-          <Text style={styles.streakValue}>{gamification.currentWinStreak}</Text>
-          <Text style={styles.streakLabel}>wins</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Badges - clickable */}
-        <TouchableOpacity style={styles.streakItem} onPress={onBadgesPress} activeOpacity={0.7}>
-          <Ionicons name="ribbon" size={18} color={palette.category.buyer} />
-          <Text style={styles.streakValue}>{gamification.badgeCount}</Text>
-          <Text style={styles.streakLabelClickable}>badges →</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Badges - centered under progress bar */}
+      <TouchableOpacity style={styles.badgesContainer} onPress={onBadgesPress} activeOpacity={0.7}>
+        <Ionicons name="ribbon" size={18} color={palette.category.buyer} />
+        <Text style={styles.badgeValue}>{gamification.badgeCount}</Text>
+        <Text style={styles.badgeLabelClickable}>badges →</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -107,43 +88,28 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.textSecondary,
           marginLeft: spacing.sm,
         },
-        streaksContainer: {
+        badgesContainer: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-around',
+          justifyContent: 'center',
           marginTop: spacing.md,
           paddingTop: spacing.md,
           borderTopWidth: 1,
           borderTopColor: colors.border,
+          gap: spacing.xs,
         },
-        streakItem: {
-          alignItems: 'center',
-          flex: 1,
-        },
-        streakValue: {
+        badgeValue: {
           ...typography.h5,
           fontWeight: fontWeight.bold,
           color: colors.text,
-          marginTop: spacing.xs,
         },
-        streakLabel: {
-          ...typography.caption,
-          color: colors.textSecondary,
-          marginTop: spacing.xxs,
-        },
-        streakLabelClickable: {
+        badgeLabelClickable: {
           ...typography.caption,
           color: colors.primary,
-          marginTop: spacing.xxs,
           fontWeight: fontWeight.semibold,
         },
         chevron: {
           marginLeft: 'auto',
-        },
-        divider: {
-          width: 1,
-          height: spacing['3xl'],
-          backgroundColor: colors.border,
         },
       }),
     [colors]

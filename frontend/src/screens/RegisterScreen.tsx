@@ -36,6 +36,13 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [acceptedCGV, setAcceptedCGV] = useState(false);
+  const [touched, setTouched] = useState({
+    username: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+    dateOfBirth: false,
+  });
   const { loading, error, register, clearError } = useAuthStore();
   const theme = useTheme();
   // Fallback to darkColors if theme context fails to load
@@ -112,6 +119,18 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     setter(value);
   };
 
+  // Handlers onBlur pour chaque champ
+  const handleBlur = (field: keyof typeof touched) => () => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  // Afficher l'erreur seulement si le champ a été touché (blur) et est invalide
+  const usernameError = touched.username && !usernameValidation.isValid ? usernameValidation.error : undefined;
+  const emailError = touched.email && !emailValidation.isValid ? emailValidation.error : undefined;
+  const passwordError = touched.password && !passwordValidation.isValid ? passwordValidation.error : undefined;
+  const confirmPasswordError = touched.confirmPassword && !confirmValidation.isValid ? confirmValidation.error : undefined;
+  const dobError = touched.dateOfBirth && !dobValidation.isValid ? dobValidation.error : undefined;
+
   return (
     <SportyBackground>
       <KeyboardAvoidingView
@@ -185,6 +204,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               icon="person-outline"
               value={username}
               onChangeText={clearOnChange(setUsername)}
+              onBlur={handleBlur('username')}
               autoCapitalize="none"
               textContentType="username"
               autoComplete="username"
@@ -192,7 +212,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => emailRef.current?.focus()}
-              error={username.length > 0 && !usernameValidation.isValid ? usernameValidation.error : undefined}
+              error={usernameError}
               accessibilityLabel="Nom d'utilisateur"
               accessibilityHint="Entrez votre nom d'utilisateur"
             />
@@ -204,6 +224,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               icon="mail-outline"
               value={email}
               onChangeText={clearOnChange(setEmail)}
+              onBlur={handleBlur('email')}
               autoCapitalize="none"
               keyboardType="email-address"
               textContentType="emailAddress"
@@ -212,7 +233,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => passwordRef.current?.focus()}
-              error={email.length > 0 && !emailValidation.isValid ? emailValidation.error : undefined}
+              error={emailError}
               accessibilityLabel="Adresse email"
               accessibilityHint="Entrez votre adresse email"
             />
@@ -225,13 +246,14 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               isPassword
               value={password}
               onChangeText={clearOnChange(setPassword)}
+              onBlur={handleBlur('password')}
               textContentType="newPassword"
               autoComplete="new-password"
               editable={!loading}
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-              error={password.length > 0 && !passwordValidation.isValid ? passwordValidation.error : undefined}
+              error={passwordError}
               accessibilityLabel="Mot de passe"
               accessibilityHint="Entrez votre mot de passe"
             />
@@ -244,12 +266,13 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               isPassword
               value={confirmPassword}
               onChangeText={clearOnChange(setConfirmPassword)}
+              onBlur={handleBlur('confirmPassword')}
               textContentType="newPassword"
               editable={!loading}
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => dateOfBirthRef.current?.focus()}
-              error={confirmPassword.length > 0 && !confirmValidation.isValid ? confirmValidation.error : undefined}
+              error={confirmPasswordError}
               accessibilityLabel="Confirmer le mot de passe"
               accessibilityHint="Entrez à nouveau votre mot de passe"
             />
@@ -261,12 +284,13 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               icon="calendar-outline"
               value={dateOfBirth}
               onChangeText={handleDateChange}
+              onBlur={handleBlur('dateOfBirth')}
               keyboardType="number-pad"
               maxLength={10}
               editable={!loading}
               returnKeyType="done"
               onSubmitEditing={handleRegister}
-              error={dateOfBirth.length > 0 && !dobValidation.isValid ? dobValidation.error : undefined}
+              error={dobError}
               accessibilityLabel="Date de naissance"
               accessibilityHint="Entrez votre date de naissance"
             />

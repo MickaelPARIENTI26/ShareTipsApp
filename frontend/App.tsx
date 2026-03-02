@@ -92,7 +92,8 @@ function AppContent() {
 
   useEffect(() => {
     hydrate();
-  }, [hydrate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!hydrated) {
     return (

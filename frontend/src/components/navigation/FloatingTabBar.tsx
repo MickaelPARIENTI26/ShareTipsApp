@@ -49,7 +49,7 @@ const TAB_CONFIG: Record<
   string,
   { icon: keyof typeof Ionicons.glyphMap; iconFocused: keyof typeof Ionicons.glyphMap; label: string }
 > = {
-  Home: { icon: 'home-outline', iconFocused: 'home', label: 'Accueil' },
+  Home: { icon: 'information-circle-outline', iconFocused: 'information-circle', label: 'Information' },
   Matches: { icon: 'football-outline', iconFocused: 'football', label: 'Matchs' },
   Marketplace: { icon: 'storefront-outline', iconFocused: 'storefront', label: 'Boutique' },
   Ranking: { icon: 'trophy-outline', iconFocused: 'trophy', label: 'Compétitions' },
@@ -128,10 +128,14 @@ const fabStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: -18,
+    zIndex: 99999,
+    elevation: 999,
   },
   wrapper: {
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 99999,
+    elevation: 999,
   },
   glowRing: {
     width: FAB_OUTER_SIZE,
@@ -142,6 +146,7 @@ const fabStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
+    zIndex: 99999,
     // Strong glow shadow
     ...Platform.select({
       ios: {
@@ -151,7 +156,7 @@ const fabStyles = StyleSheet.create({
         shadowRadius: 20,
       },
       android: {
-        elevation: 15,
+        elevation: 999,
       },
     }),
   },
@@ -162,6 +167,8 @@ const fabStyles = StyleSheet.create({
     backgroundColor: COLORS.active,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 99999,
+    elevation: 999,
   },
 });
 
@@ -250,7 +257,7 @@ const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
 
   // ── Calcul des routes ordonnées ──────────────────────────────
   const { leftRoutes, centerRoute, rightRoutes } = useMemo(() => {
-    const orderedRouteNames = ['Home', 'Matches', 'Marketplace', 'Ranking', 'Profile'];
+    const orderedRouteNames = ['Profile', 'Matches', 'Marketplace', 'Ranking', 'Home'];
     const orderedRoutes = orderedRouteNames
       .map((name) => state.routes.find((r) => r.name === name))
       .filter((r): r is typeof state.routes[number] => r !== undefined);
@@ -347,6 +354,9 @@ const FloatingTabBar: React.FC<FloatingTabBarProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.background,
+    zIndex: 100000,
+    elevation: 1000,
+    overflow: 'visible',
   },
   tabBar: {
     flexDirection: 'row',
@@ -359,6 +369,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingTop: 0,
     paddingBottom: 0,
+    overflow: 'visible',
   },
   section: {
     flex: 1,

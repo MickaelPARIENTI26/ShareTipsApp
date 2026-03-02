@@ -1,0 +1,3060 @@
+{
+  "generated_at": "2026-02-06T11:11:06.125571Z",
+  "summary": {
+    "FOOTBALL": 21,
+    "BASKETBALL": 3,
+    "TENNIS": 0,
+    "ESPORT": 0
+  },
+  "matches": [
+    {
+      "id": "f975874e-a18a-4618-a8be-a252564af398",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "0ac464a2-8883-450e-8733-713d14c0a25c",
+        "name": "Metz",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "cd60892f-bdbe-4424-8b0c-29841668db47",
+        "name": "Lille",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-06T19:45:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "4e905818-1f05-445f-ad89-babedcf7c003",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -1.5,
+          "selections": [
+            {
+              "id": "58cb1b62-821e-4210-9a3b-60cb59591652",
+              "code": "LILLE",
+              "label": "Lille",
+              "odds": 2.89,
+              "playerName": null
+            },
+            {
+              "id": "755e8e3d-d084-4ff9-8b88-f35d682b14ad",
+              "code": "METZ",
+              "label": "Metz",
+              "odds": 1.89,
+              "playerName": null
+            },
+            {
+              "id": "9c817534-3674-48e2-b1a0-fc2ee54c1567",
+              "code": "LILLE",
+              "label": "Lille",
+              "odds": 1.96,
+              "playerName": null
+            },
+            {
+              "id": "fe6d407e-0082-4f34-b167-a4db10b8884e",
+              "code": "METZ",
+              "label": "Metz",
+              "odds": 1.36,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "c5dcc0db-2af4-455d-ae06-c5dad1dfc309",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "9b7222d5-b6fc-4e2e-9b7c-822c5fe69299",
+              "code": "X",
+              "label": "Draw",
+              "odds": 4.12,
+              "playerName": null
+            },
+            {
+              "id": "bfaa439a-e80a-4a27-b63e-d8ef4c0f6669",
+              "code": "Metz",
+              "label": "Metz",
+              "odds": 4.75,
+              "playerName": null
+            },
+            {
+              "id": "fc95bb8e-c7d7-4622-ad7f-fd02c487cd98",
+              "code": "Lille",
+              "label": "Lille",
+              "odds": 1.8,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "c76c2217-fdeb-4efa-98c7-bfe8332dd20f",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "7857ed4e-3379-4322-851f-7ba33f8f8427",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.93,
+              "playerName": null
+            },
+            {
+              "id": "b6bad146-956c-409f-907e-ac8343afe1e8",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.9,
+              "playerName": null
+            },
+            {
+              "id": "bf326f46-078f-4b69-be7a-0f81a6d007ec",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.78,
+              "playerName": null
+            },
+            {
+              "id": "d52f0d0d-2140-4bf5-bd66-1b504f6d2388",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.23,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "72971956-1420-4e92-aa18-0075a161b817",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "d1843563-37cb-45ca-bd56-d940b54bce8f",
+        "name": "Leeds United",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "ea0baf30-ee15-4953-8d30-5c4c80209965",
+        "name": "Nottingham Forest",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-06T20:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "58f98271-a237-4441-93a0-829dcdc7fbce",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "06894954-ac05-4550-afcf-fbe61bbceb5c",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.45,
+              "playerName": null
+            },
+            {
+              "id": "13bb0915-9a43-4c12-bb1f-7dbafc1deb6d",
+              "code": "Nottingham Forest",
+              "label": "Nottingham Forest",
+              "odds": 3.23,
+              "playerName": null
+            },
+            {
+              "id": "81adcd82-f08e-49ef-a4d4-3aaf782a201c",
+              "code": "Leeds United",
+              "label": "Leeds United",
+              "odds": 2.43,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "6831de1c-5832-4dec-8732-eec56c2e84e9",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "8ae362c4-41ac-47c5-bc31-6090f212b8d0",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.08,
+              "playerName": null
+            },
+            {
+              "id": "e4bc1228-12fd-4a75-8ff9-529eb5524215",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.87,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "7e37ce8f-0a49-4f84-bec9-fd9fdea93a43",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -0.5,
+          "selections": [
+            {
+              "id": "0cd252e2-08b8-472d-b446-4891bd2f29da",
+              "code": "NOTTINGHAM_FOREST",
+              "label": "Nottingham Forest",
+              "odds": 1.85,
+              "playerName": null
+            },
+            {
+              "id": "4b6faf22-65c8-43e9-b204-409f792a2e5a",
+              "code": "NOTTINGHAM_FOREST",
+              "label": "Nottingham Forest",
+              "odds": 1.6,
+              "playerName": null
+            },
+            {
+              "id": "675a9dcb-bce1-41ac-a188-defea8615f3e",
+              "code": "NOTTINGHAM_FOREST",
+              "label": "Nottingham Forest",
+              "odds": 2.29,
+              "playerName": null
+            },
+            {
+              "id": "ba37ac3f-6c3a-443b-86d3-63b18c24c47d",
+              "code": "LEEDS_UNITED",
+              "label": "Leeds United",
+              "odds": 2.2,
+              "playerName": null
+            },
+            {
+              "id": "c5023c33-156b-4cb2-9693-6d2b064b1606",
+              "code": "LEEDS_UNITED",
+              "label": "Leeds United",
+              "odds": 1.73,
+              "playerName": null
+            },
+            {
+              "id": "f022bb5a-b48b-4e67-83a0-f3d3c34bc86a",
+              "code": "LEEDS_UNITED",
+              "label": "Leeds United",
+              "odds": 2.03,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3fba1811-cae1-4064-b6d0-40ccab936338",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "9bdeaa7a-51ac-4b02-a3d6-859462a30ba9",
+        "name": "Manchester United",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "f5abe098-0bd7-43d4-85e2-71d19e6e3cc8",
+        "name": "Tottenham Hotspur",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T12:30:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "0ddf562d-f739-4586-b087-bf35c39a304d",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "05fe5b9b-91b9-405b-a296-7d0f259aa49c",
+              "code": "X",
+              "label": "Draw",
+              "odds": 4.4,
+              "playerName": null
+            },
+            {
+              "id": "9bed340b-f7df-4493-aa1c-8e7c6a9ff045",
+              "code": "Manchester United",
+              "label": "Manchester United",
+              "odds": 1.72,
+              "playerName": null
+            },
+            {
+              "id": "e01286fa-fb07-4fb5-89f8-d87765a98915",
+              "code": "Tottenham Hotspur",
+              "label": "Tottenham Hotspur",
+              "odds": 5.1,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "88269aab-3186-43d5-96f4-254b5a0d10b1",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "8576b6d5-ba80-4d34-affe-f23613df13ea",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.38,
+              "playerName": null
+            },
+            {
+              "id": "a8b7ca6e-6cd7-4e34-bc50-ce582c3c2075",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.68,
+              "playerName": null
+            },
+            {
+              "id": "bd8fb27e-db02-468c-8eeb-b56d506d3d91",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.84,
+              "playerName": null
+            },
+            {
+              "id": "c1d05ab0-ee80-4215-a78d-a067438d58d6",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.02,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "c257ad2e-4b6f-4b6b-9d71-dc6b7a6b3122",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -0.5,
+          "selections": [
+            {
+              "id": "1b5599cf-ef24-44ce-a398-410a627de6aa",
+              "code": "MANCHESTER_UNITED",
+              "label": "Manchester United",
+              "odds": 1.85,
+              "playerName": null
+            },
+            {
+              "id": "73d1b11b-3f34-4fa1-92d2-ce52ea7fceb8",
+              "code": "TOTTENHAM_HOTSPUR",
+              "label": "Tottenham Hotspur",
+              "odds": 2.01,
+              "playerName": null
+            },
+            {
+              "id": "821139ce-c129-4101-a6a6-d1b3503ab92f",
+              "code": "MANCHESTER_UNITED",
+              "label": "Manchester United",
+              "odds": 1.64,
+              "playerName": null
+            },
+            {
+              "id": "c45d11a4-522b-40f7-80de-ef14aa705146",
+              "code": "TOTTENHAM_HOTSPUR",
+              "label": "Tottenham Hotspur",
+              "odds": 2.13,
+              "playerName": null
+            },
+            {
+              "id": "cbaae7b7-d0b7-4d47-b990-381497fcaf20",
+              "code": "MANCHESTER_UNITED",
+              "label": "Manchester United",
+              "odds": 2.69,
+              "playerName": null
+            },
+            {
+              "id": "f2dff56b-b003-466d-baf7-58dbf0f2e88c",
+              "code": "TOTTENHAM_HOTSPUR",
+              "label": "Tottenham Hotspur",
+              "odds": 1.41,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "352fabf5-4000-4742-a2de-8fe24b98eefa",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "9df2e790-6667-40f4-a146-d31e26550e56",
+        "name": "Burnley",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "4e04d4d3-6d70-488e-9750-0e55e620ac8a",
+        "name": "West Ham United",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T15:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "7ae13734-c0d1-4dc9-b7c6-1ee6a6f9ac84",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "0d78eadd-3c51-4f32-9358-22c7d110b74d",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.95,
+              "playerName": null
+            },
+            {
+              "id": "304ff750-6bea-42e8-8719-0b48b27021b5",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.99,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "f40f499c-1ca6-4bb2-a909-4ddec5f5d4d7",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "285ffaaa-1cfa-49ba-8707-d43a2b03896f",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.6,
+              "playerName": null
+            },
+            {
+              "id": "3407832a-d57e-460c-8bee-4ec8fa671fbe",
+              "code": "West Ham United",
+              "label": "West Ham United",
+              "odds": 2.5,
+              "playerName": null
+            },
+            {
+              "id": "47896d76-941c-4c85-9e51-c5dbf88b83d6",
+              "code": "Burnley",
+              "label": "Burnley",
+              "odds": 3.04,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "fcd9baf3-7a96-49ab-9469-e43559e71ffe",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.5,
+          "selections": [
+            {
+              "id": "4e2c4dfe-2114-43a4-9981-9d5bc13780a7",
+              "code": "BURNLEY",
+              "label": "Burnley",
+              "odds": 2.2,
+              "playerName": null
+            },
+            {
+              "id": "682d8b24-b885-4f49-bbe7-11b4ce183f4b",
+              "code": "WEST_HAM_UNITED",
+              "label": "West Ham United",
+              "odds": 2.3,
+              "playerName": null
+            },
+            {
+              "id": "9e9441cb-dd47-4e1e-a084-19b8f80bc6c7",
+              "code": "WEST_HAM_UNITED",
+              "label": "West Ham United",
+              "odds": 2.1,
+              "playerName": null
+            },
+            {
+              "id": "a595b9a4-380a-4713-8c18-dffce8fb8f52",
+              "code": "WEST_HAM_UNITED",
+              "label": "West Ham United",
+              "odds": 1.78,
+              "playerName": null
+            },
+            {
+              "id": "db90b98b-09af-49bb-8bfb-5586b92fca83",
+              "code": "BURNLEY",
+              "label": "Burnley",
+              "odds": 1.81,
+              "playerName": null
+            },
+            {
+              "id": "f7863780-f19a-4415-b59a-6a3969ad6304",
+              "code": "BURNLEY",
+              "label": "Burnley",
+              "odds": 1.55,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ba4fbef2-e0a0-41f7-9276-267c9485cf6c",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "ff8f54d4-18f9-478a-841f-156f42bc505c",
+        "name": "Fulham",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "6f8f07c7-6815-4d0a-8cfc-171836790dbf",
+        "name": "Everton",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T15:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "0245bdea-2995-40bf-9dfa-1f4dca86467a",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "2f4fbfa5-0a90-471d-9974-b350ab965f74",
+              "code": "Fulham",
+              "label": "Fulham",
+              "odds": 2.17,
+              "playerName": null
+            },
+            {
+              "id": "3dfe976b-5b16-4f7e-8d97-b2a29a3d62c7",
+              "code": "Everton",
+              "label": "Everton",
+              "odds": 4.0,
+              "playerName": null
+            },
+            {
+              "id": "7b462c45-e05a-4333-b824-c209af4dce12",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.4,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "bbc9c648-0c15-4544-b3d1-cc06f5f6d759",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -0.5,
+          "selections": [
+            {
+              "id": "57fbfb25-7437-4698-a0b6-d399beb08eac",
+              "code": "FULHAM",
+              "label": "Fulham",
+              "odds": 1.82,
+              "playerName": null
+            },
+            {
+              "id": "7124d25c-69fc-4a82-adb0-c68b1ed5ab4c",
+              "code": "FULHAM",
+              "label": "Fulham",
+              "odds": 1.49,
+              "playerName": null
+            },
+            {
+              "id": "8944cb3e-1563-477c-824d-921c26f2749a",
+              "code": "EVERTON",
+              "label": "Everton",
+              "odds": 2.62,
+              "playerName": null
+            },
+            {
+              "id": "aa86413c-1726-4d61-9fd4-19b7f625168c",
+              "code": "EVERTON",
+              "label": "Everton",
+              "odds": 2.04,
+              "playerName": null
+            },
+            {
+              "id": "dc46122e-6b96-4bfb-a38c-b30414101c8e",
+              "code": "EVERTON",
+              "label": "Everton",
+              "odds": 1.83,
+              "playerName": null
+            },
+            {
+              "id": "f7f0151b-3fa9-4c14-9016-64dd303f62a8",
+              "code": "FULHAM",
+              "label": "Fulham",
+              "odds": 2.0,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "ea32f1e1-efd2-4360-8884-b4cb3c01b131",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "6266bdcf-0f27-42ac-be3c-56559c4fc9c9",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.94,
+              "playerName": null
+            },
+            {
+              "id": "9053ba63-9394-42c5-b43c-af820bbc03fc",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.72,
+              "playerName": null
+            },
+            {
+              "id": "a284acf8-88d7-487c-988b-1ab7950161ba",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.3,
+              "playerName": null
+            },
+            {
+              "id": "c05fc584-5da5-496e-92f4-7eee36dba2ad",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.9,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "723f0d29-2597-4941-965c-35a921a82024",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "d98176bf-83ca-4abb-9e05-eb295f131a7a",
+        "name": "Wolverhampton Wanderers",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "19f131a7-5128-472a-9dbe-af7c37ade2a4",
+        "name": "Chelsea",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T15:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "14fc7fed-88e1-4eac-a779-7bbbfe77c273",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -0.5,
+          "selections": [
+            {
+              "id": "1db12995-e987-4e89-918d-bee2e917fc9f",
+              "code": "WOLVERHAMPTON_WANDERERS",
+              "label": "Wolverhampton Wanderers",
+              "odds": 1.94,
+              "playerName": null
+            },
+            {
+              "id": "b0938ac0-8e1f-45e0-adac-631d2d174a17",
+              "code": "WOLVERHAMPTON_WANDERERS",
+              "label": "Wolverhampton Wanderers",
+              "odds": 1.38,
+              "playerName": null
+            },
+            {
+              "id": "bb0a932e-f237-410c-994c-3693177030a6",
+              "code": "CHELSEA",
+              "label": "Chelsea",
+              "odds": 2.81,
+              "playerName": null
+            },
+            {
+              "id": "cf73a3d7-e37a-4ce1-ae7e-4f48177e6eeb",
+              "code": "CHELSEA",
+              "label": "Chelsea",
+              "odds": 1.9,
+              "playerName": null
+            },
+            {
+              "id": "ddb47e39-8118-4cd5-9308-d931f1621d6f",
+              "code": "CHELSEA",
+              "label": "Chelsea",
+              "odds": 1.66,
+              "playerName": null
+            },
+            {
+              "id": "ebbb5005-1118-4381-a762-7f36a11b433f",
+              "code": "WOLVERHAMPTON_WANDERERS",
+              "label": "Wolverhampton Wanderers",
+              "odds": 2.09,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "e0c16b7f-fdea-4df0-9360-4cbf902fb534",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "0c717c33-4aac-4431-b79f-9e6a9d0b1fd6",
+              "code": "Chelsea",
+              "label": "Chelsea",
+              "odds": 1.76,
+              "playerName": null
+            },
+            {
+              "id": "93c1fff6-6c27-4de0-930a-7254ae2bb0ad",
+              "code": "Wolverhampton Wanderers",
+              "label": "Wolverhampton Wanderers",
+              "odds": 4.9,
+              "playerName": null
+            },
+            {
+              "id": "b8b101a8-e495-42e5-ac53-642f0558a79c",
+              "code": "X",
+              "label": "Draw",
+              "odds": 4.27,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "e7ce1033-6bf7-431d-b077-7e9c631796ba",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "2d036f38-b64f-48a2-9117-5f2672c17b5a",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.22,
+              "playerName": null
+            },
+            {
+              "id": "46a9f00b-d885-416b-9763-cedd0a98b620",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.9,
+              "playerName": null
+            },
+            {
+              "id": "6f170f71-bbf3-4af2-bfb7-65dd5e2fcfc6",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.77,
+              "playerName": null
+            },
+            {
+              "id": "fef3c89b-dcc8-4c89-affc-a402bf8de6ce",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.93,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0d1d5602-1525-43f2-bc4f-4228fdc63327",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "5fbe6ba5-6e58-450b-82d4-c1a6cb9c27a5",
+        "name": "Bournemouth",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "c4b38a16-f1e5-477e-be4c-6bf2eef64b7b",
+        "name": "Aston Villa",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T15:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "675cea14-2e76-4c3a-8d1b-1e84842808c8",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -0.5,
+          "selections": [
+            {
+              "id": "1e4567d3-218c-4a61-9446-440cc8127ac2",
+              "code": "ASTON_VILLA",
+              "label": "Aston Villa",
+              "odds": 2.33,
+              "playerName": null
+            },
+            {
+              "id": "20e06301-fe45-459e-84bd-8939bb3ea33b",
+              "code": "ASTON_VILLA",
+              "label": "Aston Villa",
+              "odds": 1.89,
+              "playerName": null
+            },
+            {
+              "id": "bd514ac3-3f34-4886-9d60-c69007229b92",
+              "code": "BOURNEMOUTH",
+              "label": "Bournemouth",
+              "odds": 1.53,
+              "playerName": null
+            },
+            {
+              "id": "d63ee768-2d8f-4805-b2ae-ed629f4630d0",
+              "code": "BOURNEMOUTH",
+              "label": "Bournemouth",
+              "odds": 2.06,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "ca848994-e0a9-4295-a975-34b4a4f1e907",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "074e0ea5-c7ed-4285-997e-aed3d573b887",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.69,
+              "playerName": null
+            },
+            {
+              "id": "72285c77-350e-4190-b4b4-45b82e015b23",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.36,
+              "playerName": null
+            },
+            {
+              "id": "8b0deb1d-17c9-4231-a746-f3d836af8def",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.03,
+              "playerName": null
+            },
+            {
+              "id": "cec70cf9-9a34-46bf-a4fb-135705ca3b83",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.82,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "f9934f61-50b8-44c7-b293-19e543f4a8fe",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "36daf992-4355-4c6a-970e-304430f8529d",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.86,
+              "playerName": null
+            },
+            {
+              "id": "3c80645e-ec40-4ca5-b3dd-4990165d98a2",
+              "code": "Aston Villa",
+              "label": "Aston Villa",
+              "odds": 2.52,
+              "playerName": null
+            },
+            {
+              "id": "4307a645-82e3-4752-998b-da63b2b47830",
+              "code": "Bournemouth",
+              "label": "Bournemouth",
+              "odds": 2.8,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1fff67ff-a7c6-4d36-a877-9126badf5833",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "4ac12e96-9b78-4b01-b5c9-339e94365ce1",
+        "name": "Arsenal",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "6b6859b7-37a1-47b9-a902-444b7017f860",
+        "name": "Sunderland",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T15:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "8ccb8896-6e39-4310-ac29-815f40441982",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "222b2d2e-6f2a-4063-9684-884ed1ddd0d2",
+              "code": "Arsenal",
+              "label": "Arsenal",
+              "odds": 1.28,
+              "playerName": null
+            },
+            {
+              "id": "7061987e-c215-4f74-a9ae-203c4e02c931",
+              "code": "X",
+              "label": "Draw",
+              "odds": 6.7,
+              "playerName": null
+            },
+            {
+              "id": "d29e81fb-d620-4139-95cc-80b84438e297",
+              "code": "Sunderland",
+              "label": "Sunderland",
+              "odds": 15.0,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "ad5f457f-2b86-41db-92d8-85ea9d2b6052",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -1.5,
+          "selections": [
+            {
+              "id": "c1542866-f09a-49a0-aa8e-0b2c93d46879",
+              "code": "SUNDERLAND",
+              "label": "Sunderland",
+              "odds": 2.07,
+              "playerName": null
+            },
+            {
+              "id": "ced3c101-4cb6-41f9-bfc1-3c31a6d8fed7",
+              "code": "ARSENAL",
+              "label": "Arsenal",
+              "odds": 1.88,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "fafd3f32-2da2-4ee7-a2f7-d99c852b0d22",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "50bc4641-8274-4fbe-981f-96f74f10277f",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.83,
+              "playerName": null
+            },
+            {
+              "id": "8bc63366-61cf-4829-bdcd-46d2f41bc0dc",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.16,
+              "playerName": null
+            },
+            {
+              "id": "b32347f2-6bad-4ff9-b1ce-fa1fd5f5d3ce",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.03,
+              "playerName": null
+            },
+            {
+              "id": "f07413b9-e149-4fa8-b5ca-20d0801f4939",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.86,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6cd0739b-16e1-414e-bb85-7238afa356b1",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "7c4c47ce-cb9a-411c-89d7-879a029f4ea5",
+        "name": "RC Lens",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "136e06fd-86f1-4781-a38c-29bd6d01c864",
+        "name": "Rennes",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T16:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "4696925e-96ba-48b6-a22d-5eaec1aede8a",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "3abd30ae-4067-4147-a7d8-6063ebecfb40",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.45,
+              "playerName": null
+            },
+            {
+              "id": "b43ea235-f90c-47eb-861e-3af97d4eae5d",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.65,
+              "playerName": null
+            },
+            {
+              "id": "bc098ef1-8665-453a-9b92-fb1f06c7dc58",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.94,
+              "playerName": null
+            },
+            {
+              "id": "c201bb55-961b-4761-8c76-e5bdf4873f81",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.56,
+              "playerName": null
+            },
+            {
+              "id": "cc11a121-3b3e-4579-b0b6-f5c4955dea5e",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.89,
+              "playerName": null
+            },
+            {
+              "id": "e3786c05-c92e-4243-aa14-14c764744469",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.35,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "62ddabdc-2fe7-4d55-920a-6576a9f253b4",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "5d5c51be-8c36-47b5-9a9a-25fd03c87379",
+              "code": "X",
+              "label": "Draw",
+              "odds": 4.0,
+              "playerName": null
+            },
+            {
+              "id": "c2b9517c-0d39-43f2-8ad6-f968622103b6",
+              "code": "RC Lens",
+              "label": "RC Lens",
+              "odds": 1.84,
+              "playerName": null
+            },
+            {
+              "id": "f9552553-4bf3-4148-a97b-5104ae292f5b",
+              "code": "Rennes",
+              "label": "Rennes",
+              "odds": 4.62,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "e2880f8d-8553-4ca0-a56c-c536162ab17b",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -1.5,
+          "selections": [
+            {
+              "id": "30e398ed-66cc-4cc1-bd7f-c50245b17308",
+              "code": "RENNES",
+              "label": "Rennes",
+              "odds": 1.86,
+              "playerName": null
+            },
+            {
+              "id": "74b556ad-1353-4c57-8595-3e085e326794",
+              "code": "RC_LENS",
+              "label": "RC Lens",
+              "odds": 2.85,
+              "playerName": null
+            },
+            {
+              "id": "c054c2ab-ee6e-4d11-a087-9ae60f4cdad5",
+              "code": "RC_LENS",
+              "label": "RC Lens",
+              "odds": 1.99,
+              "playerName": null
+            },
+            {
+              "id": "ef597173-bc9d-4dd2-afc8-6341abef22b1",
+              "code": "RENNES",
+              "label": "Rennes",
+              "odds": 1.37,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4e21f596-7e87-4b61-91a7-028cd1a1fe57",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "a75086b3-e0b4-4981-9228-8e085006a45a",
+        "name": "Newcastle United",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "069237cf-b140-4a9c-9912-748859de08d8",
+        "name": "Brentford",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T17:30:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "1cfc6b95-16fc-498f-879c-d2f1e02669bb",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "ba69c41a-4296-43ff-8c66-7dfe57cadd06",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.94,
+              "playerName": null
+            },
+            {
+              "id": "f311dde0-73a1-41fc-a257-3e32bf7c7184",
+              "code": "Brentford",
+              "label": "Brentford",
+              "odds": 4.6,
+              "playerName": null
+            },
+            {
+              "id": "f60e0f5a-acef-43ec-b05e-177eb8b2e478",
+              "code": "Newcastle United",
+              "label": "Newcastle United",
+              "odds": 1.91,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "68d414ec-7797-497f-8ea2-3d7cf8055a47",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "0dc0cf33-32ab-4277-8f9a-1c2c6e2860a7",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.91,
+              "playerName": null
+            },
+            {
+              "id": "721d8e2f-0486-49bd-b201-fd350b7ed064",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.98,
+              "playerName": null
+            },
+            {
+              "id": "d204ffc7-5242-4595-860d-5f6a6ff1a098",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.74,
+              "playerName": null
+            },
+            {
+              "id": "dfff60a7-6f54-428f-bec9-be00dc32457c",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.27,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "c310259c-2385-4b00-9ed8-ab3bec61108d",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.0,
+          "selections": [
+            {
+              "id": "14e7f1eb-42b8-4e54-ba8d-c5fef9399e96",
+              "code": "NEWCASTLE_UNITED",
+              "label": "Newcastle United",
+              "odds": 2.0,
+              "playerName": null
+            },
+            {
+              "id": "1e9b03fd-ebfe-4833-932f-05b3accf93a8",
+              "code": "NEWCASTLE_UNITED",
+              "label": "Newcastle United",
+              "odds": 1.36,
+              "playerName": null
+            },
+            {
+              "id": "98b190b9-af43-4985-9143-b2c054849fc8",
+              "code": "BRENTFORD",
+              "label": "Brentford",
+              "odds": 2.01,
+              "playerName": null
+            },
+            {
+              "id": "a319dade-8c1d-46e2-85eb-95774d5b26db",
+              "code": "NEWCASTLE_UNITED",
+              "label": "Newcastle United",
+              "odds": 1.85,
+              "playerName": null
+            },
+            {
+              "id": "a754f789-81da-4df6-84d1-17e2803d2557",
+              "code": "BRENTFORD",
+              "label": "Brentford",
+              "odds": 1.83,
+              "playerName": null
+            },
+            {
+              "id": "afde8bde-956f-4abf-8d41-559f8658c13a",
+              "code": "BRENTFORD",
+              "label": "Brentford",
+              "odds": 2.84,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ea2fe096-5754-4210-9ae0-4a9ba45204fd",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "f61dadfc-bbeb-44c0-9ec4-4fd52ee7c981",
+        "name": "Brest",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "1ec9c84c-f24e-45fb-a41a-55113bae7d17",
+        "name": "Lorient",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T18:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "3a9289ba-c086-4e46-ab4d-3530559811a3",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "25c6f966-d5ad-4625-9dd2-64f3ed3a093d",
+              "code": "Lorient",
+              "label": "Lorient",
+              "odds": 3.62,
+              "playerName": null
+            },
+            {
+              "id": "3a118c5a-f1c1-435f-9bab-24130ace2379",
+              "code": "Brest",
+              "label": "Brest",
+              "odds": 2.36,
+              "playerName": null
+            },
+            {
+              "id": "f058a5a1-9144-4c1b-89a8-4c7ee3e73b11",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.4,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "553889ac-61b5-4236-af51-3c44cbc65db2",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.0,
+          "selections": [
+            {
+              "id": "538f1301-3c33-4913-b6d9-6028c92cc1ab",
+              "code": "LORIENT",
+              "label": "Lorient",
+              "odds": 1.92,
+              "playerName": null
+            },
+            {
+              "id": "6c019aba-23d9-42be-8c5a-08a8ca6038c9",
+              "code": "LORIENT",
+              "label": "Lorient",
+              "odds": 2.41,
+              "playerName": null
+            },
+            {
+              "id": "6fb1daeb-b1f4-4ad4-bb4a-2e2b326658e7",
+              "code": "BREST",
+              "label": "Brest",
+              "odds": 1.57,
+              "playerName": null
+            },
+            {
+              "id": "d8d39f9d-944d-46e0-a13b-7a633e9ca898",
+              "code": "BREST",
+              "label": "Brest",
+              "odds": 1.93,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "bfdedfa2-f748-461d-a5e8-c85785a7d5da",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "180c8f99-f8e4-4839-b032-5db32e526719",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.84,
+              "playerName": null
+            },
+            {
+              "id": "35de0a1e-018c-41a7-8ad5-9c8bc93d25bb",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.81,
+              "playerName": null
+            },
+            {
+              "id": "51ddb57a-315f-48fb-ad99-deac242c1d23",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.0,
+              "playerName": null
+            },
+            {
+              "id": "b752bcc8-fe9f-45f0-9837-0b2cf3175bd8",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.17,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "36fc6814-b0ed-42e2-a66c-5a3878b96724",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "94e559ae-a35b-4207-ab61-5815c02d38a8",
+        "name": "Nantes",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "c67790a5-5c80-4f59-8fff-536a80411c27",
+        "name": "Lyon",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T20:05:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "4a899b2e-a580-4ad0-99a3-5cd8dd219a88",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "138cd62d-7040-4e30-aac2-3d8a831a7abd",
+              "code": "Lyon",
+              "label": "Lyon",
+              "odds": 1.69,
+              "playerName": null
+            },
+            {
+              "id": "553ad3c1-6d01-4d68-a24a-00cd13c32398",
+              "code": "Nantes",
+              "label": "Nantes",
+              "odds": 5.49,
+              "playerName": null
+            },
+            {
+              "id": "7447d89f-0dd6-4632-acf0-75169e399790",
+              "code": "X",
+              "label": "Draw",
+              "odds": 4.12,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "90486168-bcf4-4fb9-b239-2c0fa9f80145",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -1.5,
+          "selections": [
+            {
+              "id": "6d609355-c45b-49ba-981f-0e147a2cc766",
+              "code": "LYON",
+              "label": "Lyon",
+              "odds": 1.84,
+              "playerName": null
+            },
+            {
+              "id": "8db73850-6cfc-4e9a-962a-2cfc5b1363e5",
+              "code": "NANTES",
+              "label": "Nantes",
+              "odds": 2.02,
+              "playerName": null
+            },
+            {
+              "id": "c37553a6-a574-45b3-b0c7-66aac8f40c54",
+              "code": "LYON",
+              "label": "Lyon",
+              "odds": 2.73,
+              "playerName": null
+            },
+            {
+              "id": "fc3f1d47-133d-472f-9828-69f76c7e6a4f",
+              "code": "NANTES",
+              "label": "Nantes",
+              "odds": 1.4,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "d6740786-121e-4bee-b24c-8ccbbca641a1",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "65d11029-25b4-4f32-9ebf-161022dc82cb",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.97,
+              "playerName": null
+            },
+            {
+              "id": "757a21ea-7eaf-4df4-8d3a-da479f9f99e9",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.05,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "78862f52-6419-4331-bb30-8bd500854b47",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Bundesliga",
+      "homeTeam": {
+        "id": "757bd9a8-9666-4f2e-8754-6f8328bc4706",
+        "name": "Paris Saint Germain",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "136e06fd-86f1-4781-a38c-29bd6d01c864",
+        "name": "Rennes",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T05:18:05.023631Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "07925790-2f23-40cc-94b6-4a8959067c98",
+          "type": "OverUnder",
+          "label": "Plus/Moins 2.5 buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "0340d277-7c0d-4b67-b04b-b867f69dbd99",
+              "code": "UNDER",
+              "label": "Moins de 2.5",
+              "odds": 2.06,
+              "playerName": null
+            },
+            {
+              "id": "f1303fda-de52-465b-88ca-67b277815487",
+              "code": "OVER",
+              "label": "Plus de 2.5",
+              "odds": 1.82,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "464c6ecd-e2f7-4461-9caa-c7a6c8f2773a",
+          "type": "DoubleChance",
+          "label": "Double chance",
+          "line": null,
+          "selections": [
+            {
+              "id": "04db28aa-7b23-4340-b098-57612c6dd15a",
+              "code": "12",
+              "label": "12",
+              "odds": 1.29,
+              "playerName": null
+            },
+            {
+              "id": "420f4912-2721-4898-9b79-04d21e7d72ad",
+              "code": "X2",
+              "label": "X2",
+              "odds": 1.55,
+              "playerName": null
+            },
+            {
+              "id": "69f6165b-9bdc-4632-93a9-8d1ea09340cd",
+              "code": "1X",
+              "label": "1X",
+              "odds": 1.42,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "ceea0b71-5601-4f72-ad33-2b1b77a302b2",
+          "type": "BothTeamsScore",
+          "label": "Les deux equipes marquent",
+          "line": null,
+          "selections": [
+            {
+              "id": "8b1821bd-d06c-40ef-9f17-fbf107f81701",
+              "code": "YES",
+              "label": "Oui",
+              "odds": 1.94,
+              "playerName": null
+            },
+            {
+              "id": "9a87a223-3c27-4770-8812-5153b4bd95ec",
+              "code": "NO",
+              "label": "Non",
+              "odds": 1.87,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "e80b2982-218d-4ba8-94ee-db8bb5afab22",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "05698918-916a-42d5-b6f3-a97cb2807ad1",
+              "code": "HOME_WIN",
+              "label": "1",
+              "odds": 1.58,
+              "playerName": null
+            },
+            {
+              "id": "06044ea4-9f92-44cf-9266-5d4fca981a16",
+              "code": "AWAY_WIN",
+              "label": "2",
+              "odds": 4.69,
+              "playerName": null
+            },
+            {
+              "id": "98928009-c089-4f24-b0b6-561bef393d01",
+              "code": "DRAW",
+              "label": "X",
+              "odds": 4.26,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "414b3c7d-119d-417b-b391-c679594af11d",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "e1c609c8-26fb-466d-8626-08463d12a9fb",
+        "name": "Brighton and Hove Albion",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "933b7a99-0451-473b-a871-db1d81a86a01",
+        "name": "Crystal Palace",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T14:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "016c39b4-7138-4394-a618-0400b289fbb1",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.0,
+          "selections": [
+            {
+              "id": "040aa8d0-2bbf-4d69-a92d-e11003becb0f",
+              "code": "BRIGHTON_AND_HOVE_ALBION",
+              "label": "Brighton and Hove Albion",
+              "odds": 2.05,
+              "playerName": null
+            },
+            {
+              "id": "41bf6ba3-cb74-47d7-adcb-e43260562e79",
+              "code": "CRYSTAL_PALACE",
+              "label": "Crystal Palace",
+              "odds": 2.0,
+              "playerName": null
+            },
+            {
+              "id": "81e6e084-9746-4340-a699-9cbd21055130",
+              "code": "CRYSTAL_PALACE",
+              "label": "Crystal Palace",
+              "odds": 3.1,
+              "playerName": null
+            },
+            {
+              "id": "8ef8b3a2-2b11-4fa5-9571-3a786e3f20bb",
+              "code": "BRIGHTON_AND_HOVE_ALBION",
+              "label": "Brighton and Hove Albion",
+              "odds": 1.37,
+              "playerName": null
+            },
+            {
+              "id": "ae24c0d5-6804-4967-9cbb-02a4d28bd32a",
+              "code": "BRIGHTON_AND_HOVE_ALBION",
+              "label": "Brighton and Hove Albion",
+              "odds": 1.83,
+              "playerName": null
+            },
+            {
+              "id": "f2ec2094-7659-4432-881c-f08fe6315c38",
+              "code": "CRYSTAL_PALACE",
+              "label": "Crystal Palace",
+              "odds": 1.82,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "3d13eaee-428f-4249-be79-bf175ee20066",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "ba651db2-5d1d-44a8-b258-f1df25cadc89",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.88,
+              "playerName": null
+            },
+            {
+              "id": "bf52dded-0955-4331-a743-97bc03206832",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.15,
+              "playerName": null
+            },
+            {
+              "id": "cdf0c6cd-c2a2-4f70-a78f-62af9641ec45",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.82,
+              "playerName": null
+            },
+            {
+              "id": "e8749451-858b-46bc-abc7-a9be3a1ea3c5",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.95,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "d8e1a347-8b24-4b46-b017-4b2ee0de9612",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "1d600308-2268-4b75-ae0b-7b3357ec9d65",
+              "code": "Crystal Palace",
+              "label": "Crystal Palace",
+              "odds": 4.3,
+              "playerName": null
+            },
+            {
+              "id": "9212a920-b189-47d4-b4aa-a6f1e61dbf17",
+              "code": "X",
+              "label": "Draw",
+              "odds": 4.11,
+              "playerName": null
+            },
+            {
+              "id": "ca708fde-221f-4a9e-9867-8b10b1ce7f4f",
+              "code": "Brighton and Hove Albion",
+              "label": "Brighton and Hove Albion",
+              "odds": 1.86,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6e663cb8-c6ce-4e1d-b7ba-712869d58831",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "59c154bc-ccb0-4204-8c5b-2989b3e1a766",
+        "name": "Nice",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "191d54f3-857d-43ab-98a9-1633522f0cec",
+        "name": "AS Monaco",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T14:00:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "435f400e-9e1c-4a55-86c4-6e20b5a0cdfd",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 3.5,
+          "selections": [
+            {
+              "id": "06e24c74-56e9-4621-832a-bc2d6cae3535",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.88,
+              "playerName": null
+            },
+            {
+              "id": "09dc9ce7-77e8-49f8-892c-9cf3fc34844b",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.4,
+              "playerName": null
+            },
+            {
+              "id": "104867ff-f584-41bb-8b80-4900d32c7a92",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.55,
+              "playerName": null
+            },
+            {
+              "id": "379c7a99-f56d-43e5-9be9-e22332fde8a5",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.46,
+              "playerName": null
+            },
+            {
+              "id": "57b8e699-b3be-4aef-937d-464a80fdf4f9",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.96,
+              "playerName": null
+            },
+            {
+              "id": "5e819d8b-ae59-4931-a0b5-2d88a5af922f",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.64,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "65685af1-06a6-4bae-ab44-f848ee7af476",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.0,
+          "selections": [
+            {
+              "id": "1c5032f7-28e6-4b3b-b4f3-6b63356fea13",
+              "code": "AS_MONACO",
+              "label": "AS Monaco",
+              "odds": 1.92,
+              "playerName": null
+            },
+            {
+              "id": "3dd324d3-f10d-4f2f-9176-2346e436021c",
+              "code": "AS_MONACO",
+              "label": "AS Monaco",
+              "odds": 1.61,
+              "playerName": null
+            },
+            {
+              "id": "64d4ddf1-5497-4223-92ad-8993de84573d",
+              "code": "NICE",
+              "label": "Nice",
+              "odds": 1.93,
+              "playerName": null
+            },
+            {
+              "id": "994a028c-1196-4101-ba37-6e9c43947b2a",
+              "code": "NICE",
+              "label": "Nice",
+              "odds": 2.31,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "ac275ebe-a85f-4949-a7a1-3a1a680b05eb",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "921a1d0d-fa65-44e4-9a3d-6ad0f7ed9774",
+              "code": "Nice",
+              "label": "Nice",
+              "odds": 3.25,
+              "playerName": null
+            },
+            {
+              "id": "cd0631aa-f351-4239-b34a-35dc8b43afa5",
+              "code": "X",
+              "label": "Draw",
+              "odds": 4.0,
+              "playerName": null
+            },
+            {
+              "id": "f998593a-c5b7-455f-8313-6b4fd1f22718",
+              "code": "AS Monaco",
+              "label": "AS Monaco",
+              "odds": 2.25,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c458db10-d795-4ca4-a030-5ea65bf5851a",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "6f86fe68-5612-4ab5-9a1f-dcbeb3ae8ba0",
+        "name": "Auxerre",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "1ac6f913-9d4e-4d2f-9408-8f1f89ca3577",
+        "name": "Paris FC",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T16:15:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "7aed32e7-fb46-4ffd-b94e-9e1e100ddcc9",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "10e40a73-40b1-48c8-97d7-5b17b0142363",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.27,
+              "playerName": null
+            },
+            {
+              "id": "97516da7-f8ea-412a-9c51-a1b21ad25585",
+              "code": "Paris FC",
+              "label": "Paris FC",
+              "odds": 3.07,
+              "playerName": null
+            },
+            {
+              "id": "e2172ceb-e0d7-4df3-a12f-a49489f2fc09",
+              "code": "Auxerre",
+              "label": "Auxerre",
+              "odds": 2.6,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "b36a4c83-c74f-43a7-8f04-8a23e16899b6",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.0,
+          "selections": [
+            {
+              "id": "241bed71-322d-4526-989f-c31d60e43e43",
+              "code": "PARIS_FC",
+              "label": "Paris FC",
+              "odds": 2.13,
+              "playerName": null
+            },
+            {
+              "id": "fa82cfc5-bbf0-4c40-846a-24e1ce7f0bb8",
+              "code": "AUXERRE",
+              "label": "Auxerre",
+              "odds": 1.83,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "bcb25066-5748-4feb-9b64-946103fae380",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "08dbe22e-0589-46e5-a11a-5a71d66077a0",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.88,
+              "playerName": null
+            },
+            {
+              "id": "42eb50c5-3c2f-4e10-8986-993702567878",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.95,
+              "playerName": null
+            },
+            {
+              "id": "cab7ad8c-1633-45e4-a748-259c49b2c468",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.22,
+              "playerName": null
+            },
+            {
+              "id": "f112b20c-f1a4-4215-8d53-2a5772a4c1c6",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.77,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7689ebd0-88aa-44c1-b558-41c2b708735b",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "3fa3e334-7d59-4e84-bbbf-00297e4620f8",
+        "name": "Le Havre",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "0b08b681-b8f9-4730-bc12-0587c583d56c",
+        "name": "Strasbourg",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T16:15:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "367ade39-c077-4f59-a735-f5e4a8dee1fc",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "6557fe1c-7ff0-43a9-8764-cc52323d4f5a",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.03,
+              "playerName": null
+            },
+            {
+              "id": "815da9d4-d842-4815-9e86-1f79cd85dbda",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.91,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "46f88ffa-32b5-4d54-b1f1-561a1d041a13",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "8f123d6c-9acc-4eca-b8a5-b8a49789dce2",
+              "code": "Strasbourg",
+              "label": "Strasbourg",
+              "odds": 2.07,
+              "playerName": null
+            },
+            {
+              "id": "d3c06ef1-d627-437a-a90e-ab954f8fc139",
+              "code": "Le Havre",
+              "label": "Le Havre",
+              "odds": 3.9,
+              "playerName": null
+            },
+            {
+              "id": "db0d3d00-d92b-4b82-956c-e7c046068cf4",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.62,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "d0656328-01c2-47e2-9ddc-6a1668ae7bb4",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.0,
+          "selections": [
+            {
+              "id": "800601e0-bee7-42f8-bc02-b8dafc7bfa40",
+              "code": "LE_HAVRE",
+              "label": "Le Havre",
+              "odds": 1.83,
+              "playerName": null
+            },
+            {
+              "id": "95259faa-2fff-45a3-9b78-79461048add2",
+              "code": "LE_HAVRE",
+              "label": "Le Havre",
+              "odds": 2.69,
+              "playerName": null
+            },
+            {
+              "id": "ba2cf594-1c02-4805-9a71-ffb010276dd8",
+              "code": "STRASBOURG",
+              "label": "Strasbourg",
+              "odds": 2.03,
+              "playerName": null
+            },
+            {
+              "id": "d1e941f1-bfb9-4246-a1f5-94923fdec59f",
+              "code": "STRASBOURG",
+              "label": "Strasbourg",
+              "odds": 1.47,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "05f758b5-2dcd-4835-9455-363cdf97b6e9",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "60ab8416-008d-41b1-bf94-20aced9f89d0",
+        "name": "Angers",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "43815521-9868-4837-ab5a-72bb8112d58c",
+        "name": "Toulouse",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T16:15:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "1890a07a-8c66-4738-9b41-adffb43e76f4",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 0.0,
+          "selections": [
+            {
+              "id": "2b4bfe79-3702-4579-ad90-885583c2a006",
+              "code": "TOULOUSE",
+              "label": "Toulouse",
+              "odds": 1.56,
+              "playerName": null
+            },
+            {
+              "id": "764577bf-3c78-4ba5-8b39-47b73407144e",
+              "code": "TOULOUSE",
+              "label": "Toulouse",
+              "odds": 1.93,
+              "playerName": null
+            },
+            {
+              "id": "a04ae0c8-3cc8-4cfe-8c20-8e9c724ce5d5",
+              "code": "ANGERS",
+              "label": "Angers",
+              "odds": 1.93,
+              "playerName": null
+            },
+            {
+              "id": "cdb7b914-da8b-4b99-b3f2-604dadd886e1",
+              "code": "ANGERS",
+              "label": "Angers",
+              "odds": 2.43,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "18c548ca-5818-4029-9f79-c79012ed4530",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "b1ee3c65-3567-4163-af1d-5b612804a0df",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.23,
+              "playerName": null
+            },
+            {
+              "id": "b5ef822f-a853-43c1-8abe-c8b651da1f0c",
+              "code": "Angers",
+              "label": "Angers",
+              "odds": 3.65,
+              "playerName": null
+            },
+            {
+              "id": "b89e3733-feed-4f52-8f1e-4fa87aa768c0",
+              "code": "Toulouse",
+              "label": "Toulouse",
+              "odds": 2.33,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "d1d2b6c1-53bc-42a3-a618-d9a91a09a9c2",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "10377bac-96e3-46d3-9283-da6e7aa94e07",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.79,
+              "playerName": null
+            },
+            {
+              "id": "28c0547e-3cb0-4500-ae25-d5ffcfa1062f",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.48,
+              "playerName": null
+            },
+            {
+              "id": "8aea0dbd-4db5-42aa-884b-c8f3f4713bac",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.07,
+              "playerName": null
+            },
+            {
+              "id": "c067f478-0066-45b0-a01a-5ec332ffa70a",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.65,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d8393cf5-fa14-4cfa-ba1d-96bd6c851d18",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Premier League",
+      "homeTeam": {
+        "id": "cfd652c8-6185-4c4e-9b28-013be48326b8",
+        "name": "Liverpool",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "43bc3130-232f-44dc-8e07-c25dfb79eab0",
+        "name": "Manchester City",
+        "shortName": "MCI",
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T16:30:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "441a2a67-582e-4eee-9d52-162a9848dd43",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "044d02ee-bfbc-4a3c-b9d6-fc6a4b34b206",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.4,
+              "playerName": null
+            },
+            {
+              "id": "5b122b98-30f8-46b0-b6b9-6bdc2c74d714",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.0,
+              "playerName": null
+            },
+            {
+              "id": "6596d4d2-cd3f-4c06-bae9-b380b897a263",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.84,
+              "playerName": null
+            },
+            {
+              "id": "abf3f161-1cc1-4b77-9c27-ab91757fabbc",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.67,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "c5801d3a-2e02-42af-b3d3-45d9eac0f279",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "55c8aded-ae11-40ef-b952-3a5d75630772",
+              "code": "Liverpool",
+              "label": "Liverpool",
+              "odds": 2.6,
+              "playerName": null
+            },
+            {
+              "id": "807251a6-cf4f-4d8c-8b59-e1b5113f157e",
+              "code": "Manchester City",
+              "label": "Manchester City",
+              "odds": 2.73,
+              "playerName": null
+            },
+            {
+              "id": "94e3e484-7c90-440a-9563-bf6a4dc80116",
+              "code": "X",
+              "label": "Draw",
+              "odds": 3.98,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "fd39c9ef-3b9e-4fe9-a7f8-7a20cf410501",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": -0.5,
+          "selections": [
+            {
+              "id": "2619af28-fc65-4e2f-aea5-56d42d52d1a2",
+              "code": "MANCHESTER_CITY",
+              "label": "Manchester City",
+              "odds": 2.05,
+              "playerName": null
+            },
+            {
+              "id": "850942dc-6157-42c7-b64e-0c301d8f4de2",
+              "code": "LIVERPOOL",
+              "label": "Liverpool",
+              "odds": 1.9,
+              "playerName": null
+            },
+            {
+              "id": "9411c4dd-ce74-487b-af21-645864a39f26",
+              "code": "LIVERPOOL",
+              "label": "Liverpool",
+              "odds": 2.33,
+              "playerName": null
+            },
+            {
+              "id": "f6ee3f15-6fef-4d02-bfb9-d50b002f244b",
+              "code": "MANCHESTER_CITY",
+              "label": "Manchester City",
+              "odds": 1.54,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f86cea4a-c6f8-45d3-a74f-59d4a22d9030",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Ligue 1",
+      "homeTeam": {
+        "id": "757bd9a8-9666-4f2e-8754-6f8328bc4706",
+        "name": "Paris Saint Germain",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "29514b95-0c1a-4f16-9f4e-25254120d0ba",
+        "name": "Marseille",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-08T19:45:00Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "48fef6d2-ec9b-4ad7-a5d2-642f3e26648d",
+          "type": "OverUnder",
+          "label": "Plus/Moins de buts",
+          "line": 3.5,
+          "selections": [
+            {
+              "id": "1eaaae5e-ac7b-40fd-a942-b5bacada8d54",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.76,
+              "playerName": null
+            },
+            {
+              "id": "6ac9ef03-9466-404f-9898-5e3ba8e0b957",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 2.62,
+              "playerName": null
+            },
+            {
+              "id": "7bae9673-47ad-4291-b5c0-f4dd21bfc961",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.44,
+              "playerName": null
+            },
+            {
+              "id": "7d7f5439-757f-45c4-9cdb-d555f224ce96",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 1.94,
+              "playerName": null
+            },
+            {
+              "id": "98f6bf12-eb39-4a54-94a6-a07cf0e93364",
+              "code": "OVER",
+              "label": "Over",
+              "odds": 2.23,
+              "playerName": null
+            },
+            {
+              "id": "ddd1e582-14aa-42f9-a3c8-f3cd84c16539",
+              "code": "UNDER",
+              "label": "Under",
+              "odds": 1.89,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "6f7709e5-3659-40af-8dd1-fdd4f20f936e",
+          "type": "Handicap",
+          "label": "Handicap",
+          "line": 1.5,
+          "selections": [
+            {
+              "id": "4b083507-293e-41d6-8232-e4aa69bcff16",
+              "code": "MARSEILLE",
+              "label": "Marseille",
+              "odds": 1.85,
+              "playerName": null
+            },
+            {
+              "id": "4bed6a35-7cad-4dd3-aca7-20d299c11cd9",
+              "code": "PARIS_SAINT_GERMAIN",
+              "label": "Paris Saint Germain",
+              "odds": 2.0,
+              "playerName": null
+            },
+            {
+              "id": "70649f8d-7054-4604-9bd5-955561a3c4a7",
+              "code": "MARSEILLE",
+              "label": "Marseille",
+              "odds": 1.72,
+              "playerName": null
+            },
+            {
+              "id": "d9a148eb-20b5-466f-8d8f-af1cf45d5c5e",
+              "code": "PARIS_SAINT_GERMAIN",
+              "label": "Paris Saint Germain",
+              "odds": 2.31,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "a9c5ece2-2d0e-4f18-bab9-216f107eec58",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "28a16171-c88f-43f7-acbc-ab6b09b14b42",
+              "code": "Paris Saint Germain",
+              "label": "Paris Saint Germain",
+              "odds": 1.51,
+              "playerName": null
+            },
+            {
+              "id": "2a49c73b-10f0-4f81-94d0-198a69aa1258",
+              "code": "X",
+              "label": "Draw",
+              "odds": 5.03,
+              "playerName": null
+            },
+            {
+              "id": "77d66c89-38cb-42d5-9750-96fb157086da",
+              "code": "Marseille",
+              "label": "Marseille",
+              "odds": 6.4,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "55abe261-ae73-4904-9f25-06660b9ddaf2",
+      "sportCode": "FOOTBALL",
+      "leagueName": "Serie A",
+      "homeTeam": {
+        "id": "136e06fd-86f1-4781-a38c-29bd6d01c864",
+        "name": "Rennes",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "1ec9c84c-f24e-45fb-a41a-55113bae7d17",
+        "name": "Lorient",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-09T05:18:05.023632Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "0cfdd740-3a73-4aba-a4bd-87184e022e91",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "80e854b9-cc2a-49d5-9a08-fedb77b93573",
+              "code": "HOME_WIN",
+              "label": "1",
+              "odds": 1.88,
+              "playerName": null
+            },
+            {
+              "id": "96681b2b-af19-4fd9-8157-4fb07788ee09",
+              "code": "AWAY_WIN",
+              "label": "2",
+              "odds": 2.55,
+              "playerName": null
+            },
+            {
+              "id": "eab1b347-bf58-4a90-904d-4d934daf6e97",
+              "code": "DRAW",
+              "label": "X",
+              "odds": 3.45,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "75f25465-733c-4606-a3ad-1924a42df3fb",
+          "type": "BothTeamsScore",
+          "label": "Les deux equipes marquent",
+          "line": null,
+          "selections": [
+            {
+              "id": "8cd1a600-8451-436c-8594-e9df9967b69f",
+              "code": "NO",
+              "label": "Non",
+              "odds": 2.29,
+              "playerName": null
+            },
+            {
+              "id": "979262cb-5616-48ec-81f4-efd01fd05a43",
+              "code": "YES",
+              "label": "Oui",
+              "odds": 1.97,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "7c3cbef6-7068-4340-a9ba-a525bc00f0ee",
+          "type": "DoubleChance",
+          "label": "Double chance",
+          "line": null,
+          "selections": [
+            {
+              "id": "0c44cf86-bec4-400b-b126-6ec2b13b817e",
+              "code": "X2",
+              "label": "X2",
+              "odds": 1.35,
+              "playerName": null
+            },
+            {
+              "id": "7e8ed283-0a11-4d5f-9674-c469a52ab2d9",
+              "code": "12",
+              "label": "12",
+              "odds": 1.37,
+              "playerName": null
+            },
+            {
+              "id": "f487579b-dedd-4922-ac1b-9633c555acfe",
+              "code": "1X",
+              "label": "1X",
+              "odds": 1.51,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "bcf6e6d2-6917-4038-b5f7-3c74da40669e",
+          "type": "OverUnder",
+          "label": "Plus/Moins 2.5 buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "31ecb3ec-ee42-4bc6-8bdf-8e5b9c1eadfd",
+              "code": "OVER",
+              "label": "Plus de 2.5",
+              "odds": 1.71,
+              "playerName": null
+            },
+            {
+              "id": "fc004653-2422-40bf-b299-04f13be0e45a",
+              "code": "UNDER",
+              "label": "Moins de 2.5",
+              "odds": 1.72,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "15460233-08ca-4f4f-a28d-5e22d10e30b4",
+      "sportCode": "BASKETBALL",
+      "leagueName": "NBA",
+      "homeTeam": {
+        "id": "07aece4b-5a3c-44f5-863f-48f995f4da97",
+        "name": "Indiana Pacers",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "e57580e2-be53-496c-9eae-467a8fe7222d",
+        "name": "Chicago Bulls",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T08:18:05.023689Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "1b971fe0-dec9-4d30-b1f8-2de9b5233ad8",
+          "type": "OverUnder",
+          "label": "Plus/Moins 2.5 buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "2252826a-df0e-4e33-b7e3-bd65ebc1cba1",
+              "code": "UNDER",
+              "label": "Moins de 2.5",
+              "odds": 1.9,
+              "playerName": null
+            },
+            {
+              "id": "f491271e-c9d6-48e7-916c-d2cb2487fb64",
+              "code": "OVER",
+              "label": "Plus de 2.5",
+              "odds": 2.17,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "259107d5-3761-4293-ba08-c03b2e3c023f",
+          "type": "DoubleChance",
+          "label": "Double chance",
+          "line": null,
+          "selections": [
+            {
+              "id": "2fad031a-04de-4643-b264-818d2282dc02",
+              "code": "X2",
+              "label": "X2",
+              "odds": 1.33,
+              "playerName": null
+            },
+            {
+              "id": "60a52112-6349-466a-994e-28eb21a77644",
+              "code": "1X",
+              "label": "1X",
+              "odds": 1.58,
+              "playerName": null
+            },
+            {
+              "id": "cc6b8cc6-6814-4f68-8ee4-56453e477f14",
+              "code": "12",
+              "label": "12",
+              "odds": 1.24,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "5053a56d-6f96-4bd3-a31d-af5502d63f3b",
+          "type": "BothTeamsScore",
+          "label": "Les deux equipes marquent",
+          "line": null,
+          "selections": [
+            {
+              "id": "33353741-2d75-41ec-a78a-7dd7fa53de69",
+              "code": "YES",
+              "label": "Oui",
+              "odds": 1.85,
+              "playerName": null
+            },
+            {
+              "id": "fb30a827-0637-4ef2-8d03-a6b3edc4a518",
+              "code": "NO",
+              "label": "Non",
+              "odds": 1.93,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "55290967-b063-49dd-a668-770eef25e7b4",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "30480c3a-0141-441b-a7a9-fcb4a72d4655",
+              "code": "DRAW",
+              "label": "X",
+              "odds": 3.47,
+              "playerName": null
+            },
+            {
+              "id": "bbbe4cb3-ffb1-4951-a923-e361d111b25a",
+              "code": "AWAY_WIN",
+              "label": "2",
+              "odds": 2.55,
+              "playerName": null
+            },
+            {
+              "id": "c78dc36b-cf2b-43da-a0f0-d7e27f9c8ab8",
+              "code": "HOME_WIN",
+              "label": "1",
+              "odds": 3.21,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe12b3ea-3a5a-40d1-a860-2032d8184cd6",
+      "sportCode": "BASKETBALL",
+      "leagueName": "EuroLeague",
+      "homeTeam": {
+        "id": "a3983dff-eaa1-41b7-96a6-bee671e8ea94",
+        "name": "Toronto Raptors",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "8c096502-cfd3-41ca-ace2-b28a7071722a",
+        "name": "New York Knicks",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T13:18:05.023691Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "26ec3758-237b-4252-897b-a105e2aa3d99",
+          "type": "BothTeamsScore",
+          "label": "Les deux equipes marquent",
+          "line": null,
+          "selections": [
+            {
+              "id": "108e5633-48cf-4f67-b613-c41570ce4f02",
+              "code": "YES",
+              "label": "Oui",
+              "odds": 1.67,
+              "playerName": null
+            },
+            {
+              "id": "bf33dd1d-ca72-459c-bb51-cf48eeb402cf",
+              "code": "NO",
+              "label": "Non",
+              "odds": 2.09,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "6771cabb-7c90-42d8-9212-13082958465e",
+          "type": "OverUnder",
+          "label": "Plus/Moins 2.5 buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "05472121-7819-456b-88d0-83df11427f0b",
+              "code": "OVER",
+              "label": "Plus de 2.5",
+              "odds": 1.75,
+              "playerName": null
+            },
+            {
+              "id": "448d5e54-1987-4fe8-917a-c2cb1933ed27",
+              "code": "UNDER",
+              "label": "Moins de 2.5",
+              "odds": 2.07,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "77a4c56c-240e-4c45-b2e5-d21a3095d0fa",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "19e8f06a-f5b3-4bee-9d89-53ecc59f972c",
+              "code": "AWAY_WIN",
+              "label": "2",
+              "odds": 3.93,
+              "playerName": null
+            },
+            {
+              "id": "eb578883-0bf1-4840-b239-caa806ab7b0e",
+              "code": "HOME_WIN",
+              "label": "1",
+              "odds": 1.81,
+              "playerName": null
+            },
+            {
+              "id": "edb748fd-4912-4603-91db-3b815b8d1d82",
+              "code": "DRAW",
+              "label": "X",
+              "odds": 3.27,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "8e370997-3f3d-4763-8d60-3415c598e8f6",
+          "type": "DoubleChance",
+          "label": "Double chance",
+          "line": null,
+          "selections": [
+            {
+              "id": "0b916558-d13d-4354-85cc-61d068b978a5",
+              "code": "12",
+              "label": "12",
+              "odds": 1.3,
+              "playerName": null
+            },
+            {
+              "id": "437697ad-995f-41d3-9b2f-4ca1be5ca56a",
+              "code": "1X",
+              "label": "1X",
+              "odds": 1.28,
+              "playerName": null
+            },
+            {
+              "id": "47d955c4-dc76-4a7e-9b60-8af6af0d5f06",
+              "code": "X2",
+              "label": "X2",
+              "odds": 1.56,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fc7c9bb5-f806-4bdf-9e45-b5db039e014e",
+      "sportCode": "BASKETBALL",
+      "leagueName": "Euroleague",
+      "homeTeam": {
+        "id": "9c1fe7de-5cef-4386-84e5-beaecf2793c5",
+        "name": "Miami Heat",
+        "shortName": "MIA",
+        "logoUrl": null
+      },
+      "awayTeam": {
+        "id": "07aece4b-5a3c-44f5-863f-48f995f4da97",
+        "name": "Indiana Pacers",
+        "shortName": null,
+        "logoUrl": null
+      },
+      "startTime": "2026-02-07T16:18:05.023689Z",
+      "status": "Scheduled",
+      "homeScore": null,
+      "awayScore": null,
+      "markets": [
+        {
+          "id": "0303cd8c-efdb-419d-ab8b-76573e02f702",
+          "type": "DoubleChance",
+          "label": "Double chance",
+          "line": null,
+          "selections": [
+            {
+              "id": "72cf8ae6-77da-481d-929f-b1dc47bbc710",
+              "code": "1X",
+              "label": "1X",
+              "odds": 1.47,
+              "playerName": null
+            },
+            {
+              "id": "ea78d6f7-df73-42fc-a606-2be2c5122849",
+              "code": "12",
+              "label": "12",
+              "odds": 1.21,
+              "playerName": null
+            },
+            {
+              "id": "fe25942d-4d08-4ae9-9bb9-3fdc5081400c",
+              "code": "X2",
+              "label": "X2",
+              "odds": 1.7,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "2464c064-115e-430e-afd0-a0054e5441f2",
+          "type": "BothTeamsScore",
+          "label": "Les deux equipes marquent",
+          "line": null,
+          "selections": [
+            {
+              "id": "0b2716c9-060f-4fef-b93b-137fa0a6d44c",
+              "code": "YES",
+              "label": "Oui",
+              "odds": 1.78,
+              "playerName": null
+            },
+            {
+              "id": "79d5c0cb-dea5-4045-bc3b-680c821ff63a",
+              "code": "NO",
+              "label": "Non",
+              "odds": 2.16,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "383269ea-6128-4fc5-af49-083704217b1b",
+          "type": "OverUnder",
+          "label": "Plus/Moins 2.5 buts",
+          "line": 2.5,
+          "selections": [
+            {
+              "id": "8da84db9-4479-48f1-93e3-e45da5d24f64",
+              "code": "OVER",
+              "label": "Plus de 2.5",
+              "odds": 1.94,
+              "playerName": null
+            },
+            {
+              "id": "992d59ff-14ac-4ec6-aeae-37f7cc5138e8",
+              "code": "UNDER",
+              "label": "Moins de 2.5",
+              "odds": 1.78,
+              "playerName": null
+            }
+          ]
+        },
+        {
+          "id": "7470d346-c292-4eb7-aabc-b583d547726b",
+          "type": "MatchResult",
+          "label": "Resultat du match",
+          "line": null,
+          "selections": [
+            {
+              "id": "8ba25b9f-6334-4afc-883d-b0637990d7e5",
+              "code": "AWAY_WIN",
+              "label": "2",
+              "odds": 4.65,
+              "playerName": null
+            },
+            {
+              "id": "8c6c8175-271a-4882-8474-2eef8956b44e",
+              "code": "DRAW",
+              "label": "X",
+              "odds": 3.41,
+              "playerName": null
+            },
+            {
+              "id": "eb688790-c003-48bb-b418-71b85453afce",
+              "code": "HOME_WIN",
+              "label": "1",
+              "odds": 2.08,
+              "playerName": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "matches": 24,
+    "markets": 77,
+    "selections": 267,
+    "market_types": [
+      "BothTeamsScore",
+      "DoubleChance",
+      "Handicap",
+      "MatchResult",
+      "OverUnder"
+    ]
+  }
+}

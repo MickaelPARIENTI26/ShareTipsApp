@@ -24,6 +24,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [touched, setTouched] = useState({ email: false, password: false });
   const { loading, error, login, clearError } = useAuthStore();
   const theme = useTheme();
   // Fallback to darkColors if theme context fails to load
@@ -71,6 +72,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     if (error) clearError();
     setPassword(value);
   };
+
+  const handleEmailBlur = () => {
+    setTouched((prev) => ({ ...prev, email: true }));
+  };
+
+  const handlePasswordBlur = () => {
+    setTouched((prev) => ({ ...prev, password: true }));
+  };
+
+  // Afficher l'erreur seulement si le champ a été touché (blur) et est invalide
+  const emailError = touched.email && !emailValidation.isValid ? emailValidation.error : undefined;
+  const passwordError = touched.password && !passwordValidation.isValid ? passwordValidation.error : undefined;
 
   return (
     <SportyBackground>
@@ -137,6 +150,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               icon="mail-outline"
               value={email}
               onChangeText={handleEmailChange}
+              onBlur={handleEmailBlur}
               autoCapitalize="none"
               keyboardType="email-address"
               textContentType="emailAddress"
@@ -145,7 +159,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => passwordRef.current?.focus()}
-              error={email.length > 0 && !emailValidation.isValid ? emailValidation.error : undefined}
+              error={emailError}
               accessibilityLabel="Adresse email"
               accessibilityHint="Entrez votre adresse email"
             />
@@ -158,12 +172,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               isPassword
               value={password}
               onChangeText={handlePasswordChange}
+              onBlur={handlePasswordBlur}
               textContentType="password"
               autoComplete="password"
               editable={!loading}
               returnKeyType="go"
               onSubmitEditing={handleLogin}
-              error={password.length > 0 && !passwordValidation.isValid ? passwordValidation.error : undefined}
+              error={passwordError}
               accessibilityLabel="Mot de passe"
               accessibilityHint="Entrez votre mot de passe"
             />

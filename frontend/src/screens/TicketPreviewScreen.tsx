@@ -14,7 +14,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, CommonActions } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ticketApi } from '../api/ticket.api';
@@ -27,10 +26,8 @@ import {
   spacing,
   radius,
   typography,
-  palette,
-  effectGlass,
   effectShadows,
-  createGlow,
+  effectGradients,
   springConfigs,
 } from '../theme';
 
@@ -38,33 +35,32 @@ import {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 
-const SPORT_LABELS: Record<string, string> = {
-  FOOTBALL: 'Football',
-  BASKETBALL: 'Basketball',
-  TENNIS: 'Tennis',
-  ESPORT: 'Esport',
-};
-
 const SPORT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   FOOTBALL: 'football',
   BASKETBALL: 'basketball',
   TENNIS: 'tennisball',
   ESPORT: 'game-controller',
+  HOCKEY: 'snow',
+  RUGBY: 'american-football',
+  BASEBALL: 'baseball',
 };
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════
 
-function formatDateTime(iso: string): string {
+function formatShortDateTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString('fr-FR', {
     weekday: 'short',
-    day: 'numeric',
-    month: 'short',
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + '...';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -72,52 +68,24 @@ function formatDateTime(iso: string): string {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Section header avec gradient
+ * Section header - Style harmonisé avec MatchesScreen
  */
 const SectionHeader: React.FC<{
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
+  count?: number;
   colors: ThemeColors;
-}> = React.memo(({ icon, title, colors }) => {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.02, duration: 2000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start();
-  }, [pulseAnim]);
-
-  return (
-    <View style={sectionStyles.container}>
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-        <LinearGradient
-          colors={[colors.primary, colors.primaryLight || colors.primary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[
-            sectionStyles.badge,
-            Platform.select({
-              ios: createGlow(colors.primary, 0.3),
-              android: { elevation: 4 },
-            }),
-          ]}
-        >
-          <Ionicons name={icon} size={14} color="#FFFFFF" />
-          <Text style={[typography.label, { color: '#FFFFFF' }]}>{title}</Text>
-        </LinearGradient>
-      </Animated.View>
-      <LinearGradient
-        colors={[colors.border, 'transparent']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={sectionStyles.line}
-      />
-    </View>
-  );
-});
+}> = React.memo(({ icon, title, count, colors }) => (
+  <View style={[sectionStyles.container, { backgroundColor: colors.surfaceSecondary }]}>
+    <Ionicons name={icon} size={16} color={colors.primary} />
+    <Text style={[sectionStyles.title, { color: colors.text }]}>{title}</Text>
+    {count !== undefined && (
+      <View style={[sectionStyles.countBadge, { backgroundColor: colors.primaryBg }]}>
+        <Text style={[sectionStyles.countText, { color: colors.primary }]}>{count}</Text>
+      </View>
+    )}
+  </View>
+));
 
 SectionHeader.displayName = 'SectionHeader';
 
@@ -125,25 +93,34 @@ const sectionStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radius.full,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
-  line: {
+  title: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     flex: 1,
-    height: 1,
+  },
+  countBadge: {
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  countText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 
 /**
- * Carte de sélection avec design premium
+ * Carte de sélection propre et structurée (4 lignes)
  */
 const SelectionCard: React.FC<{
   item: TicketSelection;
@@ -168,106 +145,6 @@ const SelectionCard: React.FC<{
     }).start();
   }, [scaleAnim]);
 
-  const cardContent = (
-    <>
-      {/* Header */}
-      <View style={selCardStyles.header}>
-        <LinearGradient
-          colors={[colors.primary, colors.primaryLight || colors.primary]}
-          style={[
-            selCardStyles.indexBadge,
-            Platform.select({
-              ios: createGlow(colors.primary, 0.4),
-              android: { elevation: 4 },
-            }),
-          ]}
-        >
-          <Text style={[typography.badge, { color: '#FFFFFF', fontWeight: '800' }]}>
-            {index + 1}
-          </Text>
-        </LinearGradient>
-        <View style={[selCardStyles.sportBadge, { backgroundColor: colors.primaryBg }]}>
-          <Ionicons
-            name={SPORT_ICONS[item.sportCode] || 'trophy'}
-            size={12}
-            color={colors.primary}
-          />
-          <Text style={[typography.badge, { color: colors.primary }]}>
-            {SPORT_LABELS[item.sportCode] ?? item.sportCode}
-          </Text>
-        </View>
-      </View>
-
-      {/* Rows */}
-      <View style={[selCardStyles.row, { borderBottomColor: colors.border }]}>
-        <View style={selCardStyles.labelContainer}>
-          <View style={[selCardStyles.iconWrapper, { backgroundColor: `${colors.primary}15` }]}>
-            <Ionicons name="ribbon" size={12} color={colors.primary} />
-          </View>
-          <Text style={[typography.caption, { color: colors.textSecondary }]}>Compétition</Text>
-        </View>
-        <Text style={[typography.bodySmall, selCardStyles.value, { color: colors.text }]} numberOfLines={1}>
-          {item.leagueName}
-        </Text>
-      </View>
-
-      <View style={[selCardStyles.row, { borderBottomColor: colors.border }]}>
-        <View style={selCardStyles.labelContainer}>
-          <View style={[selCardStyles.iconWrapper, { backgroundColor: `${colors.primary}15` }]}>
-            <Ionicons name="football" size={12} color={colors.primary} />
-          </View>
-          <Text style={[typography.caption, { color: colors.textSecondary }]}>Match</Text>
-        </View>
-        <Text style={[typography.bodySmall, selCardStyles.value, { color: colors.text }]} numberOfLines={1}>
-          {item.matchLabel}
-        </Text>
-      </View>
-
-      <View style={[selCardStyles.row, { borderBottomColor: colors.border }]}>
-        <View style={selCardStyles.labelContainer}>
-          <View style={[selCardStyles.iconWrapper, { backgroundColor: `${colors.primary}15` }]}>
-            <Ionicons name="stats-chart" size={12} color={colors.primary} />
-          </View>
-          <Text style={[typography.caption, { color: colors.textSecondary }]}>Marché</Text>
-        </View>
-        <Text style={[typography.bodySmall, selCardStyles.value, { color: colors.text }]} numberOfLines={1}>
-          {item.marketLabel} — {item.selectionLabel}
-        </Text>
-      </View>
-
-      <View style={[selCardStyles.row, { borderBottomColor: colors.border }]}>
-        <View style={selCardStyles.labelContainer}>
-          <View style={[selCardStyles.iconWrapper, { backgroundColor: `${colors.primary}15` }]}>
-            <Ionicons name="time" size={12} color={colors.primary} />
-          </View>
-          <Text style={[typography.caption, { color: colors.textSecondary }]}>Heure</Text>
-        </View>
-        <Text style={[typography.bodySmall, selCardStyles.value, { color: colors.text }]}>
-          {formatDateTime(item.startTime)}
-        </Text>
-      </View>
-
-      <View style={[selCardStyles.row, selCardStyles.rowLast]}>
-        <View style={selCardStyles.labelContainer}>
-          <View style={[selCardStyles.iconWrapper, { backgroundColor: `${colors.accent}20` }]}>
-            <Ionicons name="trending-up" size={12} color={colors.accent} />
-          </View>
-          <Text style={[typography.caption, { color: colors.textSecondary }]}>Cote</Text>
-        </View>
-        <LinearGradient
-          colors={[`${colors.accent}20`, `${colors.accent}10`]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={selCardStyles.oddsContainer}
-        >
-          <Text style={[typography.odds, { color: colors.accent }]}>
-            {item.odds.toFixed(2)}
-          </Text>
-        </LinearGradient>
-      </View>
-    </>
-  );
-
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <TouchableOpacity
@@ -275,34 +152,75 @@ const SelectionCard: React.FC<{
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        {Platform.OS === 'ios' ? (
-          <BlurView
-            intensity={effectGlass.light.intensity}
-            tint="light"
-            style={[
-              selCardStyles.container,
-              {
-                backgroundColor: `${colors.surface}90`,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            {cardContent}
-          </BlurView>
-        ) : (
-          <View
-            style={[
-              selCardStyles.container,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                elevation: 3,
-              },
-            ]}
-          >
-            {cardContent}
+        <View
+          style={[
+            selCardStyles.container,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          {/* Header: Badge numéro + Badge sport */}
+          <View style={selCardStyles.headerRow}>
+            <View style={[selCardStyles.numberBadge, { backgroundColor: colors.primary }]}>
+              <Text style={selCardStyles.numberText}>{index + 1}</Text>
+            </View>
+            <View style={[selCardStyles.sportBadge, { backgroundColor: colors.primaryBg }]}>
+              <Ionicons
+                name={SPORT_ICONS[item.sportCode] || 'trophy'}
+                size={14}
+                color={colors.primary}
+              />
+              <Text style={[selCardStyles.sportText, { color: colors.primary }]}>
+                {item.sportCode}
+              </Text>
+            </View>
           </View>
-        )}
+
+          {/* Ligne 1: Compétition + Date/Heure (côte à côte) */}
+          <View style={[selCardStyles.compactRowBg, { backgroundColor: colors.surfaceSecondary }]}>
+            <View style={selCardStyles.compactItem}>
+              <Ionicons name="trophy-outline" size={14} color={colors.textSecondary} />
+              <Text style={[selCardStyles.compactValue, { color: colors.text }]} numberOfLines={1}>
+                {item.leagueName}
+              </Text>
+            </View>
+            <View style={[selCardStyles.verticalDivider, { backgroundColor: colors.border }]} />
+            <View style={selCardStyles.compactItem}>
+              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+              <Text style={[selCardStyles.compactValue, { color: colors.text }]} numberOfLines={1}>
+                {formatShortDateTime(item.startTime)}
+              </Text>
+            </View>
+          </View>
+
+          {/* Ligne 2: Match */}
+          <View style={selCardStyles.infoRow}>
+            <Ionicons name="people-outline" size={16} color={colors.textSecondary} />
+            <Text style={[selCardStyles.infoValue, { color: colors.text }]} numberOfLines={1}>
+              {item.matchLabel}
+            </Text>
+          </View>
+
+          {/* Ligne 3: Marché + Sélection */}
+          <View style={selCardStyles.infoRow}>
+            <Ionicons name="trending-up" size={16} color={colors.textSecondary} />
+            <Text style={[selCardStyles.infoValue, { color: colors.text }]} numberOfLines={1}>
+              {item.marketLabel} — <Text style={{ fontWeight: '700' }}>{item.selectionLabel}</Text>
+            </Text>
+          </View>
+
+          {/* Ligne 4: Cote (mise en avant) */}
+          <View style={[selCardStyles.oddsRow, { backgroundColor: colors.accentBg }]}>
+            <Ionicons name="stats-chart-outline" size={18} color={colors.accent} />
+            <Text style={[selCardStyles.oddsLabel, { color: colors.textSecondary }]}>Cote</Text>
+            <View style={{ flex: 1 }} />
+            <Text style={[selCardStyles.oddsValue, { color: colors.accent }]}>
+              {item.odds.toFixed(2)}
+            </Text>
+          </View>
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -312,200 +230,254 @@ SelectionCard.displayName = 'SelectionCard';
 
 const selCardStyles = StyleSheet.create({
   container: {
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    overflow: 'hidden',
+    ...effectShadows.card,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.lg,
     gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  indexBadge: {
+  numberBadge: {
     width: 32,
     height: 32,
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  numberText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
   sportBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
   },
-  row: {
+  sportText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  // Ligne compacte avec fond (2 infos côte à côte)
+  compactRowBg: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
   },
-  rowLast: {
-    borderBottomWidth: 0,
-    paddingTop: spacing.lg,
-    paddingBottom: 0,
+  compactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flex: 1,
   },
-  labelContainer: {
+  compactValue: {
+    fontSize: 13,
+    fontWeight: '500',
+    flexShrink: 1,
+  },
+  verticalDivider: {
+    width: 1,
+    height: 16,
+    marginHorizontal: spacing.sm,
+  },
+  // Ligne info standard
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  iconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  value: {
-    fontWeight: '600',
-    flexShrink: 1,
-    textAlign: 'right',
-    maxWidth: '50%',
-  },
-  oddsContainer: {
-    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    borderRadius: radius.full,
+    paddingHorizontal: spacing.xs,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  // Ligne cote (mise en avant)
+  oddsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    marginTop: spacing.sm,
+  },
+  oddsLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  oddsValue: {
+    fontSize: 22,
+    fontWeight: '900',
   },
 });
 
 /**
- * Ligne de résumé avec design amélioré
+ * Card récapitulative sur une seule ligne
  */
-const SummaryRow: React.FC<{
-  label: string;
-  value: string;
-  highlight?: boolean;
-  icon?: keyof typeof Ionicons.glyphMap;
-  iconColor?: string;
+const SummaryCard: React.FC<{
+  count: number;
+  totalOdds: number;
+  visibility: 'PUBLIC' | 'PRIVATE';
+  priceEur?: number | null;
   colors: ThemeColors;
-}> = React.memo(({ label, value, highlight, icon, iconColor, colors }) => (
-  <View style={[summaryRowStyles.container, { borderBottomColor: colors.border }]}>
-    <Text style={[typography.body, { color: colors.textSecondary }]}>{label}</Text>
-    <View style={summaryRowStyles.right}>
-      {icon && (
-        <View
-          style={[
-            summaryRowStyles.iconWrapper,
-            { backgroundColor: `${iconColor || colors.primary}20` },
-          ]}
-        >
-          <Ionicons name={icon} size={14} color={iconColor ?? colors.primary} />
-        </View>
+}> = React.memo(({ count, totalOdds, visibility, priceEur, colors }) => (
+  <View style={[summaryCardStyles.container, { backgroundColor: colors.surfaceSecondary }]}>
+    <View style={summaryCardStyles.row}>
+      {/* Sélections */}
+      <View style={summaryCardStyles.item}>
+        <Ionicons name="list-outline" size={14} color={colors.textSecondary} />
+        <Text style={[summaryCardStyles.label, { color: colors.textSecondary }]}>Sélections</Text>
+        <Text style={[summaryCardStyles.value, { color: colors.text }]}>{count}</Text>
+      </View>
+
+      <View style={[summaryCardStyles.divider, { backgroundColor: colors.border }]} />
+
+      {/* Cote totale */}
+      <View style={summaryCardStyles.item}>
+        <Ionicons name="stats-chart-outline" size={14} color={colors.accent} />
+        <Text style={[summaryCardStyles.label, { color: colors.textSecondary }]}>Cote</Text>
+        <Text style={[summaryCardStyles.valueHighlight, { color: colors.accent }]}>
+          {totalOdds.toFixed(2)}
+        </Text>
+      </View>
+
+      <View style={[summaryCardStyles.divider, { backgroundColor: colors.border }]} />
+
+      {/* Visibilité */}
+      <View style={summaryCardStyles.item}>
+        <Ionicons
+          name={visibility === 'PUBLIC' ? 'globe-outline' : 'lock-closed-outline'}
+          size={14}
+          color={colors.primary}
+        />
+        <Text style={[summaryCardStyles.valueSuccess, { color: colors.primary }]}>
+          {visibility === 'PUBLIC' ? 'Public' : 'Privé'}
+        </Text>
+      </View>
+
+      {/* Prix si privé */}
+      {visibility === 'PRIVATE' && priceEur != null && (
+        <>
+          <View style={[summaryCardStyles.divider, { backgroundColor: colors.border }]} />
+          <View style={summaryCardStyles.item}>
+            <Ionicons name="pricetag-outline" size={14} color={colors.accent} />
+            <Text style={[summaryCardStyles.valueHighlight, { color: colors.accent }]}>
+              {priceEur}€
+            </Text>
+          </View>
+        </>
       )}
-      <Text
-        style={[
-          typography.body,
-          { color: colors.text, fontWeight: '700' },
-          highlight && { ...typography.h3, color: colors.accent },
-        ]}
-      >
-        {value}
-      </Text>
     </View>
   </View>
 ));
 
-SummaryRow.displayName = 'SummaryRow';
+SummaryCard.displayName = 'SummaryCard';
 
-const summaryRowStyles = StyleSheet.create({
+const summaryCardStyles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
-  right: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-around',
     gap: spacing.sm,
   },
-  iconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.sm,
+  item: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.xs,
+    flex: 1,
     justifyContent: 'center',
+  },
+  label: {
+    fontSize: 11,
+  },
+  value: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  valueHighlight: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  valueSuccess: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  divider: {
+    width: 1,
+    height: 20,
   },
 });
 
 /**
- * Carte d'avertissement avec design premium
+ * Carte d'avertissement
  */
 const WarningCard: React.FC<{
   title: string;
   items: string[];
   colors: ThemeColors;
-}> = React.memo(({ title, items, colors }) => {
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 3, duration: 100, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: -3, duration: 100, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 2, duration: 100, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
-    ]).start();
-  }, [shakeAnim]);
-
-  return (
-    <View
-      style={[
-        warningStyles.container,
-        {
-          backgroundColor: colors.accentBg,
-          borderColor: `${colors.accent}40`,
-        },
-      ]}
-    >
-      <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
-        <LinearGradient
-          colors={[`${colors.warning}30`, `${colors.warning}15`]}
-          style={warningStyles.iconWrapper}
-        >
-          <Ionicons name="warning" size={20} color={colors.warning} />
-        </LinearGradient>
-      </Animated.View>
-      <View style={warningStyles.content}>
-        <Text style={[typography.body, { color: colors.text, fontWeight: '700', marginBottom: spacing.xs }]}>
-          {title}
-        </Text>
-        {items.map((item, index) => (
-          <View key={index} style={warningStyles.itemRow}>
-            <View style={[warningStyles.bullet, { backgroundColor: colors.warning }]} />
-            <Text style={[typography.bodySmall, { color: colors.textSecondary, lineHeight: 20 }]}>
-              {item}
-            </Text>
-          </View>
-        ))}
-      </View>
+}> = React.memo(({ title, items, colors }) => (
+  <View
+    style={[
+      warningStyles.container,
+      {
+        backgroundColor: colors.accentBg,
+        borderColor: `${colors.warning}40`,
+      },
+    ]}
+  >
+    <View style={[warningStyles.iconWrapper, { backgroundColor: `${colors.warning}20` }]}>
+      <Ionicons name="warning" size={20} color={colors.warning} />
     </View>
-  );
-});
+    <View style={warningStyles.content}>
+      <Text style={[typography.body, { color: colors.text, fontWeight: '700', marginBottom: spacing.xs }]}>
+        {title}
+      </Text>
+      {items.map((item, index) => (
+        <View key={index} style={warningStyles.itemRow}>
+          <View style={[warningStyles.bullet, { backgroundColor: colors.warning }]} />
+          <Text style={[typography.bodySmall, { color: colors.textSecondary, lineHeight: 20 }]}>
+            {item}
+          </Text>
+        </View>
+      ))}
+    </View>
+  </View>
+));
 
 WarningCard.displayName = 'WarningCard';
 
 const warningStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginTop: spacing.lg,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
     borderWidth: 1,
     gap: spacing.md,
   },
   iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.lg,
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -519,109 +491,82 @@ const warningStyles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   bullet: {
-    width: 6,
-    height: 6,
+    width: 5,
+    height: 5,
     borderRadius: radius.full,
     marginTop: 7,
   },
 });
 
 /**
- * Carte info Stripe avec design premium
+ * Carte info Stripe
  */
 const StripeInfoCard: React.FC<{
   onSetup: () => void;
   loading: boolean;
   colors: ThemeColors;
-}> = React.memo(({ onSetup, loading, colors }) => {
-  const btnScale = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = useCallback(() => {
-    Animated.spring(btnScale, {
-      toValue: 0.95,
-      ...springConfigs.responsive,
-      useNativeDriver: true,
-    }).start();
-  }, [btnScale]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(btnScale, {
-      toValue: 1,
-      ...springConfigs.bouncy,
-      useNativeDriver: true,
-    }).start();
-  }, [btnScale]);
-
-  return (
-    <View
-      style={[
-        stripeStyles.container,
-        {
-          backgroundColor: colors.primaryBg,
-          borderColor: `${colors.primary}30`,
-        },
-      ]}
-    >
-      <LinearGradient
-        colors={[`${colors.primary}30`, `${colors.primary}15`]}
-        style={stripeStyles.iconWrapper}
-      >
-        <Ionicons name="information-circle" size={24} color={colors.primary} />
-      </LinearGradient>
-      <View style={stripeStyles.content}>
-        <Text style={[typography.body, { color: colors.primary, fontWeight: '700', marginBottom: spacing.xs }]}>
-          Configuration Stripe recommandée
-        </Text>
-        <Text style={[typography.bodySmall, { color: colors.textSecondary, lineHeight: 20, marginBottom: spacing.md }]}>
-          Vous pouvez créer ce ticket payant maintenant. Vos gains seront conservés jusqu'à ce que vous configuriez Stripe pour les retirer.
-        </Text>
-        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-          <TouchableOpacity
-            style={[
-              stripeStyles.btn,
-              {
-                borderColor: colors.primary,
-                backgroundColor: `${colors.primary}10`,
-              },
-            ]}
-            onPress={onSetup}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            disabled={loading}
-            activeOpacity={0.9}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <>
-                <Ionicons name="card" size={18} color={colors.primary} />
-                <Text style={[typography.button, { color: colors.primary }]}>
-                  Configurer maintenant
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
+}> = React.memo(({ onSetup, loading, colors }) => (
+  <View
+    style={[
+      stripeStyles.container,
+      {
+        backgroundColor: colors.primaryBg,
+        borderColor: `${colors.primary}30`,
+      },
+    ]}
+  >
+    <View style={[stripeStyles.iconWrapper, { backgroundColor: `${colors.primary}20` }]}>
+      <Ionicons name="information-circle" size={24} color={colors.primary} />
     </View>
-  );
-});
+    <View style={stripeStyles.content}>
+      <Text style={[typography.body, { color: colors.primary, fontWeight: '700', marginBottom: spacing.xs }]}>
+        Configuration Stripe recommandée
+      </Text>
+      <Text style={[typography.bodySmall, { color: colors.textSecondary, lineHeight: 20, marginBottom: spacing.md }]}>
+        Configurez Stripe pour pouvoir retirer vos gains.
+      </Text>
+      <TouchableOpacity
+        style={[
+          stripeStyles.btn,
+          {
+            borderColor: colors.primary,
+            backgroundColor: `${colors.primary}10`,
+          },
+        ]}
+        onPress={onSetup}
+        disabled={loading}
+        activeOpacity={0.8}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <>
+            <Ionicons name="card" size={18} color={colors.primary} />
+            <Text style={[typography.button, { color: colors.primary }]}>
+              Configurer maintenant
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
+    </View>
+  </View>
+));
 
 StripeInfoCard.displayName = 'StripeInfoCard';
 
 const stripeStyles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderRadius: radius.xl,
-    padding: spacing.lg,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     marginTop: spacing.md,
     borderWidth: 1,
     gap: spacing.md,
   },
   iconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.lg,
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -633,15 +578,80 @@ const stripeStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderWidth: 1,
     gap: spacing.sm,
   },
 });
 
 /**
- * Bouton d'action avec animation
+ * Checkbox CGU
+ */
+const TermsCheckbox: React.FC<{
+  accepted: boolean;
+  onToggle: () => void;
+  onPressTerms: () => void;
+  colors: ThemeColors;
+}> = React.memo(({ accepted, onToggle, onPressTerms, colors }) => (
+  <TouchableOpacity
+    style={checkboxStyles.row}
+    onPress={onToggle}
+    activeOpacity={0.7}
+  >
+    <View
+      style={[
+        checkboxStyles.box,
+        { borderColor: accepted ? colors.primary : colors.border },
+        accepted && { backgroundColor: colors.primary },
+      ]}
+    >
+      {accepted && (
+        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+      )}
+    </View>
+    <Text style={[checkboxStyles.text, { color: colors.textSecondary }]}>
+      J'accepte les{' '}
+      <Text
+        style={[checkboxStyles.link, { color: colors.primary }]}
+        onPress={onPressTerms}
+      >
+        conditions générales
+      </Text>
+    </Text>
+  </TouchableOpacity>
+));
+
+TermsCheckbox.displayName = 'TermsCheckbox';
+
+const checkboxStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
+  },
+  box: {
+    width: 22,
+    height: 22,
+    borderRadius: radius.xs,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    fontSize: 13,
+    flex: 1,
+  },
+  link: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+});
+
+/**
+ * Bouton d'action
  */
 const ActionButton: React.FC<{
   label: string;
@@ -686,16 +696,13 @@ const ActionButton: React.FC<{
             colors={
               disabled
                 ? [colors.textTertiary, colors.textTertiary]
-                : [colors.primary, colors.primaryLight || colors.primary]
+                : effectGradients.primary.colors
             }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+            start={effectGradients.primary.start}
+            end={effectGradients.primary.end}
             style={[
               actionBtnStyles.primary,
-              !disabled && Platform.select({
-                ios: createGlow(colors.primary, 0.4),
-                android: { elevation: 6 },
-              }),
+              !disabled && effectShadows.glowPrimarySubtle,
             ]}
           >
             {loading ? (
@@ -703,7 +710,7 @@ const ActionButton: React.FC<{
             ) : (
               <Ionicons name={icon} size={20} color="#FFFFFF" />
             )}
-            <Text style={[typography.button, { color: '#FFFFFF', fontSize: 16 }]}>
+            <Text style={actionBtnStyles.primaryText}>
               {label}
             </Text>
           </LinearGradient>
@@ -728,7 +735,7 @@ const ActionButton: React.FC<{
         activeOpacity={0.8}
       >
         <Ionicons name={icon} size={18} color={colors.primary} />
-        <Text style={[typography.button, { color: colors.primary }]}>{label}</Text>
+        <Text style={[actionBtnStyles.secondaryText, { color: colors.primary }]}>{label}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -742,9 +749,14 @@ const actionBtnStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     borderRadius: radius.lg,
+  },
+  primaryText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   secondary: {
     flexDirection: 'row',
@@ -755,6 +767,10 @@ const actionBtnStyles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     borderRadius: radius.lg,
     borderWidth: 1,
+  },
+  secondaryText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
@@ -773,6 +789,7 @@ const TicketPreviewScreen: React.FC = () => {
   const clear = useTicketBuilderStore((s) => s.clear);
 
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [stripeStatus, setStripeStatus] = useState<ConnectedAccountStatusDto | null>(null);
   const [stripeLoading, setStripeLoading] = useState(false);
 
@@ -805,7 +822,17 @@ const TicketPreviewScreen: React.FC = () => {
     }
   };
 
+  const handlePressTerms = () => {
+    // Navigate to CGU screen or open URL
+    Linking.openURL('https://sharetips.app/cgu');
+  };
+
   const handleConfirm = async () => {
+    if (!acceptedTerms) {
+      Alert.alert('Conditions requises', 'Veuillez accepter les conditions générales pour continuer.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Build title from match labels
@@ -880,8 +907,9 @@ const TicketPreviewScreen: React.FC = () => {
       >
         {/* Selections */}
         <SectionHeader
-          icon="list"
-          title={`Sélections (${draft.selections.length})`}
+          icon="list-outline"
+          title="SÉLECTIONS"
+          count={draft.selections.length}
           colors={colors}
         />
         {draft.selections.map((sel, i) => (
@@ -895,83 +923,18 @@ const TicketPreviewScreen: React.FC = () => {
 
         {/* Summary */}
         <View style={styles.summarySection}>
-          <SectionHeader icon="receipt" title="Récapitulatif" colors={colors} />
-          {Platform.OS === 'ios' ? (
-            <BlurView
-              intensity={effectGlass.light.intensity}
-              tint="light"
-              style={[
-                styles.summaryCard,
-                {
-                  backgroundColor: `${colors.surface}90`,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <SummaryRow
-                label="Sélections"
-                value={String(draft.selections.length)}
-                colors={colors}
-              />
-              <SummaryRow
-                label="Cote totale"
-                value={draft.totalOdds.toFixed(2)}
-                highlight
-                colors={colors}
-              />
-              <SummaryRow
-                label="Visibilité"
-                value={draft.visibility === 'PUBLIC' ? 'Public' : 'Privé'}
-                icon={draft.visibility === 'PUBLIC' ? 'earth' : 'lock-closed'}
-                iconColor={draft.visibility === 'PUBLIC' ? colors.primary : colors.warning}
-                colors={colors}
-              />
-              {draft.visibility === 'PRIVATE' && draft.priceEur != null && (
-                <SummaryRow
-                  label="Prix"
-                  value={`${draft.priceEur.toFixed(2)} €`}
-                  colors={colors}
-                />
-              )}
-            </BlurView>
-          ) : (
-            <View
-              style={[
-                styles.summaryCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                  elevation: 3,
-                },
-              ]}
-            >
-              <SummaryRow
-                label="Sélections"
-                value={String(draft.selections.length)}
-                colors={colors}
-              />
-              <SummaryRow
-                label="Cote totale"
-                value={draft.totalOdds.toFixed(2)}
-                highlight
-                colors={colors}
-              />
-              <SummaryRow
-                label="Visibilité"
-                value={draft.visibility === 'PUBLIC' ? 'Public' : 'Privé'}
-                icon={draft.visibility === 'PUBLIC' ? 'earth' : 'lock-closed'}
-                iconColor={draft.visibility === 'PUBLIC' ? colors.primary : colors.warning}
-                colors={colors}
-              />
-              {draft.visibility === 'PRIVATE' && draft.priceEur != null && (
-                <SummaryRow
-                  label="Prix"
-                  value={`${draft.priceEur.toFixed(2)} €`}
-                  colors={colors}
-                />
-              )}
-            </View>
-          )}
+          <SectionHeader
+            icon="document-text-outline"
+            title="RÉCAPITULATIF"
+            colors={colors}
+          />
+          <SummaryCard
+            count={draft.selections.length}
+            totalOdds={draft.totalOdds}
+            visibility={draft.visibility}
+            priceEur={draft.priceEur}
+            colors={colors}
+          />
         </View>
 
         {/* Warning */}
@@ -996,64 +959,40 @@ const TicketPreviewScreen: React.FC = () => {
       </ScrollView>
 
       {/* Actions */}
-      {Platform.OS === 'ios' ? (
-        <BlurView
-          intensity={effectGlass.medium.intensity}
-          tint="light"
-          style={[
-            styles.actions,
-            {
-              backgroundColor: `${colors.surface}90`,
-              borderTopColor: colors.border,
-            },
-          ]}
-        >
-          <ActionButton
-            label="Modifier le ticket"
-            icon="arrow-back"
-            onPress={handleModify}
-            variant="secondary"
-            colors={colors}
-          />
-          <ActionButton
-            label={submitting ? 'Création en cours…' : 'Confirmer et créer le ticket'}
-            icon="checkmark-circle"
-            onPress={handleConfirm}
-            variant="primary"
-            loading={submitting}
-            disabled={submitting}
-            colors={colors}
-          />
-        </BlurView>
-      ) : (
-        <View
-          style={[
-            styles.actions,
-            {
-              backgroundColor: colors.surface,
-              borderTopColor: colors.border,
-              elevation: 8,
-            },
-          ]}
-        >
-          <ActionButton
-            label="Modifier le ticket"
-            icon="arrow-back"
-            onPress={handleModify}
-            variant="secondary"
-            colors={colors}
-          />
-          <ActionButton
-            label={submitting ? 'Création en cours…' : 'Confirmer et créer le ticket'}
-            icon="checkmark-circle"
-            onPress={handleConfirm}
-            variant="primary"
-            loading={submitting}
-            disabled={submitting}
-            colors={colors}
-          />
-        </View>
-      )}
+      <View
+        style={[
+          styles.actions,
+          {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+          },
+        ]}
+      >
+        {/* Checkbox CGU */}
+        <TermsCheckbox
+          accepted={acceptedTerms}
+          onToggle={() => setAcceptedTerms(!acceptedTerms)}
+          onPressTerms={handlePressTerms}
+          colors={colors}
+        />
+
+        <ActionButton
+          label="Modifier le ticket"
+          icon="arrow-back"
+          onPress={handleModify}
+          variant="secondary"
+          colors={colors}
+        />
+        <ActionButton
+          label={submitting ? 'Création...' : 'Confirmer et créer'}
+          icon="checkmark-circle"
+          onPress={handleConfirm}
+          variant="primary"
+          loading={submitting}
+          disabled={submitting || !acceptedTerms}
+          colors={colors}
+        />
+      </View>
     </View>
   );
 };
@@ -1071,23 +1010,20 @@ const useStyles = (colors: ThemeColors) =>
           backgroundColor: colors.background,
         },
         scroll: {
-          padding: spacing.base,
+          padding: spacing.md,
           paddingBottom: spacing.xxl,
         },
         summarySection: {
-          marginTop: spacing.xl,
-        },
-        summaryCard: {
-          borderRadius: radius.xl,
-          padding: spacing.lg,
-          borderWidth: 1,
-          overflow: 'hidden',
+          marginTop: spacing.lg,
         },
         actions: {
-          padding: spacing.base,
+          padding: spacing.md,
           borderTopWidth: 1,
-          gap: spacing.md,
-          overflow: 'hidden',
+          gap: spacing.sm,
+          ...Platform.select({
+            ios: effectShadows.card,
+            android: { elevation: 8 },
+          }),
         },
       }),
     [colors]

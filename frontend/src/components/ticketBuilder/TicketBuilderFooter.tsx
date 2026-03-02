@@ -232,83 +232,59 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
     }
   }, [animated, clearScaleAnim]);
 
-  // ── Rendu de la ligne de résumé ────────────────────────────────
-  const renderSummaryRow = (
-    label: string,
-    content: React.ReactNode,
-    isHighlight = false
-  ) => (
-    <View style={[styles.summaryRow, isHighlight && styles.summaryRowHighlight]}>
-      <Text style={styles.summaryLabel}>{label}</Text>
-      {content}
-    </View>
-  );
-
   // ── Rendu de la section résumé ─────────────────────────────────
   const renderSummary = () => {
     const summaryContent = (
-      <>
-        {/* Cote totale - mise en avant */}
-        <View style={styles.totalSection}>
-          <View style={styles.totalLabelRow}>
-            <Ionicons name="calculator" size={16} color={colors.primary} />
-            <Text style={styles.totalLabel}>Cote totale</Text>
-          </View>
-          <Text style={styles.totalValue}>{totalOdds.toFixed(2)}</Text>
+      <View style={styles.summaryRowContainer}>
+        {/* Cote totale */}
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryItemLabel}>Cote</Text>
+          <Text style={styles.summaryItemValuePrimary}>{totalOdds.toFixed(2)}</Text>
         </View>
 
-        <View style={styles.divider} />
+        <View style={styles.verticalDivider} />
 
-        {/* Détails */}
-        <View style={styles.detailsGrid}>
-          {/* Sélections */}
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Sélections</Text>
-            <View style={styles.detailValueContainer}>
-              <Text style={styles.detailValue}>{count}</Text>
-            </View>
-          </View>
+        {/* Sélections */}
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryItemLabel}>Sélections</Text>
+          <Text style={styles.summaryItemValue}>{count}</Text>
+        </View>
 
-          {/* Visibilité */}
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Visibilité</Text>
-            <View
+        <View style={styles.verticalDivider} />
+
+        {/* Visibilité */}
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryItemLabel}>Visibilité</Text>
+          <View style={styles.visibilityInlineContainer}>
+            <Ionicons
+              name={visibility === 'PUBLIC' ? 'earth' : 'lock-closed'}
+              size={14}
+              color={visibility === 'PUBLIC' ? colors.primary : colors.accent}
+            />
+            <Text
               style={[
-                styles.visibilityBadge,
-                visibility === 'PUBLIC'
-                  ? styles.visibilityPublic
-                  : styles.visibilityPrivate,
+                styles.summaryItemValue,
+                { color: visibility === 'PUBLIC' ? colors.primary : colors.accent },
               ]}
             >
-              <Ionicons
-                name={visibility === 'PUBLIC' ? 'earth' : 'lock-closed'}
-                size={12}
-                color={visibility === 'PUBLIC' ? colors.primary : colors.accent}
-              />
-              <Text
-                style={[
-                  styles.visibilityText,
-                  { color: visibility === 'PUBLIC' ? colors.primary : colors.accent },
-                ]}
-              >
-                {visibility === 'PUBLIC' ? 'Public' : 'Privé'}
+              {visibility === 'PUBLIC' ? 'Public' : 'Privé'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Prix (si privé) */}
+        {visibility === 'PRIVATE' && (
+          <>
+            <View style={styles.verticalDivider} />
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryItemLabel}>Prix</Text>
+              <Text style={[styles.summaryItemValue, { color: colors.accent }]}>
+                {priceEur != null ? `${priceEur}€` : '–'}
               </Text>
             </View>
-          </View>
-
-          {/* Prix (si privé) */}
-          {visibility === 'PRIVATE' && (
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Prix</Text>
-              <View style={styles.priceBadge}>
-                <Text style={styles.priceValue}>
-                  {priceEur != null ? `${priceEur}€` : '–'}
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
-      </>
+          </>
+        )}
+      </View>
     );
 
     if (variant === 'glass') {
@@ -449,7 +425,7 @@ const useStyles = (
       container: {
         paddingHorizontal: config.paddingH,
         paddingTop: config.paddingV,
-        paddingBottom: config.gap,
+        paddingBottom: spacing.md,
         borderTopWidth: variant === 'minimal' ? 0 : 1,
         borderTopColor: isGlass
           ? effectGlass.light.borderColor
@@ -468,110 +444,44 @@ const useStyles = (
           : colors.border,
         ...(variant === 'card' && effectShadows.card),
       },
-      totalSection: {
-        alignItems: 'center',
-        paddingBottom: config.gap,
-      },
-      totalLabelRow: {
+      summaryRowContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.xs,
-        marginBottom: spacing.xxs,
+        justifyContent: 'space-around',
       },
-      totalLabel: {
-        fontSize: config.labelSize,
-        color: colors.textSecondary,
-        fontWeight: '500',
-      },
-      totalValue: {
-        fontSize: config.totalSize,
-        fontWeight: '900',
-        color: colors.primary,
-        fontVariant: ['tabular-nums'],
-        letterSpacing: -0.5,
-      },
-      divider: {
-        height: 1,
-        backgroundColor: isGlass
-          ? effectGlass.light.borderColor
-          : colors.border,
-        marginBottom: config.gap,
-      },
-      detailsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: config.gap,
-        justifyContent: 'center',
-      },
-      detailItem: {
+      summaryItem: {
         flex: 1,
-        minWidth: '30%',
         alignItems: 'center',
         gap: spacing.xxs,
       },
-      detailLabel: {
+      summaryItemLabel: {
         fontSize: config.labelSize - 1,
         color: colors.textTertiary,
         fontWeight: '500',
       },
-      detailValueContainer: {
-        backgroundColor: colors.surfaceElevated,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: radius.sm,
-      },
-      detailValue: {
+      summaryItemValue: {
         fontSize: config.valueSize,
         fontWeight: '700',
         color: colors.text,
         fontVariant: ['tabular-nums'],
       },
-      summaryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: spacing.xs,
+      summaryItemValuePrimary: {
+        fontSize: config.totalSize - 4,
+        fontWeight: '900',
+        color: colors.primary,
+        fontVariant: ['tabular-nums'],
       },
-      summaryRowHighlight: {
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-        paddingBottom: config.gap,
-        marginBottom: spacing.xs,
+      verticalDivider: {
+        width: 1,
+        height: 32,
+        backgroundColor: isGlass
+          ? effectGlass.light.borderColor
+          : colors.border,
       },
-      summaryLabel: {
-        fontSize: config.labelSize,
-        color: colors.textSecondary,
-        fontWeight: '500',
-      },
-      visibilityBadge: {
+      visibilityInlineContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xxs,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: radius.full,
-      },
-      visibilityPublic: {
-        backgroundColor: colors.primary + '20',
-      },
-      visibilityPrivate: {
-        backgroundColor: colors.accent + '20',
-      },
-      visibilityText: {
-        fontSize: config.badgeSize,
-        fontWeight: '600',
-      },
-      priceBadge: {
-        backgroundColor: colors.accent + '20',
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: radius.full,
-      },
-      priceValue: {
-        fontSize: config.valueSize,
-        fontWeight: '800',
-        color: colors.accent,
-        fontVariant: ['tabular-nums'],
       },
       disclaimerContainer: {
         flexDirection: 'row',

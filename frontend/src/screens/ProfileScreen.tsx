@@ -8,16 +8,21 @@ import {
   ScrollView,
   Platform,
   Animated,
+  Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 
 import { useAuthStore } from '../store/auth.store';
 import { useNotificationStore } from '../store/notification.store';
 import { useProfileStore } from '../store/profile.store';
+import { useWalletStore } from '../store/wallet.store';
 import { gamificationApi } from '../api/gamification.api';
+import { followApi } from '../api/follow.api';
 import { GamificationCard } from '../components/gamification';
 import type { RootStackParamList } from '../types';
 import type { UserGamificationDto } from '../types/gamification.types';
@@ -38,10 +43,25 @@ const ProfileScreen: React.FC = () => {
   const loadingStats = useProfileStore((s) => s.loading && !s.stats);
   const hydrateProfile = useProfileStore((s) => s.hydrate);
 
+  // Wallet store
+  const wallet = useWalletStore((s) => s.wallet);
+  const walletLoading = useWalletStore((s) => s.loading);
+  const walletError = useWalletStore((s) => s.error);
+  const hydrateWallet = useWalletStore((s) => s.hydrate);
+
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Wallet card animation
+  const walletScaleAnim = useRef(new Animated.Value(1)).current;
 
   // Gamification state
   const [gamification, setGamification] = useState<UserGamificationDto | null>(null);
+
+  // Follow info state
+  const [followInfo, setFollowInfo] = useState<{ followerCount: number; followingCount: number } | null>(null);
+
+  // Profile image state
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   // Entrance animation
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -78,7 +98,46 @@ const ProfileScreen: React.FC = () => {
       }
     };
     loadGamification();
-  }, [hydrateProfile, fetchUnreadCount]);
+
+    // Fetch follow info for current user
+    const loadFollowInfo = async () => {
+      if (!user?.id) return;
+      try {
+        const { data } = await followApi.getFollowInfo(user.id);
+        setFollowInfo({
+          followerCount: data.followerCount,
+          followingCount: data.followingCount,
+        });
+      } catch {
+        // Silently fail
+      }
+    };
+    loadFollowInfo();
+  }, [hydrateProfile, fetchUnreadCount, user?.id]);
+
+  // Hydrate wallet on focus
+  useFocusEffect(
+    useCallback(() => {
+      hydrateWallet();
+    }, [hydrateWallet])
+  );
+
+  // Wallet press handlers
+  const handleWalletPressIn = useCallback(() => {
+    Animated.spring(walletScaleAnim, {
+      toValue: 0.98,
+      friction: 8,
+      useNativeDriver: true,
+    }).start();
+  }, [walletScaleAnim]);
+
+  const handleWalletPressOut = useCallback(() => {
+    Animated.spring(walletScaleAnim, {
+      toValue: 1,
+      friction: 8,
+      useNativeDriver: true,
+    }).start();
+  }, [walletScaleAnim]);
 
   const goToMyTickets = useCallback(
     () => navigation.navigate('MyTickets'),
@@ -124,6 +183,63 @@ const ProfileScreen: React.FC = () => {
     () => navigation.navigate('XpGuide'),
     [navigation]
   );
+  // Performance stats (mock data for now)
+  const performanceStats = {
+    ranking: stats?.ranking ?? 42,
+    avgOdds: stats?.avgOdds ?? 2.45,
+    winRate: stats?.winRate ?? 67,
+  };
+
+  // Image picker functions
+  const pickImageFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission requise', 'Nous avons besoin de votre permission pour accéder à la galerie.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission requise', 'Nous avons besoin de votre permission pour accéder à la caméra.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const handleEditProfileImage = () => {
+    Alert.alert(
+      'Photo de profil',
+      'Choisissez une option',
+      [
+        { text: 'Prendre une photo', onPress: takePhoto },
+        { text: 'Choisir dans la galerie', onPress: pickImageFromGallery },
+        { text: 'Annuler', style: 'cancel' },
+      ],
+      { cancelable: true }
+    );
+  };
 
   const ActionRow: React.FC<{
     icon: keyof typeof Ionicons.glyphMap;
@@ -185,14 +301,22 @@ const ProfileScreen: React.FC = () => {
           },
         ]}
       >
-        <View style={styles.avatarContainer}>
-          <LinearGradient
-            colors={[DS.colors.green, '#1E5C34']}
-            style={styles.avatarGradient}
-          >
-            <Ionicons name="person" size={36} color={DS.colors.white} />
-          </LinearGradient>
-        </View>
+        <TouchableOpacity style={styles.avatarContainer} onPress={handleEditProfileImage} activeOpacity={0.8}>
+          {profileImage ? (
+            <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+          ) : (
+            <LinearGradient
+              colors={[DS.colors.green, '#1E5C34']}
+              style={styles.avatarGradient}
+            >
+              <Ionicons name="person" size={36} color={DS.colors.white} />
+            </LinearGradient>
+          )}
+          {/* Edit badge */}
+          <View style={styles.editBadge}>
+            <Ionicons name="pencil" size={14} color={DS.colors.white} />
+          </View>
+        </TouchableOpacity>
         <Text testID="profile-username" style={styles.username}>
           {user?.username ?? '—'}
         </Text>
@@ -210,17 +334,146 @@ const ProfileScreen: React.FC = () => {
             label="Tickets vendus"
           />
           <View style={styles.statDivider} />
-          <StatItem
-            value={stats?.followersCount}
-            label="Abonnés"
-          />
+          <TouchableOpacity style={styles.statItem} activeOpacity={1}>
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={DS.colors.green} />
+            ) : (
+              <View style={styles.premiumValueRow}>
+                <Text style={styles.statValue}>{stats?.premiumSubscribersCount ?? 0}</Text>
+                <Text style={styles.crownIcon}>👑</Text>
+              </View>
+            )}
+            <Text style={styles.statLabel}>Membres Premium</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Stats Button */}
-        <TouchableOpacity style={styles.statsButton} onPress={goToStatistiques} activeOpacity={0.8}>
-          <Ionicons name="stats-chart" size={18} color={DS.colors.white} />
-          <Text style={styles.statsButtonText}>Voir les stats</Text>
+        {/* Followers/Following Row with Stats Button */}
+        <View style={styles.followSection}>
+          <TouchableOpacity style={styles.followItem} onPress={goToAbonnes} activeOpacity={0.7}>
+            {!followInfo ? (
+              <ActivityIndicator size="small" color={DS.colors.green} />
+            ) : (
+              <Text style={styles.followValue}>{followInfo.followerCount}</Text>
+            )}
+            <Text style={styles.followLabel}>Abonnés</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.statsButton} onPress={goToStatistiques} activeOpacity={0.8}>
+            <Ionicons name="stats-chart" size={18} color={DS.colors.white} />
+            <Text style={styles.statsButtonText}>Voir les stats</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.followItem} onPress={goToAbonnements} activeOpacity={0.7}>
+            {!followInfo ? (
+              <ActivityIndicator size="small" color={DS.colors.green} />
+            ) : (
+              <Text style={styles.followValue}>{followInfo.followingCount}</Text>
+            )}
+            <Text style={styles.followLabel}>Suivis</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+
+      {/* Wallet Card */}
+      <Animated.View
+        style={[
+          styles.walletCardWrapper,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: walletScaleAnim }, { translateY: slideAnim }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.walletCardOuter}
+          onPress={goToWallet}
+          onPressIn={handleWalletPressIn}
+          onPressOut={handleWalletPressOut}
+          activeOpacity={0.95}
+        >
+          <LinearGradient
+            colors={[DS.colors.green, '#1E5C34']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.walletCard}
+          >
+            {/* Decorative pattern overlay */}
+            <View style={styles.walletPattern}>
+              <View style={styles.walletPatternCircle1} />
+              <View style={styles.walletPatternCircle2} />
+            </View>
+
+            <View style={styles.walletIconContainer}>
+              <Ionicons name="wallet" size={18} color={DS.colors.white} />
+            </View>
+            <View style={styles.walletContent}>
+              <View style={styles.walletHeader}>
+                <Text style={styles.walletLabel}>Solde disponible</Text>
+                <View style={styles.walletChevron}>
+                  <Ionicons name="chevron-forward" size={14} color={DS.colors.white} />
+                </View>
+              </View>
+              {walletLoading ? (
+                <View style={styles.walletLoadingContainer}>
+                  <ActivityIndicator size="small" color={DS.colors.white} />
+                  <Text style={styles.walletLoadingText}>Chargement...</Text>
+                </View>
+              ) : walletError ? (
+                <View style={styles.walletErrorContainer}>
+                  <Ionicons name="alert-circle-outline" size={20} color={DS.colors.white} />
+                  <Text style={styles.walletErrorText}>{walletError}</Text>
+                  <Text style={styles.walletRetryText}>Appuyez pour réessayer</Text>
+                </View>
+              ) : (
+                <View style={styles.walletAmountRow}>
+                  <Text style={styles.walletAmount}>
+                    {wallet?.availableBalance?.toFixed(2) ?? '0.00'}
+                  </Text>
+                  <Text style={styles.walletUnit}>EUR</Text>
+                </View>
+              )}
+              {wallet && !walletLoading && !walletError && wallet.pendingPayout > 0 && (
+                <View style={styles.pendingBadge}>
+                  <Ionicons name="time-outline" size={12} color="#FBBF24" />
+                  <Text style={styles.walletLocked}>
+                    {wallet.pendingPayout.toFixed(2)} EUR en virement
+                  </Text>
+                </View>
+              )}
+            </View>
+          </LinearGradient>
         </TouchableOpacity>
+      </Animated.View>
+
+      {/* Performance Stats Card */}
+      <Animated.View
+        style={[
+          styles.performanceStatsCard,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
+        <View style={styles.performanceStatsRow}>
+          <View style={styles.performanceStatColumn}>
+            <Ionicons name="trophy-outline" size={20} color="#FBBF24" />
+            <Text style={styles.performanceStatValue}>#{performanceStats.ranking}</Text>
+            <Text style={styles.performanceStatLabel}>Classement</Text>
+          </View>
+          <View style={styles.performanceStatDivider} />
+          <View style={styles.performanceStatColumn}>
+            <Ionicons name="stats-chart-outline" size={20} color={DS.colors.green} />
+            <Text style={styles.performanceStatValue}>{performanceStats.avgOdds.toFixed(2)}</Text>
+            <Text style={styles.performanceStatLabel}>Cote moy.</Text>
+          </View>
+          <View style={styles.performanceStatDivider} />
+          <View style={styles.performanceStatColumn}>
+            <Ionicons name="checkmark-circle-outline" size={20} color="#22C55E" />
+            <Text style={styles.performanceStatValue}>{performanceStats.winRate}%</Text>
+            <Text style={styles.performanceStatLabel}>Réussite</Text>
+          </View>
+        </View>
       </Animated.View>
 
       {/* Gamification Card */}
@@ -273,7 +526,7 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.quickActionIcon}>
             <Ionicons name="key" size={22} color={DS.colors.white} />
           </View>
-          <Text style={styles.quickActionLabel}>Mes accès</Text>
+          <Text style={styles.quickActionLabel}>Mes achats</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickActionCard} onPress={goToFavoris} activeOpacity={0.8}>
           <View style={styles.quickActionIcon}>
@@ -296,35 +549,7 @@ const ProfileScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Réseau</Text>
         <View style={styles.networkCard}>
           <TouchableOpacity
-            style={styles.networkRow}
-            onPress={goToAbonnes}
-            activeOpacity={0.7}
-          >
-            <View style={styles.networkRowLeft}>
-              <View style={styles.networkIconContainer}>
-                <Ionicons name="people" size={18} color={DS.colors.white} />
-              </View>
-              <Text style={styles.networkLabel}>Mes abonnés</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={DS.colors.textSecondary} />
-          </TouchableOpacity>
-          <View style={styles.networkDivider} />
-          <TouchableOpacity
-            style={styles.networkRow}
-            onPress={goToAbonnements}
-            activeOpacity={0.7}
-          >
-            <View style={styles.networkRowLeft}>
-              <View style={styles.networkIconContainer}>
-                <Ionicons name="person-add" size={18} color={DS.colors.white} />
-              </View>
-              <Text style={styles.networkLabel}>Mes abonnements</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={DS.colors.textSecondary} />
-          </TouchableOpacity>
-          <View style={styles.networkDivider} />
-          <TouchableOpacity
-            style={styles.networkRow}
+            style={[styles.networkRow, styles.networkRowLast]}
             onPress={goToPlansAbonnement}
             activeOpacity={0.7}
           >
@@ -409,6 +634,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 12,
+    position: 'relative',
   },
   avatarGradient: {
     width: 80,
@@ -425,6 +651,37 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 6,
+      },
+    }),
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: DS.colors.green,
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: DS.colors.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: DS.colors.cardBg,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 4,
       },
     }),
   },
@@ -492,6 +749,230 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: DS.colors.white,
   },
+  premiumValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  crownIcon: {
+    fontSize: 14,
+  },
+  followSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 16,
+    paddingHorizontal: 8,
+  },
+  followItem: {
+    alignItems: 'center',
+    minWidth: 70,
+  },
+  followValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: DS.colors.white,
+  },
+  followLabel: {
+    fontSize: 12,
+    color: DS.colors.textSecondary,
+    marginTop: 2,
+  },
+
+  // Wallet Card
+  walletCardWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  walletCardOuter: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: DS.colors.green,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  walletCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    padding: 14,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  walletPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  walletPatternCircle1: {
+    position: 'absolute',
+    top: -30,
+    right: -30,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  walletPatternCircle2: {
+    position: 'absolute',
+    bottom: -20,
+    left: -20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  walletIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  walletContent: {
+    flex: 1,
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  walletLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  walletChevron: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  walletAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  walletAmount: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: DS.colors.white,
+    letterSpacing: -0.5,
+  },
+  walletUnit: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  walletLocked: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FBBF24',
+  },
+  pendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(251, 191, 36, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+  },
+  walletLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  walletLoadingText: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  walletErrorContainer: {
+    gap: 4,
+  },
+  walletErrorText: {
+    fontSize: 14,
+    color: DS.colors.white,
+    opacity: 0.9,
+  },
+  walletRetryText: {
+    fontSize: 12,
+    color: DS.colors.white,
+    opacity: 0.7,
+    textDecorationLine: 'underline',
+  },
+
+  // Performance Stats Card
+  performanceStatsCard: {
+    backgroundColor: DS.colors.cardBg,
+    borderRadius: 10,
+    padding: 8,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: DS.colors.cardBorder,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  performanceStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 4,
+  },
+  performanceStatColumn: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 1,
+  },
+  performanceStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: DS.colors.white,
+    marginTop: 4,
+  },
+  performanceStatLabel: {
+    fontSize: 10,
+    color: DS.colors.textSecondary,
+    marginTop: 1,
+  },
+  performanceStatDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: DS.colors.cardBorder,
+  },
+
   gamificationSection: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -606,6 +1087,9 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: DS.colors.cardBorder,
     marginLeft: 64,
+  },
+  networkRowLast: {
+    borderBottomWidth: 0,
   },
   settingsSection: {
     marginHorizontal: 16,

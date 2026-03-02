@@ -55,7 +55,7 @@ import type { TicketDraft } from '../../types';
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 
-const TAB_BAR_HEIGHT = 70;
+const TAB_BAR_HEIGHT = 52;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const MAX_BODY_HEIGHT = SCREEN_HEIGHT * 0.6;
 

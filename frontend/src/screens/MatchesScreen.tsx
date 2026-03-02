@@ -19,7 +19,8 @@ import { sportsApi } from '../api/sports.api';
 import { useTicketBuilderStore } from '../store/ticketBuilder.store';
 import { DS } from '../theme/designSystem';
 import { getTeamLogo, getTennisFlag } from '../utils/teamAssets';
-import type { MatchDetail, RootStackParamList, MarketSelection, TicketSelection } from '../types';
+import OddsButton from '../components/match/OddsButton';
+import type { MatchDetail, MatchesStackParamList, MarketSelection, TicketSelection } from '../types';
 import type { SportDto } from '../types/sport.types';
 
 // ═══════════════════════════════════════════════════════════════
@@ -30,6 +31,14 @@ interface DateGroup {
   date: string;
   dateLabel: string;
   matches: MatchDetail[];
+}
+
+interface LeagueInfo {
+  id: string;
+  name: string;
+  sportCode: string;
+  sportIcon: keyof typeof Ionicons.glyphMap;
+  matchCount: number;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -95,6 +104,30 @@ function getSportIcon(sportCode: string): keyof typeof Ionicons.glyphMap {
   return icons[sportCode.toUpperCase()] ?? 'trophy';
 }
 
+/** Extract unique leagues from matches */
+function extractLeagues(matches: MatchDetail[]): LeagueInfo[] {
+  const leagueMap = new Map<string, LeagueInfo>();
+
+  for (const match of matches) {
+    const key = match.leagueName.toLowerCase();
+    if (!leagueMap.has(key)) {
+      leagueMap.set(key, {
+        id: key,
+        name: match.leagueName,
+        sportCode: match.sportCode,
+        sportIcon: getSportIcon(match.sportCode),
+        matchCount: 1,
+      });
+    } else {
+      const existing = leagueMap.get(key)!;
+      existing.matchCount++;
+    }
+  }
+
+  // Sort by match count (most popular first)
+  return Array.from(leagueMap.values()).sort((a, b) => b.matchCount - a.matchCount);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // MATCH CARD COMPONENT (INLINE)
 // ═══════════════════════════════════════════════════════════════
@@ -104,7 +137,7 @@ interface MatchCardInlineProps {
 }
 
 const MatchCardInline: React.FC<MatchCardInlineProps> = ({ match }) => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<MatchesStackParamList>>();
   const toggleSelection = useTicketBuilderStore((s) => s.toggleSelection);
   const selections = useTicketBuilderStore((s) => s.selections);
 
@@ -195,7 +228,7 @@ const MatchCardInline: React.FC<MatchCardInlineProps> = ({ match }) => {
       {/* Header: League + Time */}
       <View style={cardStyles.header}>
         <View style={cardStyles.leagueBadge}>
-          <View style={cardStyles.leagueBar} />
+          <Ionicons name={getSportIcon(match.sportCode)} size={14} color={DS.colors.green} />
           <Text style={cardStyles.leagueText}>{match.leagueName}</Text>
         </View>
         <View style={cardStyles.timeContainer}>
@@ -222,7 +255,9 @@ const MatchCardInline: React.FC<MatchCardInlineProps> = ({ match }) => {
           <Text style={cardStyles.teamName} numberOfLines={2}>{match.homeTeam.name}</Text>
         </View>
 
-        <Text style={cardStyles.vsText}>VS</Text>
+        <View style={cardStyles.vsCircle}>
+          <Text style={cardStyles.vsText}>VS</Text>
+        </View>
 
         <View style={cardStyles.teamContainer}>
           <View style={cardStyles.teamLogo}>
@@ -241,33 +276,21 @@ const MatchCardInline: React.FC<MatchCardInlineProps> = ({ match }) => {
         </View>
       </View>
 
-      {/* Odds Buttons */}
+      {/* Odds Buttons - Using unified OddsButton component */}
       {matchResult && (
         <View style={cardStyles.oddsContainer}>
           {oddsSelections.map(({ sel, label }) =>
             sel ? (
-              <TouchableOpacity
+              <OddsButton
                 key={sel.id}
-                style={[
-                  cardStyles.oddsButton,
-                  isSelected(sel.id) && cardStyles.oddsButtonSelected,
-                ]}
+                label={label}
+                odds={sel.odds}
+                isSelected={isSelected(sel.id)}
+                disabled={false}
                 onPress={() => handleOddsPress(sel)}
-                activeOpacity={0.7}
-              >
-                <Text style={[
-                  cardStyles.oddsLabel,
-                  isSelected(sel.id) && cardStyles.oddsLabelSelected,
-                ]}>
-                  {label}
-                </Text>
-                <Text style={[
-                  cardStyles.oddsValue,
-                  isSelected(sel.id) && cardStyles.oddsValueSelected,
-                ]}>
-                  {sel.odds.toFixed(2)}
-                </Text>
-              </TouchableOpacity>
+                variant="default"
+                size="md"
+              />
             ) : null
           )}
         </View>
@@ -307,13 +330,7 @@ const cardStyles = StyleSheet.create({
   leagueBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  leagueBar: {
-    width: 3,
-    height: 14,
-    backgroundColor: DS.colors.green,
-    borderRadius: 2,
-    marginRight: 8,
+    gap: 6,
   },
   leagueText: {
     fontSize: 12,
@@ -369,51 +386,26 @@ const cardStyles = StyleSheet.create({
     color: DS.colors.white,
     textAlign: 'center',
   },
-  vsText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: DS.colors.textVs,
+  vsCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0F1611',
+    borderWidth: 2,
+    borderColor: DS.colors.green,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginHorizontal: 8,
+  },
+  vsText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: DS.colors.green,
   },
   oddsContainer: {
     flexDirection: 'row',
     gap: 8,
     marginBottom: 12,
-  },
-  oddsButton: {
-    flex: 1,
-    backgroundColor: '#121815',
-    borderWidth: 1,
-    borderColor: '#1C2B21',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-    shadowColor: DS.colors.green,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  oddsButtonSelected: {
-    backgroundColor: DS.colors.green,
-    borderColor: DS.colors.green,
-  },
-  oddsLabel: {
-    fontSize: 10,
-    fontWeight: '400',
-    color: '#8A9A8F',
-    marginBottom: 2,
-  },
-  oddsLabelSelected: {
-    color: DS.colors.white,
-  },
-  oddsValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: DS.colors.white,
-  },
-  oddsValueSelected: {
-    color: DS.colors.white,
   },
   marketsLink: {
     flexDirection: 'row',
@@ -429,8 +421,80 @@ const cardStyles = StyleSheet.create({
 });
 
 // ═══════════════════════════════════════════════════════════════
+// LEAGUE CHIP COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
+interface LeagueChipProps {
+  league: LeagueInfo;
+  isActive: boolean;
+  showSportIcon: boolean;
+  onPress: () => void;
+}
+
+const LeagueChip: React.FC<LeagueChipProps> = ({ league, isActive, showSportIcon, onPress }) => (
+  <TouchableOpacity
+    style={[
+      leagueChipStyles.chip,
+      isActive && leagueChipStyles.chipActive,
+    ]}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
+    {showSportIcon && (
+      <Ionicons
+        name={league.sportIcon}
+        size={14}
+        color={isActive ? DS.colors.white : DS.colors.green}
+      />
+    )}
+    <Text
+      style={[
+        leagueChipStyles.text,
+        isActive && leagueChipStyles.textActive,
+      ]}
+      numberOfLines={1}
+    >
+      {league.name}
+    </Text>
+    {isActive && (
+      <Ionicons name="close-circle" size={16} color={DS.colors.white} />
+    )}
+  </TouchableOpacity>
+);
+
+const leagueChipStyles = StyleSheet.create({
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: DS.colors.surface,
+    borderWidth: 1,
+    borderColor: DS.colors.buttonBorder,
+    maxWidth: 160,
+  },
+  chipActive: {
+    backgroundColor: DS.colors.green,
+    borderColor: DS.colors.green,
+  },
+  text: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: DS.colors.white,
+    flexShrink: 1,
+  },
+  textActive: {
+    color: DS.colors.white,
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
+
+const MAX_DISPLAYED_LEAGUES = 4;
 
 const MatchesScreen: React.FC = () => {
   // Data states
@@ -442,6 +506,8 @@ const MatchesScreen: React.FC = () => {
 
   // Filter states
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
+  const [showAllLeagues, setShowAllLeagues] = useState(false);
 
   // Fetch all data
   const fetchData = useCallback(async () => {
@@ -470,32 +536,81 @@ const MatchesScreen: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
+  // Extract available leagues from matches (filtered by sport if selected)
+  const availableLeagues = useMemo(() => {
+    const matchesToAnalyze = selectedSport
+      ? allMatches.filter((m) => m.sportCode === selectedSport)
+      : allMatches;
+    return extractLeagues(matchesToAnalyze);
+  }, [allMatches, selectedSport]);
+
+  // Get displayed leagues (limited or all)
+  const displayedLeagues = useMemo(() => {
+    if (showAllLeagues) return availableLeagues;
+    return availableLeagues.slice(0, MAX_DISPLAYED_LEAGUES);
+  }, [availableLeagues, showAllLeagues]);
+
+  const remainingLeaguesCount = availableLeagues.length - MAX_DISPLAYED_LEAGUES;
+
   // Apply filters
   const filteredMatches = useMemo(() => {
-    if (!selectedSport) return allMatches;
-    return allMatches.filter((m) => m.sportCode === selectedSport);
-  }, [allMatches, selectedSport]);
+    let filtered = allMatches;
+
+    // Filter by sport
+    if (selectedSport) {
+      filtered = filtered.filter((m) => m.sportCode === selectedSport);
+    }
+
+    // Filter by league
+    if (selectedLeague) {
+      filtered = filtered.filter(
+        (m) => m.leagueName.toLowerCase() === selectedLeague
+      );
+    }
+
+    return filtered;
+  }, [allMatches, selectedSport, selectedLeague]);
 
   const groupedMatches = useMemo(
     () => groupByDate(filteredMatches),
     [filteredMatches]
   );
 
+  // Handlers
+  const handleSportSelect = useCallback((sportCode: string | null) => {
+    setSelectedSport(sportCode);
+    setSelectedLeague(null); // Reset league when changing sport
+    setShowAllLeagues(false);
+  }, []);
+
+  const handleLeagueSelect = useCallback((leagueId: string) => {
+    if (selectedLeague === leagueId) {
+      // Toggle off if already selected
+      setSelectedLeague(null);
+    } else {
+      setSelectedLeague(leagueId);
+    }
+  }, [selectedLeague]);
+
+  const handleShowMoreLeagues = useCallback(() => {
+    setShowAllLeagues(true);
+  }, []);
+
   // ── Render Sport Filters ──────────────────────────────────────
   const renderSportFilters = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.filtersContainer}
-      contentContainerStyle={styles.filtersContent}
-    >
+    <View style={styles.filtersWrapper}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtersContent}
+      >
       {/* "Tous" filter */}
       <TouchableOpacity
         style={[
           styles.filterChip,
           !selectedSport && styles.filterChipActive,
         ]}
-        onPress={() => setSelectedSport(null)}
+        onPress={() => handleSportSelect(null)}
         activeOpacity={0.7}
       >
         <Ionicons
@@ -521,7 +636,7 @@ const MatchesScreen: React.FC = () => {
               styles.filterChip,
               isActive && styles.filterChipActive,
             ]}
-            onPress={() => setSelectedSport(sport.code)}
+            onPress={() => handleSportSelect(sport.code)}
             activeOpacity={0.7}
           >
             <Ionicons
@@ -538,17 +653,79 @@ const MatchesScreen: React.FC = () => {
           </TouchableOpacity>
         );
       })}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
+
+  // ── Render League Filters ─────────────────────────────────────
+  const renderLeagueFilters = () => {
+    if (availableLeagues.length === 0) return null;
+
+    return (
+      <View style={styles.leaguesSection}>
+        <View style={styles.leaguesHeader}>
+          <Ionicons name="trophy-outline" size={14} color={DS.colors.greenLight} />
+          <Text style={styles.leaguesTitle}>
+            Championnats{selectedSport ? ` ${sports.find(s => s.code === selectedSport)?.name || ''}` : ''}
+          </Text>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.leaguesContent}
+        >
+          {displayedLeagues.map((league) => (
+            <LeagueChip
+              key={league.id}
+              league={league}
+              isActive={selectedLeague === league.id}
+              showSportIcon={!selectedSport} // Show sport icon only when "Tous" is selected
+              onPress={() => handleLeagueSelect(league.id)}
+            />
+          ))}
+          {remainingLeaguesCount > 0 && !showAllLeagues && (
+            <TouchableOpacity
+              style={styles.moreChip}
+              onPress={handleShowMoreLeagues}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.moreChipText}>+{remainingLeaguesCount}</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </View>
+    );
+  };
 
   // ── Render Date Section ───────────────────────────────────────
   const renderDateHeader = (dateLabel: string) => (
     <View style={styles.dateSection}>
       <Ionicons name="calendar-outline" size={14} color={DS.colors.greenLight} />
       <Text style={styles.dateText}>{dateLabel}</Text>
-      <Ionicons name="chevron-forward" size={14} color={DS.colors.greenLight} />
     </View>
   );
+
+  // ── Render Active Filters Badge ───────────────────────────────
+  const renderActiveFilters = () => {
+    if (!selectedLeague) return null;
+
+    const league = availableLeagues.find((l) => l.id === selectedLeague);
+    if (!league) return null;
+
+    return (
+      <View style={styles.activeFiltersContainer}>
+        <Text style={styles.activeFiltersLabel}>Filtré par :</Text>
+        <TouchableOpacity
+          style={styles.activeFilterBadge}
+          onPress={() => setSelectedLeague(null)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.activeFilterText}>{league.name}</Text>
+          <Ionicons name="close" size={14} color={DS.colors.white} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   // ── Loading State ─────────────────────────────────────────────
   if (loading) {
@@ -583,15 +760,19 @@ const MatchesScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         {renderSportFilters()}
+        {renderLeagueFilters()}
         <View style={styles.center}>
           <Ionicons name="football-outline" size={48} color="#8A9A8F" />
           <Text style={styles.emptyText}>Aucun match à venir</Text>
-          {selectedSport && (
+          {(selectedSport || selectedLeague) && (
             <TouchableOpacity
               style={styles.resetBtn}
-              onPress={() => setSelectedSport(null)}
+              onPress={() => {
+                setSelectedSport(null);
+                setSelectedLeague(null);
+              }}
             >
-              <Text style={styles.resetBtnText}>Voir tous les sports</Text>
+              <Text style={styles.resetBtnText}>Réinitialiser les filtres</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -603,6 +784,8 @@ const MatchesScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {renderSportFilters()}
+      {renderLeagueFilters()}
+      {renderActiveFilters()}
       <FlatList
         data={groupedMatches}
         keyExtractor={(item) => item.date}
@@ -638,27 +821,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DS.colors.background,
   },
-  filtersContainer: {
-    maxHeight: 50,
+  filtersWrapper: {
     marginTop: 8,
+    marginBottom: 4,
+    paddingVertical: 4,
   },
   filtersContent: {
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingVertical: 4,
     gap: 8,
     flexDirection: 'row',
+    alignItems: 'center',
   },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: DS.colors.buttonBorder,
-    marginRight: 8,
   },
   filterChipActive: {
     backgroundColor: DS.colors.green,
@@ -672,6 +856,73 @@ const styles = StyleSheet.create({
   filterLabelActive: {
     color: DS.colors.white,
   },
+  // League filters
+  leaguesSection: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  leaguesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  leaguesTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: DS.colors.greenLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  leaguesContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  moreChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: DS.colors.greenBgSubtle,
+    borderWidth: 1,
+    borderColor: DS.colors.green,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  moreChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: DS.colors.green,
+  },
+  // Active filters
+  activeFiltersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  activeFiltersLabel: {
+    fontSize: 12,
+    color: '#8A9A8F',
+  },
+  activeFilterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: DS.colors.green,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  activeFilterText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: DS.colors.white,
+  },
+  // Date section
   dateSection: {
     flexDirection: 'row',
     alignItems: 'center',

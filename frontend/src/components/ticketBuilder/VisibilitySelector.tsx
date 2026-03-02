@@ -538,7 +538,7 @@ const useStyles = (
         backgroundColor: 'transparent',
         borderColor: 'transparent',
         borderWidth: 0,
-        padding: 0,
+        padding: spacing.xxs,
       },
       card: {
         backgroundColor: colors.surface,
@@ -583,6 +583,9 @@ const useStyles = (
         color: colors.text,
         marginBottom: config.gap,
         letterSpacing: -0.3,
+        paddingLeft: spacing.xxs,
+        paddingTop: spacing.xs,
+        lineHeight: config.labelSize + 6,
       },
       toggleRow: {
         flexDirection: 'row',

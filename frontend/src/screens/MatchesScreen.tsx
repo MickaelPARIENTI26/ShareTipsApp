@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -102,6 +103,18 @@ function getSportIcon(sportCode: string): keyof typeof Ionicons.glyphMap {
     ESPORT: 'game-controller',
   };
   return icons[sportCode.toUpperCase()] ?? 'trophy';
+}
+
+// Sport background images mapping
+const sportBackgrounds: Record<string, any> = {
+  FOOTBALL: require('../../assets/backgrounds/football_field.webp'),
+  BASKETBALL: require('../../assets/backgrounds/basketball_field.webp'),
+  TENNIS: require('../../assets/backgrounds/tennis_field.webp'),
+  ESPORT: require('../../assets/backgrounds/esport_field.webp'),
+};
+
+function getSportBackground(sportCode: string) {
+  return sportBackgrounds[sportCode.toUpperCase()] ?? sportBackgrounds.FOOTBALL;
 }
 
 /** Extract unique leagues from matches */
@@ -225,101 +238,128 @@ const MatchCardInline: React.FC<MatchCardInlineProps> = ({ match }) => {
       onPress={navigateToDetails}
       activeOpacity={0.8}
     >
-      {/* Header: League + Time */}
-      <View style={cardStyles.header}>
-        <View style={cardStyles.leagueBadge}>
-          <Ionicons name={getSportIcon(match.sportCode)} size={14} color={DS.colors.green} />
-          <Text style={cardStyles.leagueText}>{match.leagueName}</Text>
-        </View>
-        <View style={cardStyles.timeContainer}>
-          <Ionicons name="time-outline" size={12} color="#8A9A8F" />
-          <Text style={cardStyles.timeText}>{formatTime(match.startTime)}</Text>
-        </View>
-      </View>
+      <ImageBackground
+        source={getSportBackground(match.sportCode)}
+        style={cardStyles.backgroundImage}
+        imageStyle={cardStyles.backgroundImageStyle}
+        resizeMode="cover"
+      >
+        {/* Dark overlay for text readability */}
+        <View style={cardStyles.overlay} />
 
-      {/* Teams Section */}
-      <View style={cardStyles.teamsSection}>
-        <View style={cardStyles.teamContainer}>
-          <View style={cardStyles.teamLogo}>
-            {(() => {
-              const logoUrl = match.sportCode === 'TENNIS'
-                ? getTennisFlag(match.homeTeam.name)
-                : getTeamLogo(match.homeTeam.name, match.sportCode);
-              return logoUrl ? (
-                <Image source={{ uri: logoUrl }} style={cardStyles.teamLogoImage} />
-              ) : (
-                <Text style={cardStyles.teamInitials}>{getTeamInitials(match.homeTeam.name)}</Text>
-              );
-            })()}
+        {/* Card Content */}
+        <View style={cardStyles.content}>
+          {/* Header: League + Time */}
+          <View style={cardStyles.header}>
+            <View style={cardStyles.leagueBadge}>
+              <Ionicons name={getSportIcon(match.sportCode)} size={14} color={DS.colors.green} />
+              <Text style={cardStyles.leagueText}>{match.leagueName}</Text>
+            </View>
+            <View style={cardStyles.timeContainer}>
+              <Ionicons name="time-outline" size={12} color="#8A9A8F" />
+              <Text style={cardStyles.timeText}>{formatTime(match.startTime)}</Text>
+            </View>
           </View>
-          <Text style={cardStyles.teamName} numberOfLines={2}>{match.homeTeam.name}</Text>
-        </View>
 
-        <View style={cardStyles.vsCircle}>
-          <Text style={cardStyles.vsText}>VS</Text>
-        </View>
+          {/* Teams Section */}
+          <View style={cardStyles.teamsSection}>
+            <View style={cardStyles.teamContainer}>
+              <View style={cardStyles.teamLogo}>
+                {(() => {
+                  const logoUrl = match.sportCode === 'TENNIS'
+                    ? getTennisFlag(match.homeTeam.name)
+                    : getTeamLogo(match.homeTeam.name, match.sportCode);
+                  return logoUrl ? (
+                    <Image source={{ uri: logoUrl }} style={cardStyles.teamLogoImage} />
+                  ) : (
+                    <Text style={cardStyles.teamInitials}>{getTeamInitials(match.homeTeam.name)}</Text>
+                  );
+                })()}
+              </View>
+              <Text style={cardStyles.teamName} numberOfLines={2}>{match.homeTeam.name}</Text>
+            </View>
 
-        <View style={cardStyles.teamContainer}>
-          <View style={cardStyles.teamLogo}>
-            {(() => {
-              const logoUrl = match.sportCode === 'TENNIS'
-                ? getTennisFlag(match.awayTeam.name)
-                : getTeamLogo(match.awayTeam.name, match.sportCode);
-              return logoUrl ? (
-                <Image source={{ uri: logoUrl }} style={cardStyles.teamLogoImage} />
-              ) : (
-                <Text style={cardStyles.teamInitials}>{getTeamInitials(match.awayTeam.name)}</Text>
-              );
-            })()}
+            <View style={cardStyles.vsCircle}>
+              <Text style={cardStyles.vsText}>VS</Text>
+            </View>
+
+            <View style={cardStyles.teamContainer}>
+              <View style={cardStyles.teamLogo}>
+                {(() => {
+                  const logoUrl = match.sportCode === 'TENNIS'
+                    ? getTennisFlag(match.awayTeam.name)
+                    : getTeamLogo(match.awayTeam.name, match.sportCode);
+                  return logoUrl ? (
+                    <Image source={{ uri: logoUrl }} style={cardStyles.teamLogoImage} />
+                  ) : (
+                    <Text style={cardStyles.teamInitials}>{getTeamInitials(match.awayTeam.name)}</Text>
+                  );
+                })()}
+              </View>
+              <Text style={cardStyles.teamName} numberOfLines={2}>{match.awayTeam.name}</Text>
+            </View>
           </View>
-          <Text style={cardStyles.teamName} numberOfLines={2}>{match.awayTeam.name}</Text>
-        </View>
-      </View>
 
-      {/* Odds Buttons - Using unified OddsButton component */}
-      {matchResult && (
-        <View style={cardStyles.oddsContainer}>
-          {oddsSelections.map(({ sel, label }) =>
-            sel ? (
-              <OddsButton
-                key={sel.id}
-                label={label}
-                odds={sel.odds}
-                isSelected={isSelected(sel.id)}
-                disabled={false}
-                onPress={() => handleOddsPress(sel)}
-                variant="default"
-                size="md"
-              />
-            ) : null
+          {/* Odds Buttons - Using unified OddsButton component */}
+          {matchResult && (
+            <View style={cardStyles.oddsContainer}>
+              {oddsSelections.map(({ sel, label }) =>
+                sel ? (
+                  <OddsButton
+                    key={sel.id}
+                    label={label}
+                    odds={sel.odds}
+                    isSelected={isSelected(sel.id)}
+                    disabled={false}
+                    onPress={() => handleOddsPress(sel)}
+                    variant="default"
+                    size="md"
+                  />
+                ) : null
+              )}
+            </View>
           )}
-        </View>
-      )}
 
-      {/* Markets Link */}
-      <TouchableOpacity style={cardStyles.marketsLink} onPress={navigateToDetails}>
-        <Text style={cardStyles.marketsText}>
-          +{match.markets.length} marché{match.markets.length > 1 ? 's' : ''}
-        </Text>
-        <Ionicons name="chevron-forward" size={12} color={DS.colors.green} />
-      </TouchableOpacity>
+          {/* Markets Link */}
+          <TouchableOpacity style={cardStyles.marketsLink} onPress={navigateToDetails}>
+            <Text style={cardStyles.marketsText}>
+              +{match.markets.length} marché{match.markets.length > 1 ? 's' : ''}
+            </Text>
+            <Ionicons name="chevron-forward" size={12} color={DS.colors.green} />
+          </TouchableOpacity>
+        </View>
+      </ImageBackground>
     </TouchableOpacity>
   );
 };
 
 const cardStyles = StyleSheet.create({
   container: {
-    backgroundColor: '#131916',
-    borderWidth: 1,
-    borderColor: '#1E2A22',
     borderRadius: 12,
-    padding: 16,
     marginBottom: 8,
+    overflow: 'hidden',
     shadowColor: DS.colors.green,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
+  },
+  backgroundImage: {
+    width: '100%',
+  },
+  backgroundImageStyle: {
+    borderRadius: 12,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(10, 15, 12, 0.65)',
+    borderRadius: 12,
+  },
+  content: {
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1E2A22',
+    borderRadius: 12,
   },
   header: {
     flexDirection: 'row',
@@ -470,7 +510,7 @@ const leagueChipStyles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: DS.colors.surface,
+    backgroundColor: DS.colors.buttonBg,
     borderWidth: 1,
     borderColor: DS.colors.buttonBorder,
     maxWidth: 160,

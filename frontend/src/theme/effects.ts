@@ -223,6 +223,11 @@ export function createGlow(
 // ── Shadow Presets ────────────────────────────────────────────
 
 export const effectShadows = {
+  // ── Standard Sizes ────────────────────────────────────────────
+  sm: createShadow('#000000', 0.10, 4, 2),
+  md: createShadow('#000000', 0.15, 8, 4),
+  lg: createShadow('#000000', 0.20, 16, 8),
+
   // ── Card Shadows ────────────────────────────────────────────
   card: createShadow('#000000', 0.25, 8),
   cardElevated: createShadow('#000000', 0.35, 16, 6),
@@ -607,6 +612,13 @@ export const springConfigs = {
   stiff: {
     tension: 400,
     friction: 20,
+    useNativeDriver: true,
+  },
+
+  /** Responsive, adaptable */
+  responsive: {
+    tension: 250,
+    friction: 14,
     useNativeDriver: true,
   },
 } as const;

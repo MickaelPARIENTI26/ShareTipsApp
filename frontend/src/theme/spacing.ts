@@ -40,6 +40,8 @@ export const spacing = {
   'xl+': 28,
   /** 32px - Large sections */
   '2xl': 32,
+  /** 32px - Alias for 2xl */
+  xxl: 32,
   /** 36px - Between 2xl and 3xl */
   '2xl+': 36,
   /** 40px - Extra large */

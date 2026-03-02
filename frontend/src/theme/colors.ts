@@ -162,6 +162,7 @@ export interface ThemeColors {
   text: string;
   textSecondary: string;
   textTertiary: string;
+  textMuted: string;
   textInverse: string;
   textOnPrimary: string;
 
@@ -175,6 +176,7 @@ export interface ThemeColors {
   inputBg: string;
   inputBorder: string;
   inputBorderFocus: string;
+  inputBackground: string;
   placeholder: string;
 
   // States
@@ -184,6 +186,8 @@ export interface ThemeColors {
   successDark: string;
   danger: string;
   dangerBg: string;
+  dangerLight: string;
+  dangerBorder: string;
   warning: string;
   warningBg: string;
   warningLight: string;
@@ -203,6 +207,7 @@ export interface ThemeColors {
 
   // Special
   premium: string;
+  subscription: string;
   live: string;
   odds: string;
   oddsSelected: string;
@@ -234,6 +239,7 @@ export const lightColors: ThemeColors = {
   text: palette.neutral[900],
   textSecondary: palette.neutral[600],
   textTertiary: palette.neutral[500],
+  textMuted: palette.neutral[400],
   textInverse: palette.neutral[0],
   textOnPrimary: palette.neutral[0],
 
@@ -247,6 +253,7 @@ export const lightColors: ThemeColors = {
   inputBg: palette.neutral[50],
   inputBorder: palette.neutral[300],
   inputBorderFocus: palette.green[500],
+  inputBackground: palette.neutral[50],
   placeholder: palette.neutral[400],
 
   // States
@@ -256,6 +263,8 @@ export const lightColors: ThemeColors = {
   successDark: palette.green[700],
   danger: palette.red[500],
   dangerBg: palette.red[50],
+  dangerLight: palette.red[100],
+  dangerBorder: palette.red[300],
   warning: palette.orange[500],
   warningBg: palette.orange[50],
   warningLight: palette.orange[100],
@@ -275,6 +284,7 @@ export const lightColors: ThemeColors = {
 
   // Special
   premium: palette.purple[500],
+  subscription: palette.purple[500],
   live: palette.red[500],
   odds: palette.green[500],
   oddsSelected: palette.green[500],
@@ -306,6 +316,7 @@ export const darkColors: ThemeColors = {
   text: '#FFFFFF',                       // DS.colors.white
   textSecondary: '#8A9A8F',              // DS.colors.textSecondary
   textTertiary: '#5A6A5E',               // DS.colors.tabInactive
+  textMuted: '#4A5A4E',                  // Muted text
   textInverse: '#0A0F0C',
   textOnPrimary: '#FFFFFF',              // White text on green
 
@@ -319,6 +330,7 @@ export const darkColors: ThemeColors = {
   inputBg: '#121815',                    // DS.colors.buttonBg
   inputBorder: '#1C2B21',                // DS.colors.buttonBorder
   inputBorderFocus: '#2D8C4E',           // DS.colors.green
+  inputBackground: '#121815',            // DS.colors.buttonBg
   placeholder: '#5A6A5E',                // DS.colors.tabInactive
 
   // States
@@ -328,6 +340,8 @@ export const darkColors: ThemeColors = {
   successDark: '#1E6B3A',
   danger: palette.red[500],
   dangerBg: 'rgba(239, 68, 68, 0.15)',
+  dangerLight: 'rgba(239, 68, 68, 0.20)',
+  dangerBorder: 'rgba(239, 68, 68, 0.30)',
   warning: palette.orange[500],
   warningBg: 'rgba(255, 159, 28, 0.15)',
   warningLight: 'rgba(255, 159, 28, 0.20)',
@@ -347,6 +361,7 @@ export const darkColors: ThemeColors = {
 
   // Special
   premium: palette.purple[500],
+  subscription: palette.purple[500],
   live: palette.red[500],
   odds: '#2D8C4E',                       // DS.colors.green
   oddsSelected: '#2D8C4E',               // DS.colors.green

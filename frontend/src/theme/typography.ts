@@ -32,6 +32,11 @@ export const fontFamily = {
     android: 'Roboto-Bold',
     default: 'System',
   }),
+  mono: Platform.select({
+    ios: 'Menlo',
+    android: 'monospace',
+    default: 'monospace',
+  }),
 } as const;
 
 // ═══════════════════════════════════════════════════════════════
@@ -294,6 +299,19 @@ export const typography = {
   currency: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.regular,
+  } as TextStyle,
+
+  // ── Monospace ─────────────────────────────────────────────────
+  mono: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.regular,
+    fontFamily: fontFamily.mono,
+  } as TextStyle,
+
+  monoSmall: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.regular,
+    fontFamily: fontFamily.mono,
   } as TextStyle,
 } as const;
 

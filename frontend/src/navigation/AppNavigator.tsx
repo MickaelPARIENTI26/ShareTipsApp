@@ -48,10 +48,6 @@ const PrivacyPolicyScreen = lazy(() => import('../screens/PrivacyPolicyScreen'))
 const HowItWorksScreen = lazy(() => import('../screens/HowItWorksScreen'));
 const MyBadgesScreen = lazy(() => import('../screens/MyBadgesScreen'));
 const XpGuideScreen = lazy(() => import('../screens/XpGuideScreen'));
-const MyStatsScreen = lazy(() => import('../screens/MyStatsScreen'));
-const ContactScreen = lazy(() => import('../screens/ContactScreen'));
-const FAQScreen = lazy(() => import('../screens/FAQScreen'));
-const AboutScreen = lazy(() => import('../screens/AboutScreen'));
 
 // Loading fallback component
 const LoadingFallback: React.FC = () => {
@@ -98,10 +94,6 @@ const LazyPrivacyPolicyScreen = withSuspense(PrivacyPolicyScreen);
 const LazyHowItWorksScreen = withSuspense(HowItWorksScreen);
 const LazyMyBadgesScreen = withSuspense(MyBadgesScreen);
 const LazyXpGuideScreen = withSuspense(XpGuideScreen);
-const LazyMyStatsScreen = withSuspense(MyStatsScreen);
-const LazyContactScreen = withSuspense(ContactScreen);
-const LazyFAQScreen = withSuspense(FAQScreen);
-const LazyAboutScreen = withSuspense(AboutScreen);
 
 const styles = StyleSheet.create({
   loadingContainer: {
@@ -376,26 +368,6 @@ const AppNavigator: React.FC = () => {
         name="XpGuide"
         component={LazyXpGuideScreen}
         options={{ title: 'Guide XP' }}
-      />
-      <RootStack.Screen
-        name="MyStats"
-        component={LazyMyStatsScreen}
-        options={{ title: 'Mes Statistiques' }}
-      />
-      <RootStack.Screen
-        name="Contact"
-        component={LazyContactScreen}
-        options={{ title: 'Contactez-nous' }}
-      />
-      <RootStack.Screen
-        name="FAQ"
-        component={LazyFAQScreen}
-        options={{ title: 'FAQ' }}
-      />
-      <RootStack.Screen
-        name="About"
-        component={LazyAboutScreen}
-        options={{ title: 'À propos' }}
       />
     </RootStack.Navigator>
   );

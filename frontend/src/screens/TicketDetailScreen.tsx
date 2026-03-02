@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
@@ -235,40 +236,86 @@ const TicketDetailScreen: React.FC = () => {
   }, [ticket, navigation]);
 
   const handleShare = useCallback(async () => {
+    if (!ticket || !viewShotRef.current || sharing) return;
+
+    setSharing(true);
+    try {
+      // 1. Capture the ticket image
+      const imageUri = await viewShotRef.current.capture?.();
+
+      // 2. Prepare share message with link
+      const ticketUrl = `https://sharetips.com/tickets/${ticket.id}`;
+      const selectionCount = ticket.selections?.length ?? ticket.selectionCount ?? 0;
+      const totalOddsValue = ticket.selections?.length > 0
+        ? ticket.selections.reduce((acc, sel) => acc * sel.odds, 1)
+        : ticket.avgOdds;
+
+      const message = `🎯 Découvre ce ticket sur ShareTips !
+
+${ticket.creatorUsername} - ${selectionCount} sélection${selectionCount > 1 ? 's' : ''}
+Cote totale: ${totalOddsValue.toFixed(2)}
+
+👉 ${ticketUrl}`;
+
+      // 3. Share image + message
+      if (imageUri) {
+        // Try sharing with image first
+        const isAvailable = await Sharing.isAvailableAsync();
+        if (isAvailable) {
+          await Sharing.shareAsync(imageUri, {
+            mimeType: 'image/png',
+            dialogTitle: message,
+            UTI: 'public.png',
+          });
+        } else {
+          // Fallback to text-only share
+          await Share.share({
+            message,
+            url: ticketUrl,
+            title: `Ticket de ${ticket.creatorUsername}`,
+          });
+        }
+      } else {
+        // Fallback if image capture fails
+        await Share.share({
+          message,
+          url: ticketUrl,
+          title: `Ticket de ${ticket.creatorUsername}`,
+        });
+      }
+    } catch (err) {
+      // User cancelled - not an error
+      if ((err as Error).message !== 'User did not share') {
+        console.error('Share error:', err);
+        Alert.alert('Erreur', 'Impossible de partager le ticket');
+      }
+    } finally {
+      setSharing(false);
+    }
+  }, [ticket, sharing]);
+
+  // Save image to gallery
+  const handleSaveImage = useCallback(async () => {
     if (!viewShotRef.current || sharing) return;
 
     setSharing(true);
     try {
-      // Capture the ticket as an image
       const uri = await viewShotRef.current.capture?.();
       if (!uri) {
         Alert.alert('Erreur', 'Impossible de capturer le ticket');
         return;
       }
 
-      // Check if sharing is available
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        // Fallback: save to gallery
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status === 'granted') {
-          await MediaLibrary.saveToLibraryAsync(uri);
-          Alert.alert('Succès', 'Image sauvegardée dans votre galerie. Vous pouvez maintenant la partager.');
-        } else {
-          Alert.alert('Erreur', 'Permission refusée pour accéder à la galerie');
-        }
-        return;
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status === 'granted') {
+        await MediaLibrary.saveToLibraryAsync(uri);
+        Alert.alert('Succès', 'Image sauvegardée dans votre galerie.');
+      } else {
+        Alert.alert('Erreur', 'Permission refusée pour accéder à la galerie');
       }
-
-      // Share the image
-      await Sharing.shareAsync(uri, {
-        mimeType: 'image/png',
-        dialogTitle: 'Partager ce ticket',
-        UTI: 'public.png',
-      });
     } catch (err) {
-      console.error('Share error:', err);
-      Alert.alert('Erreur', 'Impossible de partager le ticket');
+      console.error('Save image error:', err);
+      Alert.alert('Erreur', 'Impossible de sauvegarder l\'image');
     } finally {
       setSharing(false);
     }
@@ -295,8 +342,11 @@ const TicketDetailScreen: React.FC = () => {
   const showSelections = !isPrivateLocked;
 
   const count = ticket.selectionCount ?? ticket.selections?.length ?? 0;
-  const matchWord = count === 1 ? 'match' : 'matchs';
-  const displayTitle = `${ticket.creatorUsername} – ${count} ${matchWord}`;
+
+  // Calculate total odds as product of all selection odds
+  const totalOdds = ticket.selections?.length > 0
+    ? ticket.selections.reduce((acc, sel) => acc * sel.odds, 1)
+    : ticket.avgOdds;
 
   return (
     <View style={styles.container}>
@@ -310,156 +360,127 @@ const TicketDetailScreen: React.FC = () => {
           options={{ format: 'png', quality: 1, result: 'tmpfile' }}
           style={styles.shareableContent}
         >
+          {/* ShareTips Branding Header */}
+          <View style={styles.shareBrandingHeader}>
+            <View style={styles.shareBrandingLogo}>
+              <Ionicons name="flash" size={16} color={colors.textOnPrimary} />
+            </View>
+            <Text style={styles.shareBrandingTitle}>ShareTips</Text>
+            <View style={styles.shareBrandingBadge}>
+              <Text style={styles.shareBrandingBadgeText}>TICKET</Text>
+            </View>
+          </View>
+
           {/* Header */}
           <View style={styles.headerCard}>
-          <View style={styles.headerTop}>
-            <Text style={styles.title}>{displayTitle}</Text>
-            {isPrivateLocked && (
-              <View style={styles.payantBadge}>
-                <Ionicons name="lock-closed" size={12} color={colors.accent} />
-                <Text style={styles.payantBadgeText}>Payant</Text>
-              </View>
-            )}
-            {!ticket.isPublic && ticket.isSubscribedToCreator && (
-              <View style={styles.abonneBadge}>
-                <Ionicons name="star" size={12} color={colors.accent} />
-                <Text style={styles.abonneBadgeText}>Abonné</Text>
-              </View>
-            )}
-            {!ticket.isPublic &&
-              ticket.isPurchasedByCurrentUser &&
-              !ticket.isSubscribedToCreator && (
-                <View style={styles.acheteBadge}>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={12}
-                    color={colors.primary}
-                  />
-                  <Text style={styles.acheteBadgeText}>Acheté</Text>
+            <View style={styles.headerTop}>
+              <Text style={styles.title}>{ticket.creatorUsername}</Text>
+              {isPrivateLocked && (
+                <View style={styles.payantBadge}>
+                  <Ionicons name="lock-closed" size={12} color={colors.accent} />
+                  <Text style={styles.payantBadgeText}>Payant</Text>
                 </View>
               )}
-          </View>
-          <TouchableOpacity
-            onPress={handleTipsterPress}
-            accessibilityLabel={`Voir le profil de ${ticket.creatorUsername}`}
-            accessibilityRole="button"
-          >
-            <Text style={styles.creatorLink}>@{ticket.creatorUsername}</Text>
-          </TouchableOpacity>
-        </View>
+              {!ticket.isPublic && ticket.isSubscribedToCreator && (
+                <View style={styles.abonneBadge}>
+                  <Ionicons name="star" size={12} color={colors.accent} />
+                  <Text style={styles.abonneBadgeText}>Abonné</Text>
+                </View>
+              )}
+              {!ticket.isPublic &&
+                ticket.isPurchasedByCurrentUser &&
+                !ticket.isSubscribedToCreator && (
+                  <View style={styles.acheteBadge}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={12}
+                      color={colors.primary}
+                    />
+                    <Text style={styles.acheteBadgeText}>Acheté</Text>
+                  </View>
+                )}
+            </View>
 
-        {/* Summary */}
+            {/* Tipster username + stats */}
+            <TouchableOpacity
+              onPress={handleTipsterPress}
+              accessibilityLabel={`Voir le profil de ${ticket.creatorUsername}`}
+              accessibilityRole="button"
+            >
+              <Text style={styles.creatorLink}>@{ticket.creatorUsername}</Text>
+            </TouchableOpacity>
+
+            {/* Tipster Stats Row: 🏆 #42 • 📊 2.45 • ✅ 67% */}
+            <View style={styles.tipsterStatsRow}>
+              {/* Ranking */}
+              <View style={styles.tipsterStat}>
+                <Ionicons name="trophy" size={12} color="#FFD700" />
+                <Text style={styles.tipsterStatText}>#—</Text>
+              </View>
+
+              <Text style={styles.statSeparator}>•</Text>
+
+              {/* Average Odds */}
+              <View style={styles.tipsterStat}>
+                <Ionicons name="stats-chart" size={12} color={colors.primary} />
+                <Text style={styles.tipsterStatText}>
+                  {ticket.avgOdds.toFixed(2)}
+                </Text>
+              </View>
+
+              <Text style={styles.statSeparator}>•</Text>
+
+              {/* Win Rate */}
+              <View style={styles.tipsterStat}>
+                <Ionicons name="checkmark-circle" size={12} color={colors.success} />
+                <Text style={styles.tipsterStatText}>—%</Text>
+              </View>
+            </View>
+          </View>
+
+        {/* Summary - Only Cote moyenne + Sélections */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryLabelRow}>
               <Ionicons name="trending-up" size={14} color={colors.textSecondary} />
-              <Text style={styles.summaryLabel}>Cote moyenne</Text>
+              <Text style={styles.summaryLabel}>Cote totale</Text>
             </View>
             <View style={styles.oddsContainer}>
               <Text style={styles.summaryValueBlue}>
-                {ticket.avgOdds.toFixed(2)}
+                {totalOdds.toFixed(2)}
               </Text>
             </View>
           </View>
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, styles.summaryRowLast]}>
             <View style={styles.summaryLabelRow}>
               <Ionicons name="list" size={14} color={colors.textSecondary} />
               <Text style={styles.summaryLabel}>Sélections</Text>
             </View>
             <Text style={styles.summaryValue}>{count}</Text>
           </View>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryLabelRow}>
-              <Ionicons name="radio-button-on" size={14} color={colors.textSecondary} />
-              <Text style={styles.summaryLabel}>Statut</Text>
-            </View>
-            <View style={[styles.statusBadge, { backgroundColor: (STATUS_COLORS[ticket.status] ?? colors.textSecondary) + '20' }]}>
-              <Text
-                style={[
-                  styles.statusBadgeText,
-                  { color: STATUS_COLORS[ticket.status] ?? colors.textSecondary },
-                ]}
-              >
-                {STATUS_LABELS[ticket.status] ?? ticket.status}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryLabelRow}>
-              <Ionicons name="trophy" size={14} color={colors.textSecondary} />
-              <Text style={styles.summaryLabel}>Résultat</Text>
-            </View>
-            <View style={[styles.resultBadge, { backgroundColor: (RESULT_COLORS[ticket.result] ?? colors.textSecondary) + '20' }]}>
-              <Ionicons
-                name={ticket.result === 'Win' || ticket.result === 'Won' ? 'checkmark-circle' : ticket.result === 'Lose' || ticket.result === 'Lost' ? 'close-circle' : 'time'}
-                size={12}
-                color={RESULT_COLORS[ticket.result] ?? colors.textSecondary}
-              />
-              <Text
-                style={[
-                  styles.resultBadgeText,
-                  { color: RESULT_COLORS[ticket.result] ?? colors.textSecondary },
-                ]}
-              >
-                {RESULT_LABELS[ticket.result] ?? ticket.result}
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.summaryRow, styles.summaryRowLast]}>
-            <View style={styles.summaryLabelRow}>
-              <Ionicons name={ticket.isPublic ? 'earth' : 'lock-closed'} size={14} color={colors.textSecondary} />
-              <Text style={styles.summaryLabel}>Visibilité</Text>
-            </View>
-            <View style={[styles.visibilityBadge, ticket.isPublic ? styles.visibilityPublic : styles.visibilityPrivate]}>
-              <Text style={[styles.visibilityText, { color: ticket.isPublic ? colors.primary : colors.accent }]}>
-                {ticket.isPublic ? 'Public' : 'Privé'}
-              </Text>
-            </View>
-          </View>
         </View>
 
-        {/* Timeline */}
-        <View style={styles.timelineCard}>
-          <View style={styles.timelineTitleRow}>
-            <View style={styles.timelineIconWrapper}>
-              <Ionicons name="time" size={16} color={colors.primary} />
-            </View>
-            <Text style={styles.timelineTitle}>Chronologie</Text>
-          </View>
-          {(() => {
-            const { isSameDay, firstDate, lastDate, duration } = formatDateRangeSummary(
-              ticket.firstMatchTime,
-              ticket.lastMatchTime
-            );
-            return (
-              <>
-                <View style={styles.timelineRow}>
-                  <View style={styles.timelineDot} />
-                  <View style={styles.timelineContent}>
-                    <Text style={styles.timelineLabel}>Début</Text>
-                    <Text style={styles.timelineValue}>{firstDate}</Text>
-                  </View>
-                </View>
+        {/* Timeline - Compact on 1 line */}
+        {(() => {
+          const { isSameDay, firstDate, lastDate } = formatDateRangeSummary(
+            ticket.firstMatchTime,
+            ticket.lastMatchTime
+          );
+          return (
+            <View style={styles.timelineCard}>
+              <View style={styles.timelineCompactRow}>
+                <Ionicons name="calendar-outline" size={14} color={colors.primary} />
+                <Text style={styles.timelineCompactText}>{firstDate}</Text>
                 {!isSameDay && (
                   <>
-                    <View style={styles.timelineLine} />
-                    <View style={styles.timelineRow}>
-                      <View style={[styles.timelineDot, styles.timelineDotEnd]} />
-                      <View style={styles.timelineContent}>
-                        <Text style={styles.timelineLabel}>Fin</Text>
-                        <Text style={styles.timelineValue}>{lastDate}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.durationBadge}>
-                      <Ionicons name="hourglass-outline" size={12} color={colors.textSecondary} />
-                      <Text style={styles.durationText}>Durée: {duration}</Text>
-                    </View>
+                    <Ionicons name="arrow-forward" size={14} color={colors.textSecondary} />
+                    <Text style={styles.timelineCompactText}>{lastDate}</Text>
                   </>
                 )}
-              </>
-            );
-          })()}
-        </View>
+              </View>
+            </View>
+          );
+        })()}
 
         {/* Sports */}
           <View style={styles.sportRow}>
@@ -473,9 +494,14 @@ const TicketDetailScreen: React.FC = () => {
             ))}
           </View>
 
-          {/* ShareTips branding for shared image */}
-          <View style={styles.brandingRow}>
-            <Ionicons name="share-social" size={14} color={colors.textTertiary} />
+          {/* ShareTips branding footer for shared image */}
+          <View style={styles.brandingFooter}>
+            <View style={styles.brandingRow}>
+              <Ionicons name="link" size={12} color={colors.primary} />
+              <Text style={styles.brandingUrl}>
+                sharetips.com/t/{ticket.id.slice(-6)}
+              </Text>
+            </View>
             <Text style={styles.brandingText}>Partagé via ShareTips</Text>
           </View>
         </ViewShot>
@@ -775,6 +801,43 @@ const useStyles = (colors: ThemeColors) =>
           padding: spacing.xxs,
         },
 
+        // Share branding header
+        shareBrandingHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.md,
+          marginBottom: spacing.sm,
+          gap: spacing.sm,
+        },
+        shareBrandingLogo: {
+          width: 28,
+          height: 28,
+          borderRadius: radius.full,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        shareBrandingTitle: {
+          ...typography.h4,
+          fontWeight: '800',
+          color: colors.primary,
+          letterSpacing: -0.5,
+        },
+        shareBrandingBadge: {
+          backgroundColor: colors.accentBg,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xxs,
+          borderRadius: radius.full,
+        },
+        shareBrandingBadgeText: {
+          ...typography.badge,
+          fontWeight: '700',
+          color: colors.accent,
+          letterSpacing: 0.5,
+        },
+
         // Header
         headerCard: {
           backgroundColor: colors.surface,
@@ -810,6 +873,26 @@ const useStyles = (colors: ThemeColors) =>
           ...typography.body,
           fontWeight: '700',
           color: colors.primary,
+          marginBottom: spacing.sm,
+        },
+        tipsterStatsRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+        },
+        tipsterStat: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xxs,
+        },
+        tipsterStatText: {
+          ...typography.caption,
+          fontWeight: '600',
+          color: colors.textSecondary,
+        },
+        statSeparator: {
+          fontSize: 10,
+          color: colors.textTertiary,
         },
         payantBadge: {
           flexDirection: 'row',
@@ -929,7 +1012,7 @@ const useStyles = (colors: ThemeColors) =>
           ...typography.badge,
         },
 
-        // Timeline
+        // Timeline - Compact
         timelineCard: {
           backgroundColor: colors.surface,
           borderRadius: radius.lg,
@@ -949,72 +1032,26 @@ const useStyles = (colors: ThemeColors) =>
             },
           }),
         },
-        timelineTitleRow: {
+        timelineCompactRow: {
           flexDirection: 'row',
           alignItems: 'center',
           gap: spacing.sm,
-          marginBottom: spacing.md,
+          flexWrap: 'wrap',
         },
-        timelineIconWrapper: {
-          width: 28,
-          height: 28,
-          borderRadius: radius.sm,
-          backgroundColor: colors.primaryBg,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        timelineTitle: {
-          ...typography.body,
-          fontWeight: '700',
+        timelineCompactText: {
+          ...typography.bodySmall,
+          fontWeight: '500',
           color: colors.text,
         },
-        timelineRow: {
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          gap: spacing.md,
-        },
-        timelineDot: {
-          width: 12,
-          height: 12,
-          borderRadius: radius.full,
-          backgroundColor: colors.primary,
-          marginTop: spacing.xxs,
-        },
-        timelineDotEnd: {
-          backgroundColor: colors.success,
-        },
-        timelineLine: {
-          width: 2,
-          height: 20,
-          backgroundColor: colors.border,
-          marginLeft: 5,
-          marginVertical: spacing.xxs,
-        },
-        timelineContent: {
-          flex: 1,
-        },
-        timelineLabel: {
-          ...typography.caption,
-          color: colors.textSecondary,
-        },
-        timelineValue: {
-          ...typography.body,
-          fontWeight: '600',
-          color: colors.text,
-          marginTop: spacing.xxs,
-        },
-        durationBadge: {
+        durationCompactRow: {
           flexDirection: 'row',
           alignItems: 'center',
           gap: spacing.xs,
-          marginTop: spacing.md,
-          paddingTop: spacing.md,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
+          marginTop: spacing.sm,
         },
-        durationText: {
+        durationCompactText: {
           ...typography.caption,
-          color: colors.textSecondary,
+          color: colors.textTertiary,
         },
 
         // Sports
@@ -1037,13 +1074,24 @@ const useStyles = (colors: ThemeColors) =>
           ...typography.badge,
           color: colors.primary,
         },
+        brandingFooter: {
+          alignItems: 'center',
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.md,
+          marginTop: spacing.sm,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          gap: spacing.xs,
+        },
         brandingRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
           gap: spacing.xs,
-          paddingVertical: spacing.md,
-          marginTop: spacing.sm,
+        },
+        brandingUrl: {
+          ...typography.caption,
+          fontWeight: '600',
+          color: colors.primary,
         },
         brandingText: {
           ...typography.caption,

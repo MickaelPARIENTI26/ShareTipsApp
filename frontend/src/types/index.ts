@@ -372,6 +372,10 @@ export type RootStackParamList = {
   HowItWorks: undefined;
   MyBadges: undefined;
   XpGuide: undefined;
+  MyStats: undefined;
+  Contact: undefined;
+  FAQ: undefined;
+  About: undefined;
 };
 
 export type AppTabParamList = {
@@ -387,6 +391,12 @@ export type HomeStackParamList = {
   SportsList: undefined;
   LeagueList: { sportCode: string; sportName: string };
   MatchList: { sportCode: string; sportName: string; leagueName?: string };
+  MatchDetails: { matchId: string; title?: string };
+};
+
+export type MatchesStackParamList = {
+  MatchesList: undefined;
+  MatchDetails: { matchId: string; title?: string };
 };
 
 // --- Stripe ---

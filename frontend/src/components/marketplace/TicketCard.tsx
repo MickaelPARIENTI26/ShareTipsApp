@@ -39,6 +39,45 @@ const SPORT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// XP LEVEL STATUS
+// ═══════════════════════════════════════════════════════════════
+
+interface LevelStatus {
+  emoji: string;
+  label: string;
+  color: string;
+}
+
+const LEVEL_STATUSES: Record<string, LevelStatus & { min: number; max: number }> = {
+  BEGINNER: { min: 1, max: 5, emoji: '🥉', label: 'Débutant', color: '#cd7f32' },
+  INTERMEDIATE: { min: 6, max: 10, emoji: '🥈', label: 'Intermédiaire', color: '#c0c0c0' },
+  EXPERT: { min: 11, max: 15, emoji: '🏅', label: 'Expert', color: '#ffd700' },
+  MASTER: { min: 16, max: 20, emoji: '🏆', label: 'Maître', color: '#ff6b35' },
+  LEGEND: { min: 21, max: 999, emoji: '👑', label: 'Légende', color: '#9333ea' },
+};
+
+function getUserStatus(level: number): LevelStatus {
+  for (const status of Object.values(LEVEL_STATUSES)) {
+    if (level >= status.min && level <= status.max) {
+      return { emoji: status.emoji, label: status.label, color: status.color };
+    }
+  }
+  return LEVEL_STATUSES.BEGINNER;
+}
+
+// Derive a pseudo-level from tipster stats (winRate and tickets sold)
+function deriveTipsterLevel(tipsterStats: TipsterStatsDto | null | undefined, ranking: number | null | undefined): number {
+  if (!tipsterStats) return 1;
+
+  // Calculate level based on win rate and tickets sold
+  const winRateBonus = Math.floor(tipsterStats.winRate * 10); // 0-10 points
+  const ticketsBonus = Math.min(10, Math.floor(tipsterStats.ticketsSold / 5)); // 0-10 points
+  const rankingBonus = ranking ? Math.max(0, 5 - Math.floor(ranking / 20)) : 0; // 0-5 points
+
+  return Math.min(25, 1 + winRateBonus + ticketsBonus + rankingBonus);
+}
+
+// ═══════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════
 
@@ -107,6 +146,12 @@ interface TicketCardProps {
   onShare: (ticket: TicketDto) => void;
   onTipsterPress: (creatorId: string, username: string) => void;
   onFollowCreator: (creatorId: string) => void;
+  /** Optional callback when card is pressed */
+  onCardPress?: (ticket: TicketDto) => void;
+  /** Disable card interactions (for public tickets display) */
+  disabled?: boolean;
+  /** Hide the tipster header section (for tipster profile page) */
+  hideTipsterHeader?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -125,6 +170,9 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
   onShare,
   onTipsterPress,
   onFollowCreator,
+  onCardPress,
+  disabled = false,
+  hideTipsterHeader = false,
 }) => {
   // Animations
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -145,8 +193,17 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
   const hiddenSelections = selections.slice(2);
   const hasMoreSelections = hiddenSelections.length > 0;
 
+  // Calculate total odds as the PRODUCT of all selection odds (not average)
+  const totalOdds = selections.length > 0
+    ? selections.reduce((acc, sel) => acc * sel.odds, 1)
+    : ticket.avgOdds;
+
   // Sport counts
   const sportCounts = countSportsByType(ticket.sports, selections);
+
+  // Derive tipster level and status
+  const tipsterLevel = deriveTipsterLevel(tipsterStats, tipsterRanking);
+  const userStatus = getUserStatus(tipsterLevel);
 
   // Handlers
   const handleFavoritePress = useCallback(() => {
@@ -205,21 +262,32 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
     outputRange: ['0deg', '180deg'],
   });
 
+  // Handle card press
+  const handleCardPress = useCallback(() => {
+    if (!disabled && onCardPress) {
+      onCardPress(ticket);
+    }
+  }, [disabled, onCardPress, ticket]);
+
   return (
-    <Animated.View style={[styles.cardWrapper, { transform: [{ scale: scaleAnim }] }]}>
+    <Animated.View style={[styles.cardWrapper, { transform: [{ scale: scaleAnim }] }, disabled && styles.cardDisabled]}>
       <TouchableOpacity
-        activeOpacity={1}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        activeOpacity={disabled ? 1 : 0.95}
+        onPressIn={disabled ? undefined : handlePressIn}
+        onPressOut={disabled ? undefined : handlePressOut}
+        onPress={handleCardPress}
+        disabled={disabled && !onCardPress}
       >
         <View style={styles.card}>
           {/* ═══════════════════════════════════════════════════════════════ */}
-          {/* HEADER - Tipster Info */}
+          {/* HEADER - Tipster Info (hidden on tipster profile page) */}
           {/* ═══════════════════════════════════════════════════════════════ */}
+          {!hideTipsterHeader && (
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <TouchableOpacity
-                onPress={() => onTipsterPress(ticket.creatorId, ticket.creatorUsername)}
+                onPress={() => !disabled && onTipsterPress(ticket.creatorId, ticket.creatorUsername)}
+                disabled={disabled}
               >
                 <View style={styles.creatorAvatar}>
                   <Ionicons name="person" size={18} color={DS.colors.green} />
@@ -236,38 +304,44 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
                     </Text>
                   </TouchableOpacity>
 
-                  {tipsterStats && (
-                    <View style={styles.vipBadge}>
-                      <Ionicons name="star" size={10} color={DS.colors.greenLight} />
-                      <Text style={styles.vipText}>VIP</Text>
-                    </View>
-                  )}
+                  {/* XP Level Status Badge */}
+                  <View style={[styles.statusBadge, { borderColor: userStatus.color }]}>
+                    <Text style={styles.statusEmoji}>{userStatus.emoji}</Text>
+                    <Text style={[styles.statusLabel, { color: userStatus.color }]}>
+                      {userStatus.label}
+                    </Text>
+                  </View>
                 </View>
 
-                {/* Tipster Stats Row */}
+                {/* Tipster Stats Row: 🏆 #42 • 📊 2.45 • ✅ 67% */}
                 <View style={styles.tipsterStatsRow}>
-                  {tipsterRanking && (
-                    <View style={styles.tipsterStat}>
-                      <Ionicons name="trophy" size={12} color="#FFD700" />
-                      <Text style={styles.tipsterStatText}>
-                        #{tipsterRanking}
-                      </Text>
-                    </View>
-                  )}
+                  {/* Ranking */}
                   <View style={styles.tipsterStat}>
-                    <Ionicons name="stats-chart" size={12} color={DS.colors.greenLight} />
+                    <Ionicons name="trophy" size={12} color="#FFD700" />
+                    <Text style={styles.tipsterStatText}>
+                      #{tipsterRanking || '—'}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.statSeparator}>•</Text>
+
+                  {/* Average Odds (Cote moyenne) */}
+                  <View style={styles.tipsterStat}>
+                    <Ionicons name="stats-chart" size={12} color={DS.colors.green} />
                     <Text style={styles.tipsterStatText}>
                       {tipsterStats?.averageOdds?.toFixed(2) || ticket.avgOdds.toFixed(2)}
                     </Text>
                   </View>
-                  {tipsterStats && (
-                    <View style={styles.tipsterStat}>
-                      <Ionicons name="checkmark-circle" size={12} color={DS.colors.green} />
-                      <Text style={styles.tipsterStatText}>
-                        {(tipsterStats.winRate * 100).toFixed(0)}%
-                      </Text>
-                    </View>
-                  )}
+
+                  <Text style={styles.statSeparator}>•</Text>
+
+                  {/* Win Rate */}
+                  <View style={styles.tipsterStat}>
+                    <Ionicons name="checkmark-circle" size={12} color={DS.colors.green} />
+                    <Text style={styles.tipsterStatText}>
+                      {tipsterStats ? `${(tipsterStats.winRate * 100).toFixed(0)}%` : '—'}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -307,6 +381,7 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
               )}
             </View>
           </View>
+          )}
 
           {/* ═══════════════════════════════════════════════════════════════ */}
           {/* SPORTS ROW */}
@@ -340,12 +415,12 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
           </View>
 
           {/* ═══════════════════════════════════════════════════════════════ */}
-          {/* COTE GLOBALE */}
+          {/* COTE TOTALE (produit des cotes) */}
           {/* ═══════════════════════════════════════════════════════════════ */}
           <View style={styles.oddsRow}>
-            <Text style={styles.oddsLabel}>COTE</Text>
+            <Text style={styles.oddsLabel}>COTE TOTALE</Text>
             <Text style={styles.oddsValue}>
-              {ticket.avgOdds.toFixed(2)}
+              {totalOdds.toFixed(2)}
             </Text>
           </View>
 
@@ -529,6 +604,9 @@ const styles = StyleSheet.create({
   cardWrapper: {
     marginBottom: 12,
   },
+  cardDisabled: {
+    opacity: 0.85,
+  },
   card: {
     backgroundColor: DS.colors.cardBg,
     borderRadius: 12,
@@ -589,23 +667,29 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     color: DS.colors.white,
   },
-  vipBadge: {
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 20,
-    backgroundColor: DS.colors.greenBgSubtle,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  vipText: {
+  statusEmoji: {
+    fontSize: 11,
+  },
+  statusLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: DS.colors.greenLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   tipsterStatsRow: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    gap: 6,
   },
   tipsterStat: {
     flexDirection: 'row',
@@ -616,6 +700,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: DS.colors.textSecondary,
+  },
+  statSeparator: {
+    fontSize: 10,
+    color: DS.colors.textSecondary,
+    marginHorizontal: 2,
   },
   ticketId: {
     fontSize: 12,

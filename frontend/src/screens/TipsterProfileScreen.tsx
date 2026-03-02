@@ -38,15 +38,10 @@ import type {
   SubscriptionPlanDto,
 } from '../types';
 import { useTheme, type ThemeColors, spacing, radius, typography, size, fontSize } from '../theme';
+import { TicketCard } from '../components/marketplace/TicketCard';
+import { DS } from '../theme/designSystem';
 
 type TabKey = 'public' | 'private' | 'stats';
-
-const SPORT_LABELS: Record<string, string> = {
-  FOOTBALL: 'Football',
-  BASKETBALL: 'Basketball',
-  TENNIS: 'Tennis',
-  ESPORT: 'Esport',
-};
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -78,87 +73,6 @@ const StatItem: React.FC<{
     <Text style={styles.statLabel}>{label}</Text>
   </View>
 );
-
-// --- Ticket card ---
-const TipsterTicketCard: React.FC<{
-  ticket: TicketDto;
-  isFavorited: boolean;
-  onToggleFavorite: (id: string) => void;
-  onBuy: (ticket: TicketDto) => void;
-  onPress: () => void;
-  styles: ReturnType<typeof useStyles>;
-  colors: ThemeColors;
-}> = ({ ticket, isFavorited, onToggleFavorite, onBuy, onPress, styles, colors }) => {
-  const count = ticket.selectionCount ?? ticket.selections?.length ?? 0;
-  const hasAccess = ticket.isPurchasedByCurrentUser || ticket.isSubscribedToCreator;
-  const isPrivateLocked = !ticket.isPublic && !hasAccess;
-
-  return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {ticket.title || `${count} ${count === 1 ? 'match' : 'matchs'}`}
-        </Text>
-        <TouchableOpacity onPress={() => onToggleFavorite(ticket.id)}>
-          <Ionicons
-            name={isFavorited ? 'heart' : 'heart-outline'}
-            size={20}
-            color={isFavorited ? colors.danger : colors.textTertiary}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.cardMeta}>
-        <View style={styles.metaItem}>
-          <Text style={styles.metaLabel}>Cote moy.</Text>
-          <Text style={styles.metaValueBlue}>
-            {ticket.avgOdds.toFixed(2)}
-          </Text>
-        </View>
-        <View style={styles.metaItem}>
-          <Text style={styles.metaLabel}>Sélections</Text>
-          <Text style={styles.metaValue}>{count}</Text>
-        </View>
-      </View>
-
-      <View style={styles.cardFooter}>
-        <View style={styles.sportRow}>
-          {ticket.sports.map((s) => (
-            <View key={s} style={styles.sportBadge}>
-              <Text style={styles.sportBadgeText}>
-                {SPORT_LABELS[s] ?? s}
-              </Text>
-            </View>
-          ))}
-        </View>
-        {isPrivateLocked ? (
-          <View style={styles.payantBadge}>
-            <Ionicons name="lock-closed" size={12} color={colors.warning} />
-            <Text style={styles.payantBadgeText}>
-              {ticket.priceEur.toFixed(2)} €
-            </Text>
-          </View>
-        ) : !ticket.isPublic && ticket.isSubscribedToCreator ? (
-          <View style={styles.abonneBadge}>
-            <Ionicons name="star" size={12} color={colors.warning} />
-            <Text style={styles.abonneBadgeText}>Abonné</Text>
-          </View>
-        ) : ticket.priceEur > 0 ? (
-          <TouchableOpacity
-            style={styles.buyBtn}
-            onPress={() => onBuy(ticket)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buyBtnText}>{ticket.priceEur.toFixed(2)} €</Text>
-          </TouchableOpacity>
-        ) : (
-          <Text style={styles.freeText}>Gratuit</Text>
-        )}
-      </View>
-      <Text style={styles.dateText}>{formatDate(ticket.createdAt)}</Text>
-    </TouchableOpacity>
-  );
-};
 
 // --- Stats content ---
 const StatsContent: React.FC<{
@@ -722,6 +636,39 @@ const TipsterProfileScreen: React.FC = () => {
         </View>
         <Text style={styles.username}>@{tipsterUsername}</Text>
 
+        {/* Tipster Stats Row: 🏆 #42 • 📊 2.45 • ✅ 67% */}
+        {tipsterStats && (
+          <View style={styles.headerStatsRow}>
+            {/* Ranking */}
+            <View style={styles.headerStat}>
+              <Ionicons name="trophy" size={14} color="#FFD700" />
+              <Text style={styles.headerStatText}>
+                #{profile?.ranking?.monthly || '—'}
+              </Text>
+            </View>
+
+            <Text style={styles.headerStatSeparator}>•</Text>
+
+            {/* Average Odds */}
+            <View style={styles.headerStat}>
+              <Ionicons name="stats-chart" size={14} color={DS.colors.green} />
+              <Text style={styles.headerStatText}>
+                {tipsterStats.averageOdds.toFixed(2)}
+              </Text>
+            </View>
+
+            <Text style={styles.headerStatSeparator}>•</Text>
+
+            {/* Win Rate */}
+            <View style={styles.headerStat}>
+              <Ionicons name="checkmark-circle" size={14} color={DS.colors.green} />
+              <Text style={styles.headerStatText}>
+                {(tipsterStats.winRate * 100).toFixed(0)}%
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Follow counts */}
         {followInfo && (
           <View style={styles.followCountsRow}>
@@ -905,17 +852,29 @@ const TipsterProfileScreen: React.FC = () => {
           }
           onEndReached={onEndReached}
           onEndReachedThreshold={0.3}
-          renderItem={({ item }) => (
-            <TipsterTicketCard
-              ticket={item}
-              isFavorited={isFavorited(item.id)}
-              onToggleFavorite={handleToggleFavorite}
-              onBuy={handleBuy}
-              onPress={() => navigation.navigate('TicketDetail', { ticketId: item.id })}
-              styles={styles}
-              colors={colors}
-            />
-          )}
+          renderItem={({ item }) => {
+            const isPublicTicket = item.isPublic;
+            return (
+              <View style={styles.ticketCardWrapper}>
+                <TicketCard
+                  ticket={item}
+                  tipsterStats={tipsterStats}
+                  tipsterRanking={profile?.ranking?.monthly}
+                  isFavorited={isFavorited(item.id)}
+                  isFollowingCreator={isFollowing}
+                  isOwnTicket={isOwnProfile}
+                  onToggleFavorite={handleToggleFavorite}
+                  onBuy={handleBuy}
+                  onShare={() => {}}
+                  onTipsterPress={() => {}}
+                  onFollowCreator={() => {}}
+                  hideTipsterHeader
+                  disabled={isPublicTicket}
+                  onCardPress={isPublicTicket ? undefined : (t) => navigation.navigate('TicketDetail', { ticketId: t.id })}
+                />
+              </View>
+            );
+          }}
           ListFooterComponent={
             showPrivateGate ? (
               <SubscriptionGate
@@ -1095,6 +1054,26 @@ const useStyles = (colors: ThemeColors) =>
           ...typography.h4,
           color: colors.text,
           marginBottom: spacing['2xs'],
+        },
+        headerStatsRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+          marginBottom: spacing.sm,
+        },
+        headerStat: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
+        },
+        headerStatText: {
+          fontSize: fontSize.md,
+          fontWeight: '600',
+          color: colors.textSecondary,
+        },
+        headerStatSeparator: {
+          fontSize: fontSize.md,
+          color: colors.textTertiary,
         },
         followCountsRow: {
           flexDirection: 'row',
@@ -1299,7 +1278,12 @@ const useStyles = (colors: ThemeColors) =>
           color: colors.primary,
         },
 
-        // Card
+        // TicketCard wrapper (from marketplace)
+        ticketCardWrapper: {
+          marginHorizontal: spacing.md,
+        },
+
+        // Card (legacy TipsterTicketCard - can be removed)
         card: {
           backgroundColor: colors.surface,
           borderRadius: radius.base,

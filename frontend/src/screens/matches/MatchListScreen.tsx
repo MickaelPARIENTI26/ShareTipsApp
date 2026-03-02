@@ -14,7 +14,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { matchApi } from '../../api/match.api';
-import type { MatchDetail, RootStackParamList, MarketSelection, TicketSelection } from '../../types';
+import type { MatchDetail, HomeStackParamList, MarketSelection, TicketSelection } from '../../types';
 import { useTheme } from '../../theme';
 import { DS } from '../../theme/designSystem';
 import { useTicketBuilderStore } from '../../store/ticketBuilder.store';
@@ -108,7 +108,7 @@ interface MatchCardInlineProps {
 }
 
 const MatchCardInline: React.FC<MatchCardInlineProps> = ({ match }) => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const toggleSelection = useTicketBuilderStore((s) => s.toggleSelection);
   const selections = useTicketBuilderStore((s) => s.selections);
 

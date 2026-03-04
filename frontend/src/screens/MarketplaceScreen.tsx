@@ -384,7 +384,7 @@ const MarketplaceScreen: React.FC = () => {
           title: `Ticket #${ticket.id.slice(-4)}`,
         });
       } catch (err) {
-        console.error('Share error:', err);
+        if (__DEV__) console.error('Share error:', err);
       }
     },
     []

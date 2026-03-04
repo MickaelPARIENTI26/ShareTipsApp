@@ -217,7 +217,7 @@ const MyBadgesScreen: React.FC = () => {
       setAllBadges(allRes.data);
       setMyBadges(myRes.data);
     } catch (err) {
-      console.error('Failed to load badges:', err);
+      if (__DEV__) console.error('Failed to load badges:', err);
     } finally {
       setLoading(false);
     }

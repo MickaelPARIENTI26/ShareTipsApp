@@ -286,7 +286,7 @@ Cote totale: ${totalOddsValue.toFixed(2)}
     } catch (err) {
       // User cancelled - not an error
       if ((err as Error).message !== 'User did not share') {
-        console.error('Share error:', err);
+        if (__DEV__) console.error('Share error:', err);
         Alert.alert('Erreur', 'Impossible de partager le ticket');
       }
     } finally {
@@ -314,7 +314,7 @@ Cote totale: ${totalOddsValue.toFixed(2)}
         Alert.alert('Erreur', 'Permission refusée pour accéder à la galerie');
       }
     } catch (err) {
-      console.error('Save image error:', err);
+      if (__DEV__) console.error('Save image error:', err);
       Alert.alert('Erreur', 'Impossible de sauvegarder l\'image');
     } finally {
       setSharing(false);

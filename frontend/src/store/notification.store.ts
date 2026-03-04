@@ -33,7 +33,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
       set({ unreadCount: data.count, lastFetchedAt: now });
     } catch (error) {
       // Silently fail - badge will just show 0
-      console.warn('Failed to fetch unread count:', error);
+      if (__DEV__) console.warn('Failed to fetch unread count:', error);
     } finally {
       set({ loading: false });
     }

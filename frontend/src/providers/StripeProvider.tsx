@@ -34,11 +34,13 @@ if (Platform.OS !== 'web') {
     StripeNativeProvider = stripe.StripeProvider;
     stripeAvailable = true;
   } catch {
-    console.warn(
-      '[StripeProvider] Native Stripe module not available. ' +
-      'Payment features will be disabled. ' +
-      'Use a development build for full Stripe support.'
-    );
+    if (__DEV__) {
+      console.warn(
+        '[StripeProvider] Native Stripe module not available. ' +
+        'Payment features will be disabled. ' +
+        'Use a development build for full Stripe support.'
+      );
+    }
   }
 }
 

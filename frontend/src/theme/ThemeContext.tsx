@@ -137,7 +137,7 @@ export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext);
   // Return default value if context is somehow undefined (shouldn't happen with default value)
   if (!context) {
-    console.warn('useTheme: context is undefined, using default value');
+    if (__DEV__) console.warn('useTheme: context is undefined, using default value');
     return defaultValue;
   }
   return context;

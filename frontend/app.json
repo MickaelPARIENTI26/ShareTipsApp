@@ -36,8 +36,6 @@
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ]
     },

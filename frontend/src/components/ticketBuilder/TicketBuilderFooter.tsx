@@ -393,8 +393,7 @@ const TicketBuilderFooter: React.FC<TicketBuilderFooterProps> = ({
             color={colors.textTertiary}
           />
           <Text style={styles.disclaimer}>
-            En créant ce ticket, vous partagez un pronostic. Aucun résultat n'est
-            garanti.
+            {"En créant ce ticket, vous partagez un pronostic. Aucun résultat n'est garanti."}
           </Text>
         </View>
       )}

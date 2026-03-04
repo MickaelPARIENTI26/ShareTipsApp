@@ -251,6 +251,8 @@ const AnimatedChip: React.FC<AnimatedChipProps> = React.memo(
   }
 );
 
+AnimatedChip.displayName = 'AnimatedChip';
+
 // ═══════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════════════════════════════════════

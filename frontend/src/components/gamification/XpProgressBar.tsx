@@ -192,6 +192,8 @@ const ShineEffect: React.FC<{
   );
 });
 
+ShineEffect.displayName = 'ShineEffect';
+
 const shineStyles = StyleSheet.create({
   container: {
     position: 'absolute',
@@ -251,6 +253,8 @@ const RemainingBadge: React.FC<{
     </View>
   );
 });
+
+RemainingBadge.displayName = 'RemainingBadge';
 
 /**
  * Badge "Niveau MAX"
@@ -330,6 +334,8 @@ const MaxLevelBadge: React.FC<{
     </Animated.View>
   );
 });
+
+MaxLevelBadge.displayName = 'MaxLevelBadge';
 
 // ═══════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL

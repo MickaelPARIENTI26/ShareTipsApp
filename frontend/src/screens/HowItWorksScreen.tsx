@@ -237,7 +237,7 @@ const HowItWorksScreen: React.FC = () => {
             <View style={styles.tipCard}>
               <Ionicons name="stats-chart" size={20} color={colors.warning} />
               <Text style={styles.tipText}>
-                Avant d'acheter, vérifiez le taux de réussite et l'historique du tipster
+                {"Avant d'acheter, vérifiez le taux de réussite et l'historique du tipster"}
               </Text>
             </View>
 
@@ -267,7 +267,7 @@ const HowItWorksScreen: React.FC = () => {
             <View style={styles.tipCard}>
               <Ionicons name="megaphone" size={20} color={colors.primary} />
               <Text style={styles.tipText}>
-                Créez des plans d'abonnement pour proposer un accès illimité à vos tickets
+                {"Créez des plans d'abonnement pour proposer un accès illimité à vos tickets"}
               </Text>
             </View>
           </>

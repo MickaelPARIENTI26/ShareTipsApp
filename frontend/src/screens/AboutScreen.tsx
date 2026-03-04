@@ -26,7 +26,7 @@ const AboutScreen: React.FC = () => {
       {/* Description */}
       <View style={styles.section}>
         <Text style={styles.description}>
-          ShareTips est une plateforme innovante de partage de pronostics sportifs qui connecte les tipsters passionnés avec une communauté d'utilisateurs à la recherche de conseils avisés.
+          {"ShareTips est une plateforme innovante de partage de pronostics sportifs qui connecte les tipsters passionnés avec une communauté d'utilisateurs à la recherche de conseils avisés."}
         </Text>
       </View>
 

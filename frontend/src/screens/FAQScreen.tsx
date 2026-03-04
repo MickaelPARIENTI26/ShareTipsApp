@@ -96,7 +96,7 @@ const FAQScreen: React.FC = () => {
           <Ionicons name="help-buoy-outline" size={24} color={DS.colors.textSecondary} />
         </View>
         <Text style={styles.footerText}>
-          Vous n'avez pas trouvé la réponse à votre question ? Contactez-nous directement.
+          {"Vous n'avez pas trouvé la réponse à votre question ? Contactez-nous directement."}
         </Text>
       </View>
     </ScrollView>

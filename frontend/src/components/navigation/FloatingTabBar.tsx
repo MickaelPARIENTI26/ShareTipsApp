@@ -123,6 +123,8 @@ const CenterButton: React.FC<CenterButtonProps> = React.memo(({ onPress, isFocus
   );
 });
 
+CenterButton.displayName = 'CenterButton';
+
 const fabStyles = StyleSheet.create({
   touchable: {
     justifyContent: 'center',
@@ -231,6 +233,8 @@ const TabButton: React.FC<TabButtonProps> = React.memo(({
     </TouchableOpacity>
   );
 });
+
+TabButton.displayName = 'TabButton';
 
 const tabStyles = StyleSheet.create({
   container: {

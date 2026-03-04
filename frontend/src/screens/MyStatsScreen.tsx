@@ -22,7 +22,7 @@ const MyStatsScreen: React.FC = () => {
         </View>
         <Text style={styles.placeholderTitle}>Page en construction</Text>
         <Text style={styles.placeholderText}>
-          Tes statistiques détaillées s'afficheront ici prochainement
+          {"Tes statistiques détaillées s'afficheront ici prochainement"}
         </Text>
       </View>
 

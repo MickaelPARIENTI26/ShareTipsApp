@@ -611,7 +611,7 @@ const TermsCheckbox: React.FC<{
       )}
     </View>
     <Text style={[checkboxStyles.text, { color: colors.textSecondary }]}>
-      J'accepte les{' '}
+      {"J'accepte les "}
       <Text
         style={[checkboxStyles.link, { color: colors.primary }]}
         onPress={onPressTerms}

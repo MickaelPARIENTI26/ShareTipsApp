@@ -192,6 +192,8 @@ const EarnedIndicator: React.FC<{
   );
 });
 
+EarnedIndicator.displayName = 'EarnedIndicator';
+
 /**
  * Badge de verrouillage
  */
@@ -229,6 +231,8 @@ const LockedIndicator: React.FC<{
     </View>
   );
 });
+
+LockedIndicator.displayName = 'LockedIndicator';
 
 /**
  * Badge XP reward
@@ -322,6 +326,8 @@ const XpBadge: React.FC<{
     </Animated.View>
   );
 });
+
+XpBadge.displayName = 'XpBadge';
 
 // ═══════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL

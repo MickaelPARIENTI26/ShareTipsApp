@@ -92,6 +92,8 @@ const FeatureRow: React.FC<FeatureRowProps> = React.memo(({
   );
 });
 
+FeatureRow.displayName = 'FeatureRow';
+
 // ─────────────────────────────────────────────────────────────
 // Trust Badge Component
 // ─────────────────────────────────────────────────────────────
@@ -132,6 +134,8 @@ const TrustBadge: React.FC<TrustBadgeProps> = React.memo(({
     </View>
   );
 });
+
+TrustBadge.displayName = 'TrustBadge';
 
 // ─────────────────────────────────────────────────────────────
 // Main Screen Component
@@ -275,7 +279,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
               Prêt à faire tes pronostics ?
             </Text>
             <Text style={styles.welcomeSubtitle}>
-              Pas besoin d'être expert pour commencer
+              {"Pas besoin d'être expert pour commencer"}
             </Text>
           </Animated.View>
         </View>

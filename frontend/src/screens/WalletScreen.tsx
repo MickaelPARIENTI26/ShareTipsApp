@@ -207,6 +207,8 @@ const TransactionRow: React.FC<TransactionRowProps> = React.memo(({ tx, colors }
   );
 });
 
+TransactionRow.displayName = 'TransactionRow';
+
 // ─────────────────────────────────────────────────────────────
 // Tipster Earnings Card
 // ─────────────────────────────────────────────────────────────
@@ -561,6 +563,8 @@ const TipsterEarningsCard: React.FC<TipsterEarningsCardProps> = React.memo(({
   );
 });
 
+TipsterEarningsCard.displayName = 'TipsterEarningsCard';
+
 // ─────────────────────────────────────────────────────────────
 // Section Header
 // ─────────────────────────────────────────────────────────────
@@ -606,6 +610,8 @@ const SectionHeader: React.FC<{ colors: ThemeColors }> = React.memo(({ colors })
   );
 });
 
+SectionHeader.displayName = 'SectionHeader';
+
 // ─────────────────────────────────────────────────────────────
 // Loading State
 // ─────────────────────────────────────────────────────────────
@@ -629,6 +635,8 @@ const LoadingState: React.FC<{ colors: ThemeColors }> = React.memo(({ colors }) 
     </View>
   );
 });
+
+LoadingState.displayName = 'LoadingState';
 
 // ─────────────────────────────────────────────────────────────
 // Empty State
@@ -676,6 +684,8 @@ const EmptyState: React.FC<{ colors: ThemeColors }> = React.memo(({ colors }) =>
     </View>
   );
 });
+
+EmptyState.displayName = 'EmptyState';
 
 // ─────────────────────────────────────────────────────────────
 // Main Screen Component

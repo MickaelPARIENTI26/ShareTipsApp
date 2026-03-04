@@ -137,10 +137,9 @@ const XpGuideScreen: React.FC = () => {
         <View style={styles.infoIconWrapper}>
           <Ionicons name="sparkles" size={28} color={DS.colors.green} />
         </View>
-        <Text style={styles.infoTitle}>Comment gagner de l'XP ?</Text>
+        <Text style={styles.infoTitle}>{"Comment gagner de l'XP ?"}</Text>
         <Text style={styles.infoText}>
-          L'XP vous permet de monter en niveau et de débloquer des badges.
-          Plus vous êtes actif, plus vous progressez !
+          {"L'XP vous permet de monter en niveau et de débloquer des badges. Plus vous êtes actif, plus vous progressez !"}
         </Text>
       </Animated.View>
 

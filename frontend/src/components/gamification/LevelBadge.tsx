@@ -274,6 +274,8 @@ const StarBadge: React.FC<{
   );
 });
 
+StarBadge.displayName = 'StarBadge';
+
 /**
  * Anneau de progression
  */
@@ -322,6 +324,8 @@ const ProgressRing: React.FC<{
     </>
   );
 });
+
+ProgressRing.displayName = 'ProgressRing';
 
 // ═══════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL

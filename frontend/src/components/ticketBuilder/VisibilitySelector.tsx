@@ -258,6 +258,8 @@ const ToggleButton: React.FC<ToggleButtonProps> = React.memo(
   }
 );
 
+ToggleButton.displayName = 'ToggleButton';
+
 // ═══════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════════════════════════════════════

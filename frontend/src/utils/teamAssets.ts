@@ -283,7 +283,7 @@ const UEFA_LOGOS: Record<string, string> = {
 // BASKETBALL - NBA
 // ═══════════════════════════════════════════════════════════════
 
-export const NBA_LOGOS: Record<string, string> = {
+const NBA_LOGOS: Record<string, string> = {
   // Eastern Conference - Atlantic
   'Boston Celtics': 'https://media.api-sports.io/basketball/teams/133.png',
   'Celtics': 'https://media.api-sports.io/basketball/teams/133.png',
@@ -363,7 +363,7 @@ export const NBA_LOGOS: Record<string, string> = {
 // BASKETBALL - EUROLEAGUE
 // ═══════════════════════════════════════════════════════════════
 
-export const EUROLEAGUE_LOGOS: Record<string, string> = {
+const EUROLEAGUE_LOGOS: Record<string, string> = {
   'Olympiacos BC': 'https://media.api-sports.io/basketball/teams/2541.png',
   'Olympiacos': 'https://media.api-sports.io/basketball/teams/2541.png',
   'Panathinaikos BC': 'https://media.api-sports.io/basketball/teams/2542.png',
@@ -400,7 +400,7 @@ export const EUROLEAGUE_LOGOS: Record<string, string> = {
 // TENNIS - FLAGS (Top 50 ATP + Top 30 WTA)
 // ═══════════════════════════════════════════════════════════════
 
-export const TENNIS_FLAGS: Record<string, string> = {
+const TENNIS_FLAGS: Record<string, string> = {
   // ATP Top 50
   'Jannik Sinner': 'it',
   'Novak Djokovic': 'rs',
@@ -489,7 +489,7 @@ export const TENNIS_FLAGS: Record<string, string> = {
 // COMBINED FOOTBALL LOGOS
 // ═══════════════════════════════════════════════════════════════
 
-export const FOOTBALL_LOGOS: Record<string, string> = {
+const FOOTBALL_LOGOS: Record<string, string> = {
   ...LIGUE_1_LOGOS,
   ...PREMIER_LEAGUE_LOGOS,
   ...LA_LIGA_LOGOS,
@@ -533,19 +533,3 @@ export function getTennisFlag(playerName: string): string | null {
   return null;
 }
 
-/**
- * Check if a sport uses player flags instead of team logos
- */
-export function usesPlayerFlags(sportCode: string): boolean {
-  return sportCode === 'TENNIS';
-}
-
-/**
- * Get asset URL (logo or flag) for a team/player
- */
-export function getTeamAsset(name: string, sportCode: string): string | null {
-  if (usesPlayerFlags(sportCode)) {
-    return getTennisFlag(name);
-  }
-  return getTeamLogo(name, sportCode);
-}

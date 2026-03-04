@@ -148,6 +148,10 @@ const MesAchatsScreen: React.FC = () => {
       data={purchases}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.list}
+      removeClippedSubviews
+      maxToRenderPerBatch={8}
+      windowSize={5}
+      initialNumToRender={6}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }

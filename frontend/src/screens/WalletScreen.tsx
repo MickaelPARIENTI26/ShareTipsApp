@@ -812,6 +812,10 @@ const WalletScreen: React.FC = () => {
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
         refreshControl={
           <WalletRefreshControl
             refreshing={refreshing}

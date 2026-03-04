@@ -609,6 +609,10 @@ const MyTicketsScreen: React.FC = () => {
         keyExtractor={(item) => item.date}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        initialNumToRender={6}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

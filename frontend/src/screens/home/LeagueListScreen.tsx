@@ -115,6 +115,9 @@ const LeagueListScreen: React.FC = () => {
       keyExtractor={(item) => item.name}
       style={styles.container}
       contentContainerStyle={styles.list}
+      removeClippedSubviews
+      maxToRenderPerBatch={10}
+      windowSize={5}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import {
   View,
   Text,
@@ -33,7 +33,7 @@ interface RankCardProps {
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
-export const RankCard: React.FC<RankCardProps> = ({
+export const RankCard: React.FC<RankCardProps> = memo(({
   rank,
   username,
   userId,
@@ -180,7 +180,9 @@ export const RankCard: React.FC<RankCardProps> = ({
       </TouchableOpacity>
     </Animated.View>
   );
-};
+});
+
+RankCard.displayName = 'RankCard';
 
 // ═══════════════════════════════════════════════════════════════
 // STYLES

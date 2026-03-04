@@ -847,6 +847,10 @@ const TipsterProfileScreen: React.FC = () => {
             showPrivateGate && styles.listWithGate,
           ]}
           ListHeaderComponent={headerComponent}
+          removeClippedSubviews
+          maxToRenderPerBatch={6}
+          windowSize={5}
+          initialNumToRender={4}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }

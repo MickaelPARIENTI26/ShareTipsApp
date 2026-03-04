@@ -399,6 +399,10 @@ const RankingScreen: React.FC = () => {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={top3.length === 0 ? <EmptyState /> : null}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

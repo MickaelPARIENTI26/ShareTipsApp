@@ -211,6 +211,10 @@ const MesAbonnementsScreen: React.FC = () => {
             : styles.listContent
         }
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconWrapper}>

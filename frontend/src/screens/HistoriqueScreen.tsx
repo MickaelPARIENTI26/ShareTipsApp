@@ -391,6 +391,10 @@ const HistoriqueScreen: React.FC = () => {
             />
           )}
           contentContainerStyle={styles.listContent}
+          removeClippedSubviews
+          maxToRenderPerBatch={8}
+          windowSize={5}
+          initialNumToRender={6}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

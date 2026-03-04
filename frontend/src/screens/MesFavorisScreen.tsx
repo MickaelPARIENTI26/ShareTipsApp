@@ -499,6 +499,10 @@ const MesFavorisScreen: React.FC = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        initialNumToRender={6}
         refreshControl={
           <MarketRefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

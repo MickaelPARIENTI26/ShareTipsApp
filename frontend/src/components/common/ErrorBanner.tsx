@@ -322,7 +322,7 @@ const ErrorBanner: React.FC<ErrorBannerProps> = ({
     >
       {glassmorphism ? (
         <LinearGradient
-          colors={variantConfig.gradientColors as unknown as string[]}
+          colors={variantConfig.gradientColors as [string, string, ...string[]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientContainer}

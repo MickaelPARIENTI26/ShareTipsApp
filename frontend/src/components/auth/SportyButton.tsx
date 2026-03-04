@@ -131,7 +131,7 @@ const SIZE_CONFIG: Record<
 };
 
 type GradientConfig = {
-  colors: readonly [string, string];
+  colors: readonly [string, string, ...string[]];
   textColor: string;
   hasGradient: boolean;
   hasBorder: boolean;
@@ -176,7 +176,7 @@ const getVariantConfig = (colors: ThemeColors): Record<SportyButtonVariant, Grad
     hasBorder: false,
   },
   danger: {
-    colors: effectGradients.danger.colors as [string, string],
+    colors: ['#F87171', '#EF4444', '#DC2626'] as readonly [string, string, ...string[]],
     textColor: '#FFFFFF',
     hasGradient: true,
     hasBorder: false,
@@ -338,7 +338,7 @@ const SportyButton: React.FC<SportyButtonProps> = ({
       >
         {variantConfig.hasGradient ? (
           <LinearGradient
-            colors={variantConfig.colors as unknown as string[]}
+            colors={[...variantConfig.colors]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.button}

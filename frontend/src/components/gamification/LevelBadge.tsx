@@ -624,21 +624,15 @@ const useStyles = (
         position: 'relative',
         borderWidth: isOutline ? 2 : 0,
         borderColor: levelColor,
-        ...Platform.select({
-          ios: isMinimal
-            ? {}
-            : {
-                shadowColor: levelColor,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isGlass ? 0.4 : 0.3,
-                shadowRadius: isGlass ? 12 : 8,
-              },
-          android: isMinimal
-            ? {}
-            : {
-                elevation: 6,
-              },
-        }),
+        ...(Platform.OS === 'ios' && !isMinimal
+          ? {
+              shadowColor: levelColor,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isGlass ? 0.4 : 0.3,
+              shadowRadius: isGlass ? 12 : 8,
+            }
+          : {}),
+        ...(Platform.OS === 'android' && !isMinimal ? { elevation: 6 } : {}),
       },
       blurCircle: {
         width: '100%',

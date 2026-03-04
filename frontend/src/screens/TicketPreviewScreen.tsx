@@ -1020,10 +1020,8 @@ const useStyles = (colors: ThemeColors) =>
           padding: spacing.md,
           borderTopWidth: 1,
           gap: spacing.sm,
-          ...Platform.select({
-            ios: effectShadows.card,
-            android: { elevation: 8 },
-          }),
+          ...(Platform.OS === 'ios' ? effectShadows.card : {}),
+          ...(Platform.OS === 'android' ? { elevation: 8 } : {}),
         },
       }),
     [colors]

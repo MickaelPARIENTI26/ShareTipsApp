@@ -224,7 +224,7 @@ const PremiumRefreshControl: React.FC<PremiumRefreshControlProps> = ({
           ]}
         >
           <LinearGradient
-            colors={gradientColors as unknown as string[]}
+            colors={gradientColors as [string, string, ...string[]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradient}
@@ -266,19 +266,18 @@ const useStyles = (
           opacity: 0.3,
         },
         iconWrapper: {
-          ...Platform.select({
-            ios: showGlow
-              ? {
+          ...(showGlow
+            ? Platform.select({
+                ios: {
                   shadowColor: colors.primary,
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.4,
                   shadowRadius: 8,
-                }
-              : {},
-            android: {
-              elevation: showGlow ? 6 : 0,
-            },
-          }),
+                },
+                android: {},
+              })
+            : {}),
+          ...(Platform.OS === 'android' && showGlow ? { elevation: 6 } : {}),
         },
         gradient: {
           width: 44,

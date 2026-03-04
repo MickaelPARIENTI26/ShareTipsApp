@@ -49,7 +49,13 @@ export type SportyInputVariant = 'default' | 'filled' | 'outline' | 'glass';
 /** Tailles disponibles */
 export type SportyInputSize = 'sm' | 'md' | 'lg';
 
-export interface SportyInputProps extends Omit<TextInputProps, 'style'> {
+export interface SportyInputProps extends Omit<TextInputProps, 'style' | 'onFocus' | 'onBlur'> {
+  /** Champ requis */
+  required?: boolean;
+  /** Callback onFocus */
+  onFocus?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
+  /** Callback onBlur */
+  onBlur?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
   /** Label au-dessus de l'input */
   label?: string;
   /** Message d'erreur */
@@ -172,6 +178,7 @@ const SportyInput: React.FC<SportyInputProps> = ({
   inputWrapperStyle,
   accessibilityLabel,
   placeholder,
+  required,
   ...props
 }) => {
   const theme = useTheme();
@@ -246,7 +253,7 @@ const SportyInput: React.FC<SportyInputProps> = ({
 
   // ── Handlers ───────────────────────────────────────────────────
   const handleFocus = useCallback(
-    (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+    (e: any) => {
       setIsFocused(true);
       onFocus?.(e);
     },
@@ -254,7 +261,7 @@ const SportyInput: React.FC<SportyInputProps> = ({
   );
 
   const handleBlur = useCallback(
-    (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+    (e: any) => {
       setIsFocused(false);
       onBlur?.(e);
     },
@@ -365,7 +372,7 @@ const SportyInput: React.FC<SportyInputProps> = ({
       {label && (
         <Text style={styles.label}>
           {label}
-          {props.required && <Text style={styles.required}> *</Text>}
+          {required && <Text style={styles.required}> *</Text>}
         </Text>
       )}
 

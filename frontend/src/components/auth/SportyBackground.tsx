@@ -301,7 +301,7 @@ const SportyBackground: React.FC<SportyBackgroundProps> = ({
     <View style={[styles.container, style]}>
       {/* Base gradient */}
       <LinearGradient
-        colors={variantConfig.baseGradient as unknown as string[]}
+        colors={[...variantConfig.baseGradient]}
         locations={[0, 0.5, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}

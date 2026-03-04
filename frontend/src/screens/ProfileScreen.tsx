@@ -185,9 +185,9 @@ const ProfileScreen: React.FC = () => {
   );
   // Performance stats (mock data for now)
   const performanceStats = {
-    ranking: stats?.ranking ?? 42,
+    ranking: 42, // Not available in UserStatsDto yet
     avgOdds: stats?.avgOdds ?? 2.45,
-    winRate: stats?.winRate ?? 67,
+    winRate: 67, // Not available in UserStatsDto yet
   };
 
   // Image picker functions
@@ -339,7 +339,7 @@ const ProfileScreen: React.FC = () => {
               <ActivityIndicator size="small" color={DS.colors.green} />
             ) : (
               <View style={styles.premiumValueRow}>
-                <Text style={styles.statValue}>{stats?.premiumSubscribersCount ?? 0}</Text>
+                <Text style={styles.statValue}>{0}</Text>
                 <Text style={styles.crownIcon}>👑</Text>
               </View>
             )}

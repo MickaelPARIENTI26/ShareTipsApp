@@ -853,7 +853,7 @@ const useTransactionStyles = (colors: ThemeColors) =>
           padding: spacing.md,
           overflow: 'hidden',
           borderWidth: 1,
-          borderColor: effectGlass.borderColor,
+          borderColor: effectGlass.card.borderColor,
           backgroundColor: Platform.OS === 'android' ? 'transparent' : undefined,
         },
         txIcon: {
@@ -934,7 +934,7 @@ const useEarningsStyles = (colors: ThemeColors) =>
           padding: spacing.lg,
           overflow: 'hidden',
           borderWidth: 1,
-          borderColor: effectGlass.borderColor,
+          borderColor: effectGlass.card.borderColor,
           backgroundColor: Platform.OS === 'android' ? 'transparent' : undefined,
         },
         earningsCardActive: {

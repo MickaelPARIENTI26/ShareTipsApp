@@ -150,7 +150,7 @@ const ShimmerOverlay: React.FC<{ colors: ThemeColors }> = React.memo(({ colors }
         ]}
       >
         <LinearGradient
-          colors={effectGradients.shimmer.colors as unknown as string[]}
+          colors={[...effectGradients.shimmer.colors]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={StyleSheet.absoluteFill}
@@ -255,7 +255,7 @@ const CachedImage: React.FC<CachedImageProps> = ({
 
     return (
       <LinearGradient
-        colors={overlayGradients[overlay] as string[]}
+        colors={overlayGradients[overlay] as [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[StyleSheet.absoluteFill, styles.overlay]}

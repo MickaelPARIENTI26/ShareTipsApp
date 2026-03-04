@@ -277,11 +277,11 @@ const MarketplaceScreen: React.FC = () => {
         break;
       case 'free':
         newFilters.followedOnly = undefined;
-        newFilters.ticketType = 'free';
+        newFilters.ticketType = 'public';
         break;
       case 'paid':
         newFilters.followedOnly = undefined;
-        newFilters.ticketType = 'paid';
+        newFilters.ticketType = 'private';
         break;
       default:
         newFilters.followedOnly = undefined;

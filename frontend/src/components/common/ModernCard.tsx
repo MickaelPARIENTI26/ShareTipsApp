@@ -211,7 +211,7 @@ const ModernCard: React.FC<ModernCardProps> = ({
     if (gradientConfig) {
       return (
         <LinearGradient
-          colors={gradientConfig.colors as unknown as string[]}
+          colors={[...gradientConfig.colors]}
           start={gradientConfig.start}
           end={gradientConfig.end}
           style={[

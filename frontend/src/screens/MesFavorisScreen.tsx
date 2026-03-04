@@ -272,7 +272,7 @@ const FavoriteCard: React.FC<{
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statLabel}>MATCHS</Text>
-            <Text style={styles.statValue}>{item.selectionCount || '-'}</Text>
+            <Text style={styles.statValue}>-</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>

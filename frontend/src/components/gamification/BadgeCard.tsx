@@ -602,21 +602,15 @@ const useStyles = (
           : colors.border,
         minWidth: isDetailed ? 140 : config.container.minWidth,
         gap: spacing.xs,
-        ...Platform.select({
-          ios: earned
-            ? {
-                shadowColor: badgeColor,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: isGlass ? 0.3 : 0.2,
-                shadowRadius: isGlass ? 12 : 8,
-              }
-            : {},
-          android: earned
-            ? {
-                elevation: 4,
-              }
-            : {},
-        }),
+        ...(Platform.OS === 'ios' && earned
+          ? {
+              shadowColor: badgeColor,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isGlass ? 0.3 : 0.2,
+              shadowRadius: isGlass ? 12 : 8,
+            }
+          : {}),
+        ...(Platform.OS === 'android' && earned ? { elevation: 4 } : {}),
       },
       blurContainer: {
         borderRadius: isCompact ? radius.md : radius.lg,
@@ -633,21 +627,15 @@ const useStyles = (
       iconContainerOuter: {
         borderRadius: radius.full,
         overflow: 'hidden',
-        ...Platform.select({
-          ios: earned
-            ? {
-                shadowColor: badgeColor,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-              }
-            : {},
-          android: earned
-            ? {
-                elevation: 3,
-              }
-            : {},
-        }),
+        ...(Platform.OS === 'ios' && earned
+          ? {
+              shadowColor: badgeColor,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+            }
+          : {}),
+        ...(Platform.OS === 'android' && earned ? { elevation: 3 } : {}),
       },
       iconContainer: {
         width: config.iconContainer.width,

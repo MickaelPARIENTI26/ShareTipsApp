@@ -317,7 +317,7 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
   if (type === 'premium') {
     return (
       <LinearGradient
-        colors={effectGradients.premium.colors as unknown as string[]}
+        colors={[...effectGradients.premium.colors]}
         start={effectGradients.premium.start}
         end={effectGradients.premium.end}
         style={[
@@ -333,7 +333,7 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
       >
         {icon || (
           <Ionicons
-            name="crown"
+            name="star"
             size={sizeConfig.iconSize}
             color="#FFFFFF"
           />
@@ -422,7 +422,7 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
   if (type === 'hot') {
     return (
       <LinearGradient
-        colors={effectGradients.hot.colors as unknown as string[]}
+        colors={[...effectGradients.hot.colors]}
         start={effectGradients.hot.start}
         end={effectGradients.hot.end}
         style={[
@@ -461,7 +461,7 @@ const PremiumBadge: React.FC<PremiumBadgeProps> = ({
   if (type === 'new') {
     return (
       <LinearGradient
-        colors={effectGradients.primary.colors as unknown as string[]}
+        colors={[...effectGradients.primary.colors]}
         start={effectGradients.primary.start}
         end={effectGradients.primary.end}
         style={[

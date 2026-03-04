@@ -461,7 +461,7 @@ const useStyles = (colors: ThemeColors) =>
           padding: spacing.sm,
           overflow: 'hidden',
           borderWidth: 1,
-          borderColor: effectGlass.borderColor,
+          borderColor: effectGlass.card.borderColor,
           ...effectShadows.lg,
         },
 

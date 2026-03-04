@@ -322,7 +322,7 @@ const ModernButton: React.FC<ModernButtonProps> = ({
     if (gradientColors) {
       return (
         <LinearGradient
-          colors={gradientColors as unknown as string[]}
+          colors={gradientColors as [string, string, ...string[]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.gradientContainer, innerStyle]}

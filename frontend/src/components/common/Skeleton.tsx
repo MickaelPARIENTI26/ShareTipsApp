@@ -30,6 +30,7 @@ import {
   StyleSheet,
   type ViewStyle,
   type StyleProp,
+  type DimensionValue,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -146,7 +147,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
 
   const styles = useSkeletonStyles(
     colors,
-    finalWidth,
+    finalWidth as DimensionValue,
     finalHeight,
     finalBorderRadius
   );
@@ -180,7 +181,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
 
 const useSkeletonStyles = (
   colors: ThemeColors,
-  width: number | string,
+  width: DimensionValue,
   height: number,
   borderRadius: number
 ) =>

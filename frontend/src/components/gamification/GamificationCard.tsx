@@ -1,13 +1,27 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type ThemeColors, spacing, radius, typography, fontWeight, palette } from '../../theme';
+import { spacing, radius, typography, fontWeight, palette } from '../../theme';
 import type { UserGamificationDto } from '../../types/gamification.types';
 import { XpProgressBar } from './XpProgressBar';
 
+/** Subset of ThemeColors needed by GamificationCard */
+interface GamificationCardColors {
+  primary: string;
+  primaryBg?: string;
+  surface?: string;
+  text: string;
+  textSecondary: string;
+  textOnPrimary?: string;
+  border: string;
+  accent?: string;
+  accentBg?: string;
+  cardBg?: string;
+}
+
 interface GamificationCardProps {
   gamification: UserGamificationDto;
-  colors: ThemeColors;
+  colors: GamificationCardColors;
   onBadgesPress?: () => void;
   onXpPress?: () => void;
 }
@@ -38,7 +52,6 @@ export const GamificationCard: React.FC<GamificationCardProps> = ({
           currentXp={gamification.currentXp}
           xpForNextLevel={gamification.xpForNextLevel}
           level={gamification.level}
-          colors={colors}
         />
       </TouchableOpacity>
 
@@ -52,12 +65,12 @@ export const GamificationCard: React.FC<GamificationCardProps> = ({
   );
 };
 
-const useStyles = (colors: ThemeColors) =>
+const useStyles = (colors: GamificationCardColors) =>
   useMemo(
     () =>
       StyleSheet.create({
         container: {
-          backgroundColor: colors.cardBg,
+          backgroundColor: colors.cardBg ?? colors.surface ?? '#131916',
           borderRadius: radius.base,
           padding: spacing.base,
           borderWidth: 1,

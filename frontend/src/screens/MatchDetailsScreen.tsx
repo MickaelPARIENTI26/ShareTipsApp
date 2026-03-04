@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: DS.colors.primaryBg,
+    backgroundColor: DS.colors.greenBgSubtle,
     borderWidth: 2,
     borderColor: DS.colors.green,
     alignItems: 'center',

@@ -22,7 +22,7 @@ import { Platform } from 'react-native';
 /**
  * Types de feedback haptique disponibles
  */
-export type HapticType =
+type HapticType =
   | 'light'
   | 'medium'
   | 'heavy'
@@ -35,18 +35,6 @@ export type HapticType =
  * Configuration pour desactiver les haptics si necessaire
  */
 let hapticsEnabled = true;
-
-/**
- * Active ou desactive les haptics globalement
- */
-export const setHapticsEnabled = (enabled: boolean): void => {
-  hapticsEnabled = enabled;
-};
-
-/**
- * Verifie si les haptics sont actives
- */
-export const isHapticsEnabled = (): boolean => hapticsEnabled;
 
 /**
  * Execute un feedback haptique de maniere securisee

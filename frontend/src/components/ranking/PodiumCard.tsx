@@ -10,7 +10,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DS } from '../../theme/designSystem';
-import { palette } from '../../theme/colors';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES

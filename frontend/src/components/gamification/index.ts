@@ -30,18 +30,3 @@ export type {
   LevelBadgeVariant,
   LevelBadgeSize,
 } from './LevelBadge';
-
-// BadgeCard
-export { default as BadgeCard } from './BadgeCard';
-export {
-  DefaultBadgeCard,
-  GlassBadgeCard,
-  CompactBadgeCard,
-  DetailedBadgeCard,
-  MinimalBadgeCard,
-} from './BadgeCard';
-export type {
-  BadgeCardProps,
-  BadgeCardVariant,
-  BadgeCardSize,
-} from './BadgeCard';

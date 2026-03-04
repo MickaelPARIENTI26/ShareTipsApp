@@ -39,7 +39,6 @@ import {
   type ThemeColors,
   spacing,
   radius,
-  effectGlass,
 } from '../../theme';
 
 // ═══════════════════════════════════════════════════════════════

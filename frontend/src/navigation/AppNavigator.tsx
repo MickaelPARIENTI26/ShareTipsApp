@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, ComponentType } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 import { useTheme } from '../theme';

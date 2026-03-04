@@ -524,7 +524,7 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickActionCard} onPress={goToHistorique} activeOpacity={0.8}>
           <View style={styles.quickActionIcon}>
-            <Ionicons name="key" size={22} color={DS.colors.white} />
+            <Ionicons name="receipt" size={22} color={DS.colors.white} />
           </View>
           <Text style={styles.quickActionLabel}>Mes achats</Text>
         </TouchableOpacity>

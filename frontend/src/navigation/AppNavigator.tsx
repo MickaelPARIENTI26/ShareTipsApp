@@ -336,7 +336,7 @@ const AppNavigator: React.FC = () => {
       <RootStack.Screen
         name="Historique"
         component={LazyHistoriqueScreen}
-        options={{ title: 'Mes accès' }}
+        options={{ title: 'Mes achats' }}
       />
       <RootStack.Screen
         name="CGU"

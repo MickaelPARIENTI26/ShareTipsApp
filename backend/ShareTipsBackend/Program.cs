@@ -531,7 +531,9 @@ app.UseSerilogRequestLogging(options =>
 });
 
 // Use CORS - AllowAll in development (ngrok/mobile testing), Production otherwise
-var corsPolicy = app.Environment.IsDevelopment() ? "AllowAll" : "Production";
+// Use AllowAll for now - mobile apps don't enforce CORS anyway
+// TODO: Switch to "Production" policy once domain is finalized
+var corsPolicy = "AllowAll";
 app.UseCors(corsPolicy);
 
 // Rate limiting

@@ -1,5 +1,8 @@
 // Jest setup for unit tests (non-React Native)
 
+// Define React Native globals
+global.__DEV__ = true;
+
 // Mock localStorage for Node.js test environment
 const localStorageMock = {
   getItem: jest.fn(() => null),

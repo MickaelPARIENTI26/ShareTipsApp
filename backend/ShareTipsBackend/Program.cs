@@ -418,9 +418,11 @@ using (var scope = app.Services.CreateScope())
     if (app.Environment.IsDevelopment())
     {
         await TestDataSeeder.SeedTestDataAsync(context);
-        // Seed comprehensive mock data for demo/investor presentations
-        await MockMatchDataSeeder.SeedMockDataAsync(context);
     }
+
+    // Seed mock data in all environments (for demo/investor presentations)
+    // The seeder will skip if mock data already exists
+    await MockMatchDataSeeder.SeedMockDataAsync(context);
 }
 
 // Sentry tracing (must be early for performance monitoring) - only if Sentry is configured

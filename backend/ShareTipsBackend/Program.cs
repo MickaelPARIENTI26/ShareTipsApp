@@ -93,12 +93,39 @@ else if (!isTesting)
 }
 
 // Build connection string from environment variables
-var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
-var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
-var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "sharebet";
-var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "";
-var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
-var connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
+// Support both DATABASE_URL (Railway/Heroku format) and individual env vars
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string connectionString;
+
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    // Railway/Heroku format: postgresql://user:pass@host:port/database
+    if (databaseUrl.StartsWith("postgresql://") || databaseUrl.StartsWith("postgres://"))
+    {
+        var uri = new Uri(databaseUrl.Replace("postgres://", "postgresql://"));
+        var userInfo = uri.UserInfo.Split(':');
+        var sslMode = builder.Environment.IsProduction() ? "SSL Mode=Require;Trust Server Certificate=true;" : "";
+        connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};{sslMode}";
+        Log.Information("Using DATABASE_URL for connection (host: {Host})", uri.Host);
+    }
+    else
+    {
+        // Already in Npgsql format
+        connectionString = databaseUrl;
+        Log.Information("Using DATABASE_URL (Npgsql format)");
+    }
+}
+else
+{
+    // Individual environment variables (local development)
+    var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+    var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+    var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "sharebet";
+    var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "";
+    var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
+    connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
+    Log.Information("Using individual DB env vars (host: {Host})", dbHost);
+}
 
 // Override configuration with environment variables if they exist
 var jwtSecretEnv = Environment.GetEnvironmentVariable("JWT_SECRET");
@@ -531,6 +558,15 @@ app.MapHealthChecks("/api/health/live", new Microsoft.AspNetCore.Diagnostics.Hea
     Predicate = check => check.Tags.Contains("self"),
     ResponseWriter = WriteHealthCheckResponse
 });
+
+// Support PORT environment variable (Railway/Heroku)
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    app.Urls.Clear();
+    app.Urls.Add($"http://0.0.0.0:{port}");
+    Log.Information("Server configured to listen on port {Port}", port);
+}
 
 app.Run();
 

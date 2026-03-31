@@ -302,6 +302,10 @@ const MarketplaceScreen: React.FC = () => {
     setFilters(newFilters);
   }, [activeFilter]);
 
+  // Ref for tipster stats cache to avoid re-creating fetchTickets
+  const tipsterStatsCacheRef = useRef(tipsterStatsCache);
+  tipsterStatsCacheRef.current = tipsterStatsCache;
+
   const fetchTickets = useCallback(
     async (pageNum: number, append = false) => {
       try {
@@ -318,10 +322,9 @@ const MarketplaceScreen: React.FC = () => {
 
         // Fetch tipster stats for new creators (if not already cached)
         const creatorIds = [...new Set(newTickets.map(t => t.creatorId))];
-        const uncachedIds = creatorIds.filter(id => !tipsterStatsCache.has(id));
+        const uncachedIds = creatorIds.filter(id => !tipsterStatsCacheRef.current.has(id));
 
         if (uncachedIds.length > 0) {
-          // Fetch stats in parallel
           const statsPromises = uncachedIds.map(id =>
             userApi.getTipsterStats(id)
               .then(res => ({ id, stats: res.data }))
@@ -332,9 +335,7 @@ const MarketplaceScreen: React.FC = () => {
           setTipsterStatsCache(prev => {
             const newCache = new Map(prev);
             results.forEach(r => {
-              if (r) {
-                newCache.set(r.id, r.stats);
-              }
+              if (r) newCache.set(r.id, r.stats);
             });
             return newCache;
           });
@@ -348,7 +349,7 @@ const MarketplaceScreen: React.FC = () => {
         setLoadingMore(false);
       }
     },
-    [filters, tipsterStatsCache]
+    [filters]
   );
 
   useEffect(() => {

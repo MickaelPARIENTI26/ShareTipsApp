@@ -185,9 +185,9 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
 
   // Computed values
   const count = ticket.selectionCount ?? ticket.selections?.length ?? 0;
-  const hasAccess = ticket.isPurchasedByCurrentUser || ticket.isSubscribedToCreator;
+  const hasAccess = ticket.isPurchasedByCurrentUser || ticket.isSubscribedToCreator || isOwnTicket;
   const isPrivateLocked = !ticket.isPublic && !hasAccess;
-  const isFree = ticket.isPublic || ticket.priceEur === 0;
+  const isFree = ticket.isPublic || ticket.priceEur === 0 || isOwnTicket;
   const selections = ticket.selections || [];
   const visibleSelections = selections.slice(0, 2);
   const hiddenSelections = selections.slice(2);
@@ -510,7 +510,8 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
                 hasMoreSelections,
                 isExpanded,
                 handleBuyPress,
-                handleViewPress
+                handleViewPress,
+                isOwnTicket
               )}
             </View>
           </View>
@@ -526,6 +527,12 @@ TicketCard.displayName = 'TicketCard';
 // RENDER HELPERS
 // ═══════════════════════════════════════════════════════════════
 
+const RESULT_CONFIG: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
+  Win: { label: 'GAGNÉ', color: '#22C55E', icon: 'checkmark-circle' },
+  Lose: { label: 'PERDU', color: '#EF4444', icon: 'close-circle' },
+  Pending: { label: 'EN COURS', color: '#F59E0B', icon: 'time-outline' },
+};
+
 function renderActionButton(
   ticket: TicketDto,
   isFree: boolean,
@@ -534,8 +541,27 @@ function renderActionButton(
   hasMoreSelections: boolean,
   isExpanded: boolean,
   onBuy: () => void,
-  onView: () => void
+  onView: () => void,
+  isOwnTicket: boolean = false
 ) {
+  // Own ticket - show result badge
+  if (isOwnTicket) {
+    const resultInfo = RESULT_CONFIG[ticket.result] ?? RESULT_CONFIG.Pending;
+    return (
+      <View style={styles.freeContainer}>
+        <View style={[styles.resultBadge, { backgroundColor: `${resultInfo.color}20`, borderColor: `${resultInfo.color}40` }]}>
+          <Ionicons name={resultInfo.icon} size={14} color={resultInfo.color} />
+          <Text style={[styles.resultBadgeText, { color: resultInfo.color }]}>{resultInfo.label}</Text>
+        </View>
+        {hasMoreSelections && (
+          <TouchableOpacity onPress={onView} activeOpacity={0.8} style={styles.viewButton}>
+            <Text style={styles.viewButtonText}>{isExpanded ? 'MASQUER' : 'VOIR'}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  }
+
   // Already purchased
   if (!ticket.isPublic && ticket.isPurchasedByCurrentUser) {
     return (
@@ -903,6 +929,19 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: DS.colors.greenBgSubtle,
+  },
+  resultBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  resultBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   freeText: {
     fontSize: 12,

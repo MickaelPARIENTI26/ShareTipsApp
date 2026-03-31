@@ -13,9 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+
 import { ticketApi } from '../api/ticket.api';
 import { DS } from '../theme/designSystem';
 import type { RootStackParamList, TicketDto } from '../types';
+import { TicketCard } from '../components/marketplace/TicketCard';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -74,284 +76,12 @@ function formatTime(iso: string): string {
   return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
-const SPORT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  FOOTBALL: 'football',
-  BASKETBALL: 'basketball',
-  TENNIS: 'tennisball',
-  ESPORT: 'game-controller',
-};
 
-const SPORT_LABELS: Record<string, string> = {
-  FOOTBALL: 'Football',
-  BASKETBALL: 'Basketball',
-  TENNIS: 'Tennis',
-  ESPORT: 'Esport',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  Open: 'Ouvert',
-  Locked: 'Verrouillé',
-  Finished: 'Terminé',
-};
-
-const RESULT_LABELS: Record<string, string> = {
-  Pending: 'En cours',
-  Win: 'Gagné',
-  Lose: 'Perdu',
-};
-
-// ═══════════════════════════════════════════════════════════════
-// TICKET CARD COMPONENT
-// ═══════════════════════════════════════════════════════════════
-
-interface TicketCardInlineProps {
-  ticket: TicketDto;
-  onPress: () => void;
-}
-
-const TicketCardInline: React.FC<TicketCardInlineProps> = ({ ticket, onPress }) => {
-  const selectionCount = ticket.selectionCount ?? ticket.selections?.length ?? 0;
-
-  const resultColor = useMemo(() => {
-    switch (ticket.result) {
-      case 'Win': return '#22C55E';
-      case 'Lose': return '#EF4444';
-      default: return DS.colors.textSecondary;
-    }
-  }, [ticket.result]);
-
-  const resultIcon = useMemo((): keyof typeof Ionicons.glyphMap => {
-    switch (ticket.result) {
-      case 'Win': return 'checkmark-circle';
-      case 'Lose': return 'close-circle';
-      default: return 'time-outline';
-    }
-  }, [ticket.result]);
-
-  return (
-    <TouchableOpacity
-      style={cardStyles.container}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      {/* Header: Result badge + Time */}
-      <View style={cardStyles.header}>
-        <View style={cardStyles.titleRow}>
-          <View style={[cardStyles.resultBar, { backgroundColor: resultColor }]} />
-          <View style={[cardStyles.resultBadge, { backgroundColor: `${resultColor}20` }]}>
-            <Ionicons name={resultIcon} size={12} color={resultColor} />
-            <Text style={[cardStyles.resultText, { color: resultColor }]}>
-              {RESULT_LABELS[ticket.result] ?? ticket.result}
-            </Text>
-          </View>
-        </View>
-        <View style={cardStyles.timeContainer}>
-          <Ionicons name="time-outline" size={12} color="#8A9A8F" />
-          <Text style={cardStyles.timeText}>{formatTime(ticket.createdAt)}</Text>
-        </View>
-      </View>
-
-      {/* Title */}
-      <Text style={cardStyles.title} numberOfLines={2}>
-        {ticket.title}
-      </Text>
-
-      {/* Sports badges */}
-      <View style={cardStyles.sportsRow}>
-        {ticket.sports.map((sport) => (
-          <View key={sport} style={cardStyles.sportBadge}>
-            <Ionicons
-              name={SPORT_ICONS[sport] ?? 'trophy'}
-              size={12}
-              color={DS.colors.green}
-            />
-            <Text style={cardStyles.sportText}>{SPORT_LABELS[sport] ?? sport}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Stats row */}
-      <View style={cardStyles.statsRow}>
-        <View style={cardStyles.statItem}>
-          <Text style={cardStyles.statLabel}>Sélections</Text>
-          <Text style={cardStyles.statValue}>{selectionCount}</Text>
-        </View>
-        <View style={cardStyles.statDivider} />
-        <View style={cardStyles.statItem}>
-          <Text style={cardStyles.statLabel}>Cote moy.</Text>
-          <Text style={cardStyles.statValueHighlight}>{ticket.avgOdds.toFixed(2)}</Text>
-        </View>
-        <View style={cardStyles.statDivider} />
-        <View style={cardStyles.statItem}>
-          <Text style={cardStyles.statLabel}>Statut</Text>
-          <Text style={cardStyles.statValue}>{STATUS_LABELS[ticket.status] ?? ticket.status}</Text>
-        </View>
-      </View>
-
-      {/* Footer */}
-      <View style={cardStyles.footer}>
-        <View style={cardStyles.visibilityBadge}>
-          <Ionicons
-            name={ticket.isPublic ? 'earth-outline' : 'lock-closed-outline'}
-            size={12}
-            color={ticket.isPublic ? DS.colors.green : '#F59E0B'}
-          />
-          <Text style={[
-            cardStyles.visibilityText,
-            { color: ticket.isPublic ? DS.colors.green : '#F59E0B' }
-          ]}>
-            {ticket.isPublic ? 'Public' : `${ticket.priceEur.toFixed(2)} €`}
-          </Text>
-        </View>
-        <View style={cardStyles.detailsLink}>
-          <Text style={cardStyles.detailsText}>Voir détails</Text>
-          <Ionicons name="chevron-forward" size={12} color={DS.colors.green} />
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-};
-
-const cardStyles = StyleSheet.create({
-  container: {
-    backgroundColor: '#131916',
-    borderWidth: 1,
-    borderColor: '#1E2A22',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    shadowColor: DS.colors.green,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  resultBar: {
-    width: 3,
-    height: 18,
-    borderRadius: 2,
-    marginRight: 10,
-  },
-  resultBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  resultText: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  timeText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: '#8A9A8F',
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: DS.colors.white,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  sportsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 12,
-  },
-  sportBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: DS.colors.greenBgSubtle,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  sportText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: DS.colors.greenLight,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    backgroundColor: '#0F1611',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#1E2A22',
-  },
-  statLabel: {
-    fontSize: 10,
-    fontWeight: '400',
-    color: '#8A9A8F',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: DS.colors.white,
-  },
-  statValueHighlight: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: DS.colors.green,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#1E2A22',
-  },
-  visibilityBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  visibilityText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  detailsLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  detailsText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: DS.colors.green,
-  },
-});
+// No-op handlers for TicketCard (own tickets don't need buy/follow)
+const noop = () => {};
+const noopId = (_id: string) => {};
+const noopTicket = (_t: TicketDto) => {};
+const noopTipster = (_id: string, _name: string) => {};
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -627,10 +357,21 @@ const MyTicketsScreen: React.FC = () => {
           <View>
             {renderDateHeader(group.dateLabel)}
             {group.tickets.map((ticket) => (
-              <TicketCardInline
+              <TicketCard
                 key={ticket.id}
                 ticket={ticket}
-                onPress={() => handleTicketPress(ticket.id)}
+                tipsterStats={null}
+                tipsterRanking={null}
+                isFavorited={false}
+                isFollowingCreator={false}
+                isOwnTicket={true}
+                hideTipsterHeader={true}
+                onToggleFavorite={noopId}
+                onBuy={noopTicket}
+                onShare={noopTicket}
+                onTipsterPress={noopTipster}
+                onFollowCreator={noopId}
+                onCardPress={(t) => handleTicketPress(t.id)}
               />
             ))}
           </View>

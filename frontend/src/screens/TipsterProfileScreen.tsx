@@ -853,7 +853,9 @@ const TipsterProfileScreen: React.FC = () => {
       ? 'Aucun ticket public'
       : activeTab === 'private'
         ? 'Aucun ticket privé'
-        : null;
+        : activeTab === 'history'
+          ? 'Aucun historique'
+          : null;
 
   // Check if private tab requires subscription access
   const showPrivateGate =
@@ -888,7 +890,10 @@ const TipsterProfileScreen: React.FC = () => {
           onEndReached={onEndReached}
           onEndReachedThreshold={0.3}
           renderItem={({ item }) => {
-            const isPublicTicket = item.isPublic;
+            const isHistoryTab = activeTab === 'history';
+            // History tickets: show as "owned" (result badge, no buy button, all selections visible)
+            // Private tickets: show as marketplace (buy button if not owned)
+            const showAsOwned = isOwnProfile || isHistoryTab;
             return (
               <View style={styles.ticketCardWrapper}>
                 <TicketCard
@@ -897,15 +902,14 @@ const TipsterProfileScreen: React.FC = () => {
                   tipsterRanking={profile?.ranking?.monthly}
                   isFavorited={isFavorited(item.id)}
                   isFollowingCreator={isFollowing}
-                  isOwnTicket={isOwnProfile}
+                  isOwnTicket={showAsOwned}
                   onToggleFavorite={handleToggleFavorite}
                   onBuy={handleBuy}
                   onShare={() => {}}
                   onTipsterPress={() => {}}
                   onFollowCreator={() => {}}
                   hideTipsterHeader
-                  disabled={isPublicTicket}
-                  onCardPress={isPublicTicket ? undefined : (t) => navigation.navigate('TicketDetail', { ticketId: t.id })}
+                  onCardPress={(t) => navigation.navigate('TicketDetail', { ticketId: t.id })}
                 />
               </View>
             );

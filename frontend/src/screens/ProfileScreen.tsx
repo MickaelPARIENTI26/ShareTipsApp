@@ -23,6 +23,7 @@ import { useProfileStore } from '../store/profile.store';
 import { useWalletStore } from '../store/wallet.store';
 import { gamificationApi } from '../api/gamification.api';
 import { followApi } from '../api/follow.api';
+import { rankingApi } from '../api/ranking.api';
 import { GamificationCard } from '../components/gamification';
 import type { RootStackParamList } from '../types';
 import type { UserGamificationDto } from '../types/gamification.types';
@@ -62,6 +63,9 @@ const ProfileScreen: React.FC = () => {
 
   // Profile image state
   const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  // Ranking state
+  const [myRanking, setMyRanking] = useState<{ rank: number; winRate: number } | null>(null);
 
   // Entrance animation
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -113,6 +117,21 @@ const ProfileScreen: React.FC = () => {
       }
     };
     loadFollowInfo();
+
+    // Fetch real ranking data
+    const loadRanking = async () => {
+      if (!user?.id) return;
+      try {
+        const { data } = await rankingApi.getRanking('weekly');
+        const myEntry = data.rankings.find((r) => r.userId === user.id);
+        if (myEntry) {
+          setMyRanking({ rank: myEntry.rank, winRate: myEntry.winRate });
+        }
+      } catch {
+        // Silently fail
+      }
+    };
+    loadRanking();
   }, [hydrateProfile, fetchUnreadCount, user?.id]);
 
   // Hydrate wallet on focus
@@ -183,11 +202,11 @@ const ProfileScreen: React.FC = () => {
     () => navigation.navigate('XpGuide'),
     [navigation]
   );
-  // Performance stats (mock data for now)
+  // Performance stats from real ranking data
   const performanceStats = {
-    ranking: 42, // Not available in UserStatsDto yet
-    avgOdds: stats?.avgOdds ?? 2.45,
-    winRate: 67, // Not available in UserStatsDto yet
+    ranking: myRanking?.rank ?? '-',
+    avgOdds: stats?.avgOdds ?? 0,
+    winRate: myRanking?.winRate ?? 0,
   };
 
   // Image picker functions
@@ -458,7 +477,7 @@ const ProfileScreen: React.FC = () => {
         <View style={styles.performanceStatsRow}>
           <View style={styles.performanceStatColumn}>
             <Ionicons name="trophy-outline" size={20} color="#FBBF24" />
-            <Text style={styles.performanceStatValue}>#{performanceStats.ranking}</Text>
+            <Text style={styles.performanceStatValue}>{typeof performanceStats.ranking === 'number' ? `#${performanceStats.ranking}` : '-'}</Text>
             <Text style={styles.performanceStatLabel}>Classement</Text>
           </View>
           <View style={styles.performanceStatDivider} />
@@ -470,7 +489,7 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.performanceStatDivider} />
           <View style={styles.performanceStatColumn}>
             <Ionicons name="checkmark-circle-outline" size={20} color="#22C55E" />
-            <Text style={styles.performanceStatValue}>{performanceStats.winRate}%</Text>
+            <Text style={styles.performanceStatValue}>{performanceStats.winRate > 0 ? `${performanceStats.winRate}%` : '-'}</Text>
             <Text style={styles.performanceStatLabel}>Réussite</Text>
           </View>
         </View>

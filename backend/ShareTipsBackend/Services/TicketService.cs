@@ -197,13 +197,14 @@ public class TicketService : ITicketService
         var matchInfo = await ResolveMatchInfoAsync(tickets);
 
         // Map to DTOs, stripping selections for private tickets without access
+        // Exception: finished tickets always show selections (for history/transparency)
         var dtos = tickets.Select(t =>
         {
             var isPurchased = purchasedIds.Contains(t.Id);
             var isSubscribed = subscribedTipsterIds.Contains(t.CreatorId);
             var hasAccess = isPurchased || isSubscribed;
             var dto = MapToDto(t, isPurchased, matchInfo, isSubscribed);
-            if (!t.IsPublic && !hasAccess)
+            if (!t.IsPublic && !hasAccess && t.Status != TicketStatus.Finished)
                 return dto with { Selections = new List<TicketSelectionDto>() };
             return dto;
         });

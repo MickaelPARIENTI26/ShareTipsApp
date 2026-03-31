@@ -857,9 +857,8 @@ const TipsterProfileScreen: React.FC = () => {
           ? 'Aucun historique'
           : null;
 
-  // Check if private tab requires subscription access
-  const showPrivateGate =
-    activeTab === 'private' && !isOwnProfile && !subStatus?.isSubscribed;
+  // Private tickets are shown directly with buy buttons (no subscription gate)
+  const showPrivateGate = false;
 
   return (
     <View style={styles.container}>

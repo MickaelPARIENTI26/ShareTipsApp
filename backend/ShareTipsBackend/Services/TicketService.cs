@@ -665,7 +665,7 @@ public class TicketService : ITicketService
         var awayTeamLower = (match.AwayTeamName ?? "").ToLowerInvariant();
 
         // Head-to-head (1X2) market
-        if (market == "h2h" || market == "1x2")
+        if (market == "h2h" || market == "1x2" || market == "matchresult")
         {
             if (label.Contains("home") || label == "1" || (homeTeamLower.Length > 0 && label.Contains(homeTeamLower)))
                 return homeScore > awayScore;
@@ -676,7 +676,7 @@ public class TicketService : ITicketService
         }
 
         // Totals (Over/Under) market
-        if (market == "totals" || market.Contains("over") || market.Contains("under"))
+        if (market == "totals" || market == "overunder" || market.Contains("over") || market.Contains("under"))
         {
             var totalGoals = homeScore + awayScore;
             var regex = System.Text.RegularExpressions.Regex.Match(label, @"(\d+\.?\d*)");

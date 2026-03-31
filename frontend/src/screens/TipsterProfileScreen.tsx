@@ -41,7 +41,7 @@ import { useTheme, type ThemeColors, spacing, radius, typography, size, fontSize
 import { TicketCard } from '../components/marketplace/TicketCard';
 import { DS } from '../theme/designSystem';
 
-type TabKey = 'public' | 'private' | 'stats';
+type TabKey = 'public' | 'private' | 'history' | 'stats';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -244,6 +244,7 @@ const TipsterProfileScreen: React.FC = () => {
   );
   const [publicTickets, setPublicTickets] = useState<TicketDto[]>([]);
   const [privateTickets, setPrivateTickets] = useState<TicketDto[]>([]);
+  const [historyTickets, setHistoryTickets] = useState<TicketDto[]>([]);
   const [followInfo, setFollowInfo] = useState<FollowInfoDto | null>(null);
   const [subStatus, setSubStatus] = useState<SubscriptionStatusDto | null>(
     null
@@ -267,7 +268,7 @@ const TipsterProfileScreen: React.FC = () => {
   const handleTabChange = useCallback((tab: TabKey) => {
     if (tab === activeTab) return;
 
-    const tabIndex = { public: 0, private: 1, stats: 2 };
+    const tabIndex: Record<TabKey, number> = { public: 0, private: 1, history: 2, stats: 3 };
     const direction = tabIndex[tab] > tabIndex[activeTab] ? 1 : -1;
 
     // Animate out
@@ -305,8 +306,10 @@ const TipsterProfileScreen: React.FC = () => {
   // Pagination state
   const [publicPage, setPublicPage] = useState(1);
   const [privatePage, setPrivatePage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
   const [publicHasMore, setPublicHasMore] = useState(true);
   const [privateHasMore, setPrivateHasMore] = useState(true);
+  const [historyHasMore, setHistoryHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const PAGE_SIZE = 15;
 
@@ -316,6 +319,7 @@ const TipsterProfileScreen: React.FC = () => {
         profileRes,
         publicRes,
         privateRes,
+        historyRes,
         followRes,
         statsRes,
         subRes,
@@ -333,6 +337,12 @@ const TipsterProfileScreen: React.FC = () => {
           page: 1,
           ticketType: 'private',
         }),
+        marketplaceApi.getPublicTickets({
+          creatorId: tipsterId,
+          pageSize: PAGE_SIZE,
+          page: 1,
+          status: 'all',
+        }).catch(() => ({ data: { items: [], hasNextPage: false } })),
         followApi.getFollowInfo(tipsterId),
         userApi.getTipsterStats(tipsterId),
         subscriptionApi
@@ -342,10 +352,17 @@ const TipsterProfileScreen: React.FC = () => {
       setProfile(profileRes.data);
       setPublicTickets(publicRes.data.items);
       setPrivateTickets(privateRes.data.items);
+      // History = only finished tickets
+      const finishedTickets = (historyRes.data?.items ?? []).filter(
+        (t: TicketDto) => t.status === 'Finished'
+      );
+      setHistoryTickets(finishedTickets);
       setPublicHasMore(publicRes.data.hasNextPage);
       setPrivateHasMore(privateRes.data.hasNextPage);
+      setHistoryHasMore(historyRes.data?.hasNextPage ?? false);
       setPublicPage(1);
       setPrivatePage(1);
+      setHistoryPage(1);
       setFollowInfo(followRes.data);
       setTipsterStats(statsRes.data);
       if (subRes.data) setSubStatus(subRes.data);
@@ -368,36 +385,46 @@ const TipsterProfileScreen: React.FC = () => {
   const loadMoreTickets = useCallback(async () => {
     if (loadingMore) return;
 
-    const isPublic = activeTab === 'public';
-    const hasMore = isPublic ? publicHasMore : privateHasMore;
-    const currentPage = isPublic ? publicPage : privatePage;
+    const hasMore = activeTab === 'public' ? publicHasMore : activeTab === 'private' ? privateHasMore : historyHasMore;
+    const currentPage = activeTab === 'public' ? publicPage : activeTab === 'private' ? privatePage : historyPage;
 
     if (!hasMore) return;
 
     setLoadingMore(true);
     try {
-      const { data } = await marketplaceApi.getPublicTickets({
+      const params: any = {
         creatorId: tipsterId,
         pageSize: PAGE_SIZE,
         page: currentPage + 1,
-        ticketType: isPublic ? 'public' : 'private',
-      });
+      };
+      if (activeTab === 'history') {
+        params.status = 'all';
+      } else {
+        params.ticketType = activeTab === 'public' ? 'public' : 'private';
+      }
 
-      if (isPublic) {
+      const { data } = await marketplaceApi.getPublicTickets(params);
+
+      if (activeTab === 'public') {
         setPublicTickets((prev) => [...prev, ...data.items]);
         setPublicHasMore(data.hasNextPage);
         setPublicPage(currentPage + 1);
-      } else {
+      } else if (activeTab === 'private') {
         setPrivateTickets((prev) => [...prev, ...data.items]);
         setPrivateHasMore(data.hasNextPage);
         setPrivatePage(currentPage + 1);
+      } else {
+        const finished = data.items.filter((t: TicketDto) => t.status === 'Finished');
+        setHistoryTickets((prev) => [...prev, ...finished]);
+        setHistoryHasMore(data.hasNextPage);
+        setHistoryPage(currentPage + 1);
       }
     } catch {
       // silent
     } finally {
       setLoadingMore(false);
     }
-  }, [activeTab, publicHasMore, privateHasMore, publicPage, privatePage, loadingMore, tipsterId]);
+  }, [activeTab, publicHasMore, privateHasMore, historyHasMore, publicPage, privatePage, historyPage, loadingMore, tipsterId]);
 
   const onEndReached = useCallback(() => {
     if (activeTab !== 'stats') {
@@ -617,12 +644,16 @@ const TipsterProfileScreen: React.FC = () => {
   }
 
   const activeTickets =
-    activeTab === 'public' ? publicTickets : privateTickets;
+    activeTab === 'public' ? publicTickets
+    : activeTab === 'private' ? privateTickets
+    : activeTab === 'history' ? historyTickets
+    : [];
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: 'public', label: 'Publics', count: publicTickets.length },
     { key: 'private', label: 'Privés', count: privateTickets.length },
-    { key: 'stats', label: 'Statistiques' },
+    { key: 'history', label: 'Historique', count: historyTickets.length },
+    { key: 'stats', label: 'Stats' },
   ];
 
   const headerComponent = (

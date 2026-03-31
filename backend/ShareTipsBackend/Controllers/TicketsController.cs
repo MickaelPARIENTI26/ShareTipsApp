@@ -62,14 +62,16 @@ public class TicketsController : ApiControllerBase
         [FromQuery] bool? followedOnly = null,
         [FromQuery] Guid? creatorId = null,
         [FromQuery] string? sortBy = null,
-        [FromQuery] string? ticketType = null)
+        [FromQuery] string? ticketType = null,
+        [FromQuery] string? status = null)
     {
         Guid? userId = await GetUserIdFromAuthAsync();
         Guid? followedByUserId = followedOnly == true ? userId : null;
         var result = await _ticketService.GetPublicTicketsPaginatedAsync(
             page, pageSize, sports, minOdds, maxOdds, minConfidence, maxConfidence,
             minSelections, maxSelections, followedByUserId, creatorId, sortBy,
-            excludeUserId: userId, currentUserId: userId, ticketType: ticketType);
+            excludeUserId: userId, currentUserId: userId, ticketType: ticketType,
+            status: status);
         return Ok(result);
     }
 

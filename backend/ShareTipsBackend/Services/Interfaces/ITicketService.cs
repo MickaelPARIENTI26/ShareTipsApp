@@ -12,7 +12,8 @@ public interface ITicketService
         int? minConfidence = null, int? maxConfidence = null,
         int? minSelections = null, int? maxSelections = null,
         Guid? followedByUserId = null, Guid? creatorId = null, string? sortBy = null,
-        Guid? excludeUserId = null, Guid? currentUserId = null, string? ticketType = null);
+        Guid? excludeUserId = null, Guid? currentUserId = null, string? ticketType = null,
+        string? status = null);
     Task<TicketFilterMetaDto> GetFilterMetaAsync(Guid? excludeUserId = null);
     Task<TicketDto> CreateAsync(Guid creatorId, CreateTicketDto dto);
     Task<TicketDto?> UpdateAsync(Guid ticketId, Guid userId, UpdateTicketDto dto);

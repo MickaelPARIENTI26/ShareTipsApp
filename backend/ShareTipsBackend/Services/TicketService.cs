@@ -66,13 +66,28 @@ public class TicketService : ITicketService
         int? minConfidence = null, int? maxConfidence = null,
         int? minSelections = null, int? maxSelections = null,
         Guid? followedByUserId = null, Guid? creatorId = null, string? sortBy = null,
-        Guid? excludeUserId = null, Guid? currentUserId = null, string? ticketType = null)
+        Guid? excludeUserId = null, Guid? currentUserId = null, string? ticketType = null,
+        string? status = null)
     {
         var query = _context.Tickets
             .Include(t => t.Selections)
             .Include(t => t.Creator)
-            .Where(t => t.DeletedAt == null && t.Status == TicketStatus.Open)
+            .Where(t => t.DeletedAt == null)
             .AsQueryable();
+
+        // Filter by status (default: Open only)
+        if (!string.IsNullOrEmpty(status) && status.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            // No status filter - return all
+        }
+        else if (!string.IsNullOrEmpty(status) && Enum.TryParse<TicketStatus>(status, true, out var parsedStatus))
+        {
+            query = query.Where(t => t.Status == parsedStatus);
+        }
+        else
+        {
+            query = query.Where(t => t.Status == TicketStatus.Open);
+        }
 
         // Show ALL tickets (public + private) from other users
         if (excludeUserId.HasValue)

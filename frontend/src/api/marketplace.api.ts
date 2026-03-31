@@ -15,6 +15,7 @@ export interface MarketplaceFilters {
   creatorId?: string;
   sortBy?: string;
   ticketType?: 'public' | 'private';
+  status?: 'all' | 'Open' | 'Finished';
 }
 
 export const marketplaceApi = {
@@ -37,6 +38,7 @@ export const marketplaceApi = {
     if (filters.creatorId) params.creatorId = filters.creatorId;
     if (filters.sortBy) params.sortBy = filters.sortBy;
     if (filters.ticketType) params.ticketType = filters.ticketType;
+    if (filters.status) params.status = filters.status;
 
     return apiClient.get<PaginatedResult<TicketDto>>('/api/tickets/public', {
       params,

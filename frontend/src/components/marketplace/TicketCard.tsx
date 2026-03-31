@@ -339,7 +339,7 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({
                   <View style={styles.tipsterStat}>
                     <Ionicons name="checkmark-circle" size={12} color={DS.colors.green} />
                     <Text style={styles.tipsterStatText}>
-                      {tipsterStats ? `${(tipsterStats.winRate * 100).toFixed(0)}%` : '—'}
+                      {tipsterStats ? `${tipsterStats.winRate >= 1 ? tipsterStats.winRate.toFixed(0) : (tipsterStats.winRate * 100).toFixed(0)}%` : '—'}
                     </Text>
                   </View>
                 </View>

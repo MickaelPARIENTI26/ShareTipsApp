@@ -28,6 +28,7 @@ import { TicketCard } from '../components/marketplace/TicketCard';
 import { ErrorBanner } from '../components/common';
 import { MarketRefreshControl } from '../components/common/PremiumRefreshControl';
 import { parseError, type AppError } from '../utils/errors';
+import { rankingApi } from '../api/ranking.api';
 import type {
   RootStackParamList,
   TicketDto,
@@ -251,16 +252,26 @@ const MarketplaceScreen: React.FC = () => {
   );
   const [error, setError] = useState<AppError | null>(null);
 
-  // Cache for tipster stats
+  // Cache for tipster stats and rankings
   const [tipsterStatsCache, setTipsterStatsCache] = useState<Map<string, TipsterStatsDto>>(new Map());
+  const [rankingCache, setRankingCache] = useState<Map<string, number>>(new Map());
 
-  // Fetch filter metadata, user favorites, and followed creators on mount
+  // Fetch filter metadata, user favorites, followed creators, and rankings on mount
   useEffect(() => {
     marketplaceApi
       .getFilterMeta()
       .then(({ data }) => setFilterMeta(data))
       .catch(() => {});
     hydrateFavorites();
+
+    // Fetch ranking data once
+    rankingApi.getRanking('weekly')
+      .then(({ data }) => {
+        const map = new Map<string, number>();
+        data.rankings.forEach(r => map.set(r.userId, r.rank));
+        setRankingCache(map);
+      })
+      .catch(() => {});
     if (currentUserId) {
       hydrateFollows(currentUserId);
     }
@@ -500,7 +511,7 @@ const MarketplaceScreen: React.FC = () => {
           <TicketCard
             ticket={item}
             tipsterStats={tipsterStatsCache.get(item.creatorId) ?? null}
-            tipsterRanking={null}
+            tipsterRanking={rankingCache.get(item.creatorId) ?? null}
             isFavorited={favoritedIds.has(item.id)}
             isFollowingCreator={followedIds.has(item.creatorId)}
             isOwnTicket={item.creatorId === currentUserId}
